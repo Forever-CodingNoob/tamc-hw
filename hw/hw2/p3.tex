@@ -1,0 +1,515 @@
+\begin{problem}[Everything is One-Way function]\label{p3}
+    \leavevmode\par
+    What if, for instance, OWF is in fact a much stronger primitive comparing to PRG?
+    In this problem, you will be asked to fill up the gap by showing that the inverse direction of these statements are both easy and direct. In other words, prove the following statements with simple constructions:\\
+    (For simplicity, in problem (a) and (c) you can assume the existence of a PRF $f: \bit^{l(n)}\times \bit^n\to \bit^n$, where $l(n)=\Theta(n^c)$ for some constant $c\gt 0$.)
+    \begin{enumerate}[label=(\alph*)]
+        \item PRF implies OWF;
+        \item PRG implies OWF;
+        \item PRF implies PRG.
+    \end{enumerate}
+\end{problem}
+
+
+\begin{answer}[a]
+    Assume that there exists a PRF $f: \bit^{l(n)}\times \bit^n\to \bit^n$ where  $l(n)=\Theta(n^c)$ for some constant $c\gt 0$. Define an ``inverse'' function $l'$ of $l$ by
+    \[
+        l'(m)\triangleq \min\{n\in \Nbb \mid l(n)=m\}.
+    \]
+
+    \begin{intuition}
+        Our goal is to define a OWF $g_m: \bit^m\to \bit^{p(m)}$ where $p(m)\gg m$. We want the codomain of $g_m$ to be much larger than its image because values computed from $f$, which lie in the image of $g_m$ (size $\le 2^m$), will be easily distinguishable from values uniformly sampled from the codomain $\bit^{p(m)}$ of $g_m$ (size $=2^{p(m)}\gg 2^{m}\ge$ size of image) in the PRF game. 
+    \end{intuition}
+    
+    We show that the function $g_m:\bit^m\to \bit^{l'(m)p(l'(m))}$ defined by
+    \[
+        g_m(k) \triangleq  ({f}_{k}(0_2), \ldots , {f}_{k}((p(l'(m))-1)_2)),
+    \]
+    where $(\cdot)_2$ denotes the $l'(m)$-bit representation of the given number and $p(n)=O(\poly(n))$ will be concretely specified later, is OW. Note that we require $p(n)=O(\poly(n))$ so that $g_m$ is polynomial-time computable, as we will see later.
+
+    To show this, there are two properties to prove: (1) $g_m$ is polynomial-time computable, and (2) $g_m$ can be inverted with only negligible probability by any PPT adversary. 
+
+    To see (1) holds, note that since $p(n)=O(\poly(n))$ and $f_k:\bit^n\to\bit^n$ can be computed in $\poly(n)$ time (as $f$ is a PRF) where $n=l'(m)$, if $l'(m)$ is a polynomial of $m$, then $g_m$ can be computed in $\poly(l'(m))p(l'(m))=O(\poly(m))$ time. Therefore, it suffices to show that $l'(m)=\Theta(m^{c'})$ for some $c'\gt 0$. Specifically, we show that this indeed holds for $c'=\frac{1}{c}\gt 0$.
+    \begin{claim}\label{claim:p3-1-1}
+        $l'(m)=\Theta(m^{c'})$ where $c'=\frac{1}{c}\gt 0$.
+    \end{claim}
+    \begin{proof}
+        Since $l(n)=\Theta(n^c)$, there exist $a,b\gt 0$ and $N\in\Nbb$ such that $an^c\le l(n)\le bn^c$ for all $n\ge N$. Observe that
+        \[
+            m=l(l'(m))\le b(l'(m))^c
+            \implies  l'(m)\ge b^{-\frac{1}{c}} m^{\frac{1}{c}}
+        \]
+        for all $m\ge max_{n\lt N} l(n)+1$ and that
+        \[
+            m=l(l'(m))\ge a(l'(m))^c
+            \implies  l'(m)\le a^{-\frac{1}{c}} m^{\frac{1}{c}}
+        \]
+        for all $m\ge \max_{n\lt N} l(n)+1$.
+        Combining the two, we conclude that for all $m\ge \max_{n\lt N} l(n) +1$,
+        \[
+            b^{-\frac{1}{c}} m^{\frac{1}{c}}\le l'(m)\le a^{-\frac{1}{c}} m^{\frac{1}{c}},
+        \] 
+        which implies $l'(m)=\Theta(n^{c'})$ where $c'=\frac{1}{c}\gt 0$ as $c\gt 0$.
+    \end{proof}
+
+
+    To see (2) holds, we prove it by contradiction. Suppose to the contrary that there exists a PPT adversary $\Adv^{OW}$ that wins the following inverting game of $g_m$, denoted $\Game$, with probability $\epsilon(m)$ for all $m\in\Nbb$, where $\epsilon$ is nonnegligible.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{OW} \\
+            k\sample \bit^m & & \\
+            & \XR{(1^m, y\coloneqq g_m(k))} & \\
+            & \XL{k'} & \\
+            \multicolumn{3}{c}{\text{$\Adv^{OW}$ wins if $g_m(k') = g_m(k)$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p3-game1}
+    }
+    By abusing $\Adv^{OW}$, we construct as follows a PPT oracle distinguisher (a reduction) $\Rcal$ that, for all $n\in\Nbb$ such that $n=l'(l(n))$ (which are infinity many), distinguishes oracle access to $f_k$ (for uniform $k\Usample \bit^{l(n)}$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage.
+    On input $1^n$, $\Rcal$ makes queries $0_2,1_2,\ldots,(p(n)-1)_2$ to the challenger, receives $y_0=\Ocal(0_2),y_1=\Ocal(1_2),\ldots,y_{p(n)-1}=\Ocal((p(n)-1)_2)$ as the answers, runs $\Adv^{OW}$ on input $(1^{l(n)}, (y_0,\ldots,y_{p(n)-1}))$, and receives as output $k'\in\bit^{l(n)}$ from $\Adv^{OW}$. Finally, $\Rcal$ outputs $0$ if $g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1})$, and a uniformly  random bit otherwise. We illustrate $\Rcal$ in the following distinguishing game $\Game'$ of oracle accesses to $f_{U_n}$ and $U_{\func_n}$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & \Adv^{OW} \\
+            b\Usample\bit & & & & \\
+            k\Usample\bit^{l(n)} & & & & \\
+            H\Usample \func_n & & & & \\
+            \Ocal \coloneqq \begin{cases}
+                f_{k}, &b=0\\
+                H, &b=1
+            \end{cases} & & & & \\
+            & \XR{1^n} & &  & \\
+            & \XL{0_2} & &  & \\
+            & \XR{y_0= \Ocal(0_2)} & & & \\
+            & \vdots & &  & \\
+            & \XL{(p(n)-1)_2} & &  & \\
+            & \XR{y_{p(n)-1}= \Ocal((p(n)-1)_2)} & & & \\
+            & & & \XR{(1^{l(n)}, (y_0,\ldots,y_{p(n)-1}))} & \\
+            & & & \XL{k'} & \\
+            & & b'\begin{cases}
+                \coloneqq 0, & g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1})\\
+                \Usample \bit, &g_{l(n)}(k')\neq (y_0,\ldots,y_{p(n)-1})
+            \end{cases} & & \\
+            & \XL{b'} & & & \\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game'$}
+        \label{fig:p3-game2}
+    }
+
+    Clearly $\Rcal$ runs in PPT since (i) $\Adv^{OW}$ runs in time $\poly(l(n))=\poly(\Theta(n^c))=O(\poly(n))$, (ii) $g_{l(n)}$ can be computed in time $\poly(l(n))=\poly(\Theta(n^c))=O(\poly(n))$ (as we have shown that $g_m$ is polynomial-time computable), (iii) $f_k$ can be computed in $\poly(n)$ time (as $f$ is a PRF), and (iv) $\Rcal$ makes $p(n)=O(\poly(n))$ queries. Summing up the run time of each component, we can verify that $\Rcal$ in total runs in time
+    \[
+        \poly(n)\cdot O(\poly(n))+ O(\poly(n))+O(\poly(n)) = O(\poly(n)).
+    \]
+    
+    To see that for all $n\in\Nbb$ such that $n=l'(l(n))$, $\Rcal$ distinguishes oracle accesses to $f_{U_n}$ and $U_{\func_n}$ with nonnegligible advantage, we instead show that $\Rcal$ wins $\Game'$ with nonnegligible advantage for these $n$'s. Observe that  for all $n\in\Nbb$ such that $n=l'(l(n))$: 
+    \begin{itemize}
+        \item If $b=0$ and thus $\Ocal = f_k$ for uniform $k\Usample\bit^{l(n)}$, then
+        \begin{align*}
+            &g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1})  \\
+            \iff& g_{l(n)}(\Adv^{OW}(1^{l(n)},(y_0,\ldots,y_{p(n)-1})))=(y_0,\ldots,y_{p(n)-1}) \\
+            \iff& g_{l(n)}(\Adv^{OW}(1^{l(n)}, (f_k(0_2),\ldots,f_k((p(n)-1)_2))))= (f_k(0_2),\ldots,f_k((p(n)-1)_2)) \\
+            \iff& g_{l(n)}(\Adv^{OW}(1^{l(n)},g_{l(n)}(k)))= g_{l(n)}(k) \\
+            \iff& \Adv^{OW} \textrm{ wins } \Game \textrm{ with } m\coloneqq l(n).
+        \end{align*}
+        We can therefore calculate the win rate of $\Rcal$ when $b=0$:
+        \begin{align*}
+            &\Pr_{k\Usample\bit^{l(n)}}\left[ \Rcal^{f_k} \textrm{ wins } \Game' \Bigm\vert b=0\right]\\
+            =& \Pr_{k\Usample\bit^{l(n)}}\left[ b' =0 \mid b=0\right]\\
+            =& \Pr_{k\Usample\bit^{l(n)}}\left[ g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=0 \right]\Pr_{k\Usample\bit^{l(n)}}\left[ 0=0 \mid b=0\right]\\
+            &\quad +\left(1-\Pr_{k\Usample\bit^{l(n)}}\left[ g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=0 \right]\right)\Pr_{k\Usample\bit^{l(n)}}\left[U_1=0 \mid  b=0\right]\\
+            =& \Pr_{k\Usample\bit^{l(n)}}\left[ \Adv^{OW} \textrm{ wins } \Game \textrm{ with } m\coloneqq l(n) \right]\Pr_{k\Usample\bit^{l(n)}}\left[ 0=0 \mid b=0\right]\\
+            &\quad +\left(1-\Pr_{k\Usample\bit^{l(n)}}\left[ \Adv^{OW} \textrm{ wins } \Game \textrm{ with } m\coloneqq l(n) \right]\right)\Pr_{k\Usample\bit^{l(n)}}\left[U_1=0 \mid  b=0\right]\\
+            =& \epsilon(l(n))\cdot 1+(1-\epsilon(l(n)))\cdot \frac{1}{2}
+            = \frac{1}{2}+\frac{\epsilon(l(n))}{2}.
+        \end{align*}
+
+        \item If $b=1$ and thus $\Ocal = H$ for uniform $H\Usample\func_n$, observe that
+        \begin{align*}
+            &g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1})  \\
+            \iff& (f_{k'}(0_2),\ldots, f_{k'}((p(n)-1)_2))=(H(0_2),\ldots,H((p(n)-1)_2)) \\
+            \implies& \exists k^\ast\in\bit^{l(n)}.\ (f_{k^\ast}(0_2),\ldots, f_{k^\ast}((p(n)-1)_2))=(H(0_2),\ldots,H((p(n)-1)_2))\\
+            \iff& (H(0_2),\ldots,H((p(n)-1)_2)) \in \biggl\{ (f_{k^\ast}(0_2),\ldots, f_{k^\ast}((p(n)-1)_2))  \biggr\}_{k^\ast \in \bit^{l(n)}}
+            &&=\biggl\{ g_{l(n)}(k^\ast) \biggr\}_{k^\ast \in \bit^{l(n)}}\\
+            &&&=\mathop{\textrm{im}} (g_{l(n)}).
+        \end{align*}
+        Since $H$ is uniformly chosen from $\func_n$, $\{H(x)\}_{x\in\bit^n}$ are mutually independent and uniformly random. As a result, $(H(0_2),\ldots,H((p(n)-1)_2))$, regardless of the inputs of $H$, is uniformly distributed over $\bit^{n\times p(n)}$. We can therefore bound from above $\Pr[g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=1]$ by 
+        \begin{align}
+            \Pr_{H\Usample\func_n}\left[g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=1\right]
+            &\le \Pr_{H\Usample\func_n}\left[(H(0_2),\ldots,H((p(n)-1)_2)) \in \mathop{\textrm{im}} (g_{l(n)}) \right]\notag\\
+            &= \frac{\abs*{\mathop{\textrm{im}} (g_{l(n)})}}{\abs*{\bit^{n\times p(n)}}}\notag\\
+            &\le \frac{\abs*{\mathop{\textrm{dom}} (g_{l(n)})}}{\abs*{\bit^{n\times p(n)}}}\notag\\
+            &= \frac{2^{l(n)}}{2^{n\times p(n)}} 
+            = 2^{-(np(n)-l(n))}. \label{eq:p3-1-1}
+        \end{align}
+        Finally, we calculate the win rate of $\Rcal$ when $b=1$:
+        \begin{align*}
+            &\Pr_{H\Usample\func_n}\left[ \Rcal^{H} \textrm{ wins } \Game' \Bigm\vert b=1\right]\\
+            =& \Pr_{H\Usample\func_n}\left[ b' =1 \mid b=1\right]\\
+            =& \Pr_{H\Usample\func_n}\left[ g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=1\right] \cdot 0\\
+            &\quad +\left(1-\Pr_{H\Usample\func_n}\left[ g_{l(n)}(k')=(y_0,\ldots,y_{p(n)-1}) \mid b=1\right]\right) \cdot \frac{1}{2}\\
+            \ge& 0+\frac{1}{2}(1-2^{-(np(n)-l(n))}) \qquad \textrm{(by \eqref{eq:p3-1-1})}\\
+            \ge& \frac{1}{2} - 2^{-(np(n)-l(n))}.
+        \end{align*}
+    \end{itemize}
+
+    Combining the two cases together, we have:
+    \begin{align*}
+        &\Pr_{b\Usample\bit, k\Usample\bit^{l(n)}, H\Usample\func_n}\left[ \Rcal^{H} \textrm{ wins } \Game' \right]\\
+        =& \Pr_{b\Usample\bit}[b=0]\Pr_{k\Usample\bit^{l(n)}}\left[ \Rcal^{f_k} \textrm{ wins } \Game' \Bigm\vert b=0\right]
+        + \Pr_{b\Usample\bit}[b=1]\Pr_{H\Usample\func_n}\left[ \Rcal^{H} \textrm{ wins } \Game' \Bigm\vert b=1\right]\\
+        \ge& \frac{1}{2}\cdot \left(\frac{1}{2}+\frac{\epsilon(l(n))}{2}\right) +\frac{1}{2}\cdot \left(\frac{1}{2} - 2^{-(np(n)-l(n))}\right)\\
+        \ge& \frac{1}{2} + \left(\frac{1}{4}\epsilon(l(n))-2^{-(np(n)-l(n))}\right).
+    \end{align*}
+    for all $n\in\Nbb$ such that $n=l'(l(n))$ (of which there are infinitely many).
+    Notice that since $\epsilon(n)$ is nonnegligible and $l(n)=\Theta(n^c)=O(\poly(n))$, $\epsilon(l(n))$ is also nonnegligible. On the other hand, if we have $p(n)=\Omega(n^c)$, then $2^{-(np(n)-l(n))}$ is negligible because
+    \[
+        2^{-(np(n)-l(n))} 
+        = 2^{-(n\cdot \Theta(n^c)-\Theta(n^c))}
+        =2^{-(\Theta(n^{c+1})-\Theta(n^c))}
+        =2^{-\Theta(n^{c+1})}
+        =2^{-\omega(\log n)}
+        =o(n^{-c^\bigstar})
+    \]
+    for all $c^\bigstar\gt 0$. Thus, we set $p(n)\triangleq n^c$. (Note that we also require in the definition of $g_m$ that $p(n)=O(\poly(n))$.) Finally, since $\frac{1}{4}\epsilon(l(n))$ is nonnegligible whereas $2^{-(np(n)-l(n))}$ is negligible, the total advantage $\frac{1}{4}\epsilon(l(n))-2^{-(np(n)-l(n))}$ of $\Rcal$ is thus nonnegligible.
+
+    Hence, the existence of the PPT oracle distinguisher $\Rcal$ implies $f$ is not a PRF, contradicting the assumption. We have thus completed the proof of (2), finishing the whole proof.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% We show that the function $g_m:\bit^m\to \bit^{l'(m)}$ defined by
+%     \[
+%         g_m(k\concat x) \triangleq  {f}_{k}(x) \quad \textrm{for } k\in \bit^{l(n)}, x\in\bit^n
+%         \quad \textrm{where } n=l'(m)
+%     \]
+%     is OW.
+
+%     To show this, there are two properties to prove: (1) $g_m$ is polynomial-time computable, and (2) $g_m$ can be inverted with only negligible probability by any PPT adversary. 
+
+%     To see (1) holds, note that since $f$ can be computed in $\poly(n)$ time (as it is a PRF) where $n=l'(m)$, $g_m$ can be computed in $\poly(l'(m))=(\poly(m))$ time if $l'(m)$ is a polynomial of $m$. Therefore, it suffices to show that $l'(m)=\Theta(m^{c'})$ for some $c'\gt 0$. Specifically, we show that this indeed holds for $c'=\frac{1}{\max(1,c)}\gt 0$.
+%     \begin{claim}
+%         $l'(m)=\Theta(m^{c'})$ where $c'=\frac{1}{\max(1,c)}\gt 0$.
+%     \end{claim}
+%     \begin{proof}
+%         Since $l(n)=\Theta(n^c)$, there exist $a,b\gt 0$ and $N\in\Nbb$ such that $an^c\le l(n)\le bn^c$ for all $n\ge N$. Observe that
+%         \[
+%             m=l(l'(m))+l'(m)\le b(l'(m))^c+l'(m)\le b'(l'(m))^{\max(1,c)}
+%             \implies  l'(m)\ge b'^{-\frac{1}{\max(1,c)}} m^{\frac{1}{max(1,c)}}
+%         \]
+%         for all $m\ge \max(\max_{n\lt N}(l(n)+n)+1, N')$ and some $b'\gt 0$, where $b'\gt 0$ and $N'\in\Nbb$ are such that $bn^c+n\le b'n^{\max(1,c)}$ for all $n\ge N'$ (which exist because $bn^c+n=\Theta(n^{\max(1,c)})$ for $b\gt 0$). Conversely, observe also that 
+%         \[
+%             m=l(l'(m))+l'(m)\ge a(l'(m))^c+l'(m)\ge a'(l'(m))^{\max(1,c)}
+%             \implies  l'(m)\le a'^{-\frac{1}{\max(1,c)}} m^{\frac{1}{max(1,c)}}
+%         \]
+%         for all $m\ge \max(\max_{n\lt N}(l(n)+n)+1, N'')$ and some $a'\gt 0$, where $a'\gt 0$ and $N''\in\Nbb$ are such that $an^c+n\ge a'n^{\max(1,c)}$ for all $n\ge N''$ (which exist because $an^c+n=\Theta(n^{\max(1,c)})$ for $a\gt 0$).
+%         Combining the two, we conclude that for all $m\ge \max(\max_{n\lt N}(l(n)+n)+1, N', N'')$,
+%         \[
+%             b'^{-\frac{1}{\max(1,c)}} m^{\frac{1}{max(1,c)}}\le l'(m)\le a'^{-\frac{1}{\max(1,c)}} m^{\frac{1}{max(1,c)}},
+%         \] 
+%         which implies $l'(m)=\Theta(n^{c'})$ where $c'=\frac{1}{max(1,c)}\gt 0$ as $c\gt 0$.
+%     \end{proof}
+
+
+%     To see (2) holds, we prove it by contradiction. Suppose to the contrary that there exists a PPT adversary $\Adv^{OW}$ that wins the following inverting game of $g_m$, denoted $\Game$, with probability $\epsilon(m)$ for all $m\in\Nbb$, where $\epsilon$ is nonnegligible.
+%     {
+%         \[
+%             \begin{array}{@{} c c c @{}}
+%             \Ch & & \Adv^{OW} \\
+%             x\sample \bit^m & & \\
+%             & \XR{(1^m, y\coloneqq g_m(x))} & \\
+%             & \XL{x'} & \\
+%             \multicolumn{3}{c}{\text{$\Adv^{OW}$ wins if $g_m(x') = g_m(x)$}}
+%             \end{array}
+%         \]
+%         \captionof{figure}{Game $\Game$}
+%         \label{fig:p3-game1}
+%     }
+
+%     By abusing $\Adv^{OW}$, we construct as follows a PPT oracle distinguisher (a reduction) $\Rcal$ that distinguishes oracle access to $f_k$ (for uniform $k\Usample \bit^{l(n)}$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage: On input $1^n$, $\Rcal$ uniformly samples $x\Usample\bit^n$, makes a query $x$ to the challenger, receives $y$ as the answer, runs $\Adv^{OW}$ on input $(1^{l(n)+n}, y)$, and receives as output $k'\concat x'$, where $k'\in\bit^{l(n)}$ and $x'\in\bit^n$. Finally, $\Rcal$ outputs $0$ if $f_{k'}(x)=y$ (i.e., if $\Adv^{OW}$ has successfully inverted $y=f_{k}(x)=g_{l(n)+n}(k\concat x)$ for some $k\Usample\bit^{l(n)}$); otherwise, $\Rcal$ outputs a uniformly  random bit. We illustrate $\Rcal$ in the following distinguishing game $\Game'$ of oracle accesses to $f_{U_n}$ and $U_{\func_n}$.
+%     {
+%         \[
+%             \begin{array}{@{} c c c c c@{}}
+%             \Ch & & \Rcal & & \Adv^{OW} \\
+%             b\Usample\bit & & & & \\
+%             k\Usample\bit^{l(n)},\; H\Usample \func_n & & & & \\
+%             \Ocal \coloneqq \begin{cases}
+%                 f_{k}, &b=0\\
+%                 H, &b=1
+%             \end{cases} & & & & \\
+%             & \XR{1^n} & &  & \\
+%             & & x\Usample\bit^n & & \\
+%             & \XL{x} & &  & \\
+%             & \XR{y= \Ocal(x)} & & & \\
+%             & & & \XR{(1^{l(n)+n}, y)} & \\
+%             & & & \XL{k'\concat x'} & \\
+%             & & b'\begin{cases}
+%                 \coloneqq 0, & \textrm{if } f_{k'}(x)=y\\
+%                 \Usample \bit,  &\textrm{otherwise}
+%             \end{cases} & & \\
+%             & \XL{b'} & & & \\
+%             \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+%             \end{array}
+%         \]
+%         \captionof{figure}{Game $\Game'$}
+%         \label{fig:p3-game2}
+%     }
+
+%     Clearly $\Rcal$ runs in PPT since $\Adv^{OW}$ runs in time $\poly(l(n)+n)=\Theta(\poly(n^c+n))=\Theta(\poly(n))$ and $f$ runs in time $\poly(n)$ (as $f$ is a PRF). To see that $\Rcal$ distinguishes oracle accesses to $f_{U_n}$ and $U_{\func_n}$ with nonnegligible advantage, we instead show that $\Rcal$ wins $\Game'$ with nonnegligible advantage. Observe that:
+%     \begin{itemize}
+%         \item If $b=0$ and thus $\Ocal = f_k$ for uniform $k\Usample\bit^{l(n)}$, then
+%         \[
+%             \Pr_{k\Usample\bit^{l(n)}}\left[ x'=x \land f_{k'}(x)=y \right]
+%             =\Pr_{k\Usample\bit^{l(n)}}\left[ x'=x \land f_{k'}(x)=y \right]
+%         \]
+%         \begin{align*}
+%             \Pr_{k\Usample\bit^{l(n)}}\left[ \Rcal^{f_k} \textrm{ wins } \Game' \right]
+%             &=\Pr_{k\Usample\bit^{l(n)}}\left[ \Rcal^{f_k} \textrm{ wins} \right]
+%         \end{align*}
+%     \end{itemize}
+    
+%     \begin{align*}
+%         \Pr\left[\Rcal\textrm{ wins } \Game'\right]
+%     \end{align*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[b]
+    Assume that there exists a PRG $G_n: \bit^n\to \bit^{l(n)}$. By expanding/truncating $G_n$, we can construct a PRG $G'_n: \bit^n\to \bit^{2n}$, which we will work with in this subproblem.
+    We show that $G'_n$ is also a OWF. To show this, there are two properties to prove: (1) $G'_n$ is polynomial-time computable, and (2) $G'_n$ can be inverted with only negligible probability by any PPT adversary. Note that (1) trivially holds as $G'_n$ is also a PRG, so it remains to show (2).
+
+    We prove (2) by contradiction. Suppose to the contrary that there exists a PPT adversary $\Adv^{OW}$ that wins the following inverting game of $G'_n$, denoted $\Game$, with probability $\epsilon(n)$ for all $n\in\Nbb$ where $\epsilon$ is nonnegligible.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{OW} \\
+            x\sample \bit^n & & \\
+            & \XR{(1^n, y\coloneqq G'_n(x))} & \\
+            & \XL{x'} & \\
+            \multicolumn{3}{c}{\text{$\Adv^{OW}$ wins if $G'_n(x') = G'_n(x)$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p3-game3}
+    }
+
+    By abusing $\Adv^{OW}$, we construct a PPT distinguisher (a reduction) $\Rcal$ that distinguishes between $\ensemble{G'_n(U_n)}{n}$ and $\ensemble{U_{2n}}{n}$ with nonnegligible advantage for all $n\in\Nbb$, as shown in the following distinguishing game $\Game'$ of $\ensemble{G'_n(U_n)}{n}$ and $\ensemble{U_{2n}}{n}$.
+    Namely, on input $y\in\bit^{2n}$, $\Rcal$ runs $\Adv^{OW}$ on input $(1^n, y)$ and receives as output $x'$ from $\Adv^{OW}$. Finally,  $\Rcal$ outputs $0$ if $G'_n(x')=y$, and a uniformly  random bit otherwise.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & \Adv^{OW} \\
+            b \Usample \bit & & & & \\
+            y \sample \begin{cases} 
+                G'_n(U_n), &b = 0 \\
+                U_{2n}, &b = 1 
+            \end{cases} & & & & \\
+            & \XR{y} & & & \\
+            & & & \XR{(1^n, y)} & \\
+            & & &\XL{x'} & \\
+            & & b' \begin{cases}
+                \coloneqq 0, & G'_n(x')=y\\
+                \Usample\bit, & G'_n(x')\neq y
+            \end{cases} & & \\
+            & \XL{b'} & & & \\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $\Game'$}
+        \label{fig:p3-game4}
+    }
+    Clearly, $\Rcal$ is a PPT algorithm since $\Adv^{OW}$ is a PPT algorithm. We are now left to show that $\Rcal$ wins $\Game'$ with nonnegligible advantage. To see this, observe that for all $n\in\Nbb$
+    \begin{equation}\label{eq:p3-2-1}
+        \Pr_{y \sample G'_n(U_n)}\left[G'_n(x')=y  \right]
+        = \Pr_{x \Usample \bit^n}\left[G'_n(x')=G'_n(x) \right]
+        = \Pr_{x \Usample \bit^n}\left[\Adv^{OW} \textrm{ wins } \Game \right]
+        =\epsilon(n)
+    \end{equation}
+    and that for all $n\in\Nbb$
+    \begin{equation}\label{eq:p3-2-2}
+        \Pr_{y \sample U_{2n}}\left[G'_n(x')=y  \right]
+        =\Pr_{y \sample U_{2n}}\left[G'_n(\Adv^{OW}(1^n, y))=y \right]
+        =\Pr_{y \sample U_{2n}}\left[y\in \mathop{\textrm{im}} (G'_n)\right]
+        =\frac{\abs*{\mathop{\textrm{im}} (G'_n)}}{\abs*{\bit^{2n}}}
+        \le \frac{\abs*{\mathop{\textrm{dom}} (G'_n)}}{\abs*{\bit^{2n}}}
+        = \frac{2^n}{2^{2n}} 
+        = 2^{-n}. 
+    \end{equation}
+    We then calculate a lower bound of the advantage of $\Rcal$ in $\Game'$, for all $n\in\Nbb$, as follows:
+    \begin{align*}
+        &\Pr_{b\Usample\bit, y \sample \left.\begin{cases} 
+                G'_n(U_n), &b = 0 \\
+                U_{2n}, &b = 1 
+            \end{cases}\right\}}\left[ \Rcal \textrm{ wins } \Game' \right]\\
+        =&\Pr_{b\Usample\bit, y \sample \left.\begin{cases} 
+                G'_n(U_n), &b = 0 \\
+                U_{2n}, &b = 1 
+            \end{cases}\right\}}\left[ b'=b \right]\\
+        =&\Pr_{b\Usample\bit}[b=0]\Pr_{y \sample G'_n(U_n)}\left[b'=0 \mid b=0 \right]
+        + \Pr_{b\Usample\bit}[b=1]\Pr_{y \sample U_{2n}}\left[b'=1 \mid b=1 \right]\\
+        =&\frac{1}{2}\Pr_{y \sample G'_n(U_n)}\left[b'=0  \right]
+        + \frac{1}{2}\Pr_{y \sample U_{2n}}\left[b'=1 \right]\\
+        =&\frac{1}{2} \left(\Pr_{y \sample G'_n(U_n)}\left[G'_n(x')=y  \right]\cdot 1 + \left(1- \Pr_{y \sample G'_n(U_n)}\left[G'_n(x')=y  \right]\right) \cdot \frac{1}{2} \right)\\
+        &\quad +\frac{1}{2} \left(\Pr_{y \sample U_{2n}}\left[G'_n(x')=y \right]\cdot 0 + \left(1- \Pr_{y \sample U_{2n}}\left[G'_n(x')=y \right]\right) \cdot \frac{1}{2} \right)\\
+        \ge&\frac{1}{2} \left(\epsilon(n)\cdot 1 + \left(1- \epsilon(n)\right) \cdot \frac{1}{2} \right)
+        +\frac{1}{2} \left(0+\left(1- 2^{-n} \right) \cdot \frac{1}{2} \right)
+        \qquad (\textrm{by \eqref{eq:p3-2-1} and \eqref{eq:p3-2-2}})\\
+        =& \frac{1}{2}+\left(\frac{1}{4}\epsilon(n)-2^{-n-2}\right).
+    \end{align*}
+    Notice that $\frac{1}{4}\epsilon(n)$ is nonnegligible whereas $2^{-n-2}$ is negligible, so $\frac{1}{4}\epsilon(n)-2^{-n-2}$ is nonnegligible.
+
+    As shown above, the PPT distinguisher $\Rcal$ distinguishes between $\ensemble{G'_n(U_n)}{n}$ and $\ensemble{U_{2n}}{n}$ with nonnegligible advantage for all $n\in\Nbb$. This implies $\ensemble{G'_n(U_n)}{n}$ is not pseudorandom and thus $G'_n$ is not a PRG, contradicting the fact that $G'_n$ is. We have thus completed the proof of (2), finishing the whole proof.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[c]
+    Assume that there exists a PRF $f: \bit^{l(n)}\times \bit^n\to \bit^n$ where  $l(n)=\Theta(n^c)$ for some constant $c\gt 0$. As before, define an ``inverse'' function $l'$ of $l$ by
+    \[
+        l'(m)\triangleq \min\{n\in \Nbb \mid l(n)=m\}.
+    \]
+    Note that we have already proven in \autoref{claim:p3-1-1} that $l'(m)=\Theta(m^{c'})$ for some $c'\gt 0$.
+
+    We show that the function $G_m:\bit^m\to \bit^{m+1}$ defined by
+    \[
+        G_m(k) \triangleq  ({f}_{k}(0_2))_{[1]}\concat  ({f}_{k}(1_2))_{[1]}\concat \ldots \concat ({f}_{k}((m)_2))_{[1]},
+    \]
+    where $(x)_2$ denotes the $l'(m)$-bit representation of $x$ and $(x)_{[i]}$ denotes the $i$th bit of $x$, is a PRG. Note that we define $G_m$ for only those $m\in \Nbb$ such that $m$ is representable in $l'(m)$ bits (i.e., $m\le 2^{l'(m)}-1$), which holds for sufficiently large $m$ since $l'(m)=\Theta(m^{c'})$.
+    
+    To show this, there are three properties to prove: (1) $G_m$ is deterministic and polynomial-time computable, (2) $|G_m(x)|\gt |x|$ for all $x$, and (3) $\ensemble{G_m(U_m)}{m}$ is pseudorandom.
+
+    Firstly, to see (1) holds, note that since $l'(m)=\Theta(m^{c'})$ and $f_k:\bit^n\to\bit^n$ can be computed in $\poly(n)$ time (as $f$ is a PRF) where $n=l'(m)$,  $G_m$ can be computed in time $\poly(l'(m))(m+1)=O(\poly(m))$, as desired.
+    Besides, (2) is trivial.
+    
+    To see (3) holds, we prove it by contradiction. Suppose to the contrary that there exists a PPT distinguisher $D$ such that
+    \begin{equation}\label{eq:p3-3-1}
+        \epsilon(m) \triangleq \abs*{\Pr\left[D(G_m(U_m)) =1\right] - \Pr\left[D(U_{m+1}) =1\right]}
+    \end{equation}
+    is nonnegligible. Equivalently speaking, $D$ wins the following distinguishing game of $\ensemble{G_m(U_m)}{m}$ and $\ensemble{U_{m+1}}{m}$, denoted $\Game$, with probability $\frac{1}{2}+\frac{1}{2}\epsilon(m)$ for all $m\in\Nbb$, where $\epsilon$ is nonnegligible.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & D \\
+            b\sample \bit & & \\
+            y\sample \begin{cases}
+                G_m(U_m), & b=0\\
+                U_{m+1}, & b=1
+            \end{cases}& & \\
+            & \XR{y} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p3-game5}
+    }
+    By abusing $D$, we construct a PPT oracle distinguisher (a reduction) $\Rcal$ that, for all $n\in\Nbb$ such that $n=l'(l(n))$ (which are infinity many), distinguishes oracle access to $f_k$ (for uniform $k\Usample \bit^{l(n)}$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage, as shown in the following distinguishing game $\Game'$ of oracle accesses to $f_{U_n}$ and $U_{\func_n}$
+    Namely, on input $1^n$, $\Rcal$ makes queries $0_2,1_2,\ldots,(l(n))_2$ to the challenger, receives as the answers $y_0=\Ocal(0_2),y_1=\Ocal(1_2),\ldots,y_{l(n)}=\Ocal(l(n))_2)$, runs $D$ on input $(y_0)_{[1]}\concat\ldots\concat(y_{l(n)})_{[1]}$. When $D$ terminates, $\Rcal$ receives as output a bit $b'$ from $D$ and directly outputs $b'$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & D \\
+            b\Usample\bit & & & & \\
+            k\Usample\bit^{l(n)},\; H\Usample \func_n & & & & \\
+            \Ocal \coloneqq \begin{cases}
+                f_{k}, &b=0\\
+                H, &b=1
+            \end{cases} & & & & \\
+            & \XR{1^n} & &  & \\
+            & \XL{0_2} & &  & \\
+            & \XR{y_0= \Ocal(0_2)} & & & \\
+            & \vdots & &  & \\
+            & \XL{(l(n))_2} & &  & \\
+            & \XR{y_{l(n)}= \Ocal((l(n))_2)} & & & \\
+            & & & \XR{(y_0)_{[1]}\concat\ldots\concat(y_{l(n)})_{[1]}} & \\
+            & & & \XL{b'} & \\
+            & \XL{b'} & & & \\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game'$}
+        \label{fig:p3-game6}
+    }
+
+    Clearly $\Rcal$ runs in PPT since (i) $D$ runs in time $\poly(l(n))=\poly(\Theta(n^c))=O(\poly(n))$, (ii) $f_k$ can be computed in $\poly(n)$ time (as $f$ is a PRF), and (iii) $l(n)+1=\Theta(n^c)+1=O(\poly(n))$ queries are made. Summing up the run time of each component, we can verify that $\Rcal$ in total runs in time
+    \[
+        \poly(n)\cdot O(\poly(n))+ O(\poly(n)) = O(\poly(n)).
+    \]
+    
+    To see that for all $n\in\Nbb$ such that $n=l'(l(n))$, $\Rcal$ distinguishes oracle accesses to $f_{U_n}$ and $U_{\func_n}$ with nonnegligible advantage, observe that for all $n\in\Nbb$ such that $n=l'(l(n))$,
+    \begin{align}\label{eq:p3-3-2}
+        \Pr_{k\Usample\bit^{l(n)}}\left[ \Rcal^{f_k}(1^n)=1  \right]
+        &= \Pr_{k\Usample\bit^{l(n)}}\left[ D\left( (f_k(0_2))_{[1]}\concat\ldots\concat(f_k((l(n))_2))_{[1]} \right)=1  \right] \notag\\
+        &= \Pr_{k\Usample\bit^{l(n)}}\left[ D\left( G_{l(n)}(k) \right)=1  \right]\notag\\
+        &= \Pr\left[ D\left( G_{l(n)}(U_{l(n)}) \right)=1  \right],
+    \end{align}
+    and
+    \begin{align}\label{eq:p3-3-3}
+        \Pr_{H\Usample\func_n}\left[ \Rcal^{H}(1^n)=1 \right]
+        &= \Pr_{H\Usample\func_n}\left[ D\left( (H(0_2))_{[1]}\concat\ldots\concat(H((l(n))_2))_{[1]} \right)=1  \right]\notag\\
+        &= \Pr\left[ D\left( (U_n^{(1)})_{[1]}\concat\ldots\concat(U_n^{(l(n)+1)})_{[1]} \right)=1  \right]\notag\\
+        &= \Pr\left[ D\left( U_1^{(1)}\concat\ldots\concat U_1^{(l(n)+1)} \right)=1  \right]\notag\\
+        &= \Pr\left[ D\left( U_{l(n)+1}\right)=1  \right].
+    \end{align}
+    Hence, we calculate the advantage of $\Rcal$ in distinguishing between oracle accesses to $f_{U_n}$ and $U_{\func_n}$ as follows:
+    \begin{align*}
+        &\abs*{\Pr_{k\Usample l(n)}\left[\Rcal^{f_k}(1^n)=1\right]-\Pr_{H\Usample \func_n}\left[\Rcal^{H}(1^n)=1\right]}\\
+        =& \abs*{\Pr\left[ D\left( G_{l(n)}(U_{l(n)}) \right)=1  \right] - \Pr\left[ D\left( U_{l(n)+1}\right)=1  \right]}
+        &&\textrm{(by \eqref{eq:p3-3-2} and \eqref{eq:p3-3-3})}\\
+        =& \epsilon(l(n))
+        &&\textrm{(by \eqref{eq:p3-3-1})}
+    \end{align*}
+    for all $n\in\Nbb$ such that $n=l'(l(n))$ (of which there are infinitely many).
+    Notice that since $\epsilon(n)$ is nonnegligible and $l(n)=\Theta(n^c)=O(\poly(n))$, the total advantage $\epsilon(l(n))$ of $\Rcal$ is also nonnegligible. 
+
+    Hence, the existence of the PPT oracle distinguisher $\Rcal$ implies $f$ is not a PRF, contradicting the assumption. We have thus completed the proof of (3), finishing the whole proof.
+\end{answer}

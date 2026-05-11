@@ -1,0 +1,271 @@
+\begin{problem}[Fun with PRF]\label{p2}
+    \leavevmode\par
+    Assuming the existence of PRFs. Prove the statement ``for all pseudorandom functions $F'_{k'}:\bit^n\to \bit^n$ with $k'\in\bit^n$ as the key, $F_k$ is a pseudorandom function'', or provide a counterexample to demonstrate that it is not true.
+    \begin{enumerate}[label=(\alph*)]
+        \item  $F_k(x)= F'_{k_1}(F'_{k_2}(x))$, where $k=(k_1,k_2)$. (Hint: Hybrid argument)
+        \item $F_k(x) = F'_k(x) \oplus x$.
+        \item $F_k(x) = F'_k(x) \oplus k$.
+    \end{enumerate}
+\end{problem}
+
+\begin{answer}[a]
+    We prove $F$ is a PRF by contradiction with hybrid arguments.
+    Suppose to the contrary that $F$ is not a PRF. As $F'$ runs in deterministic polynomial time and so does $F$, it must be that there exists a PPT oracle distinguisher $D$ such that
+    \begin{equation}\label{eq:p2-1-1}
+        \epsilon(n)\triangleq \abs*{\Pr_{k_1,k_2\Usample\bit^n}\left[D^{F'_{k_1}(F'_{k_2}(\cdot))}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1\right]}
+    \end{equation}
+    is nonnegligible, where $\func_n$ denotes the set of all functions mapping $n$-bit strings to $n$-bit strings.
+
+    Define randomized algorithms $\Hcal_i$ for $i=0,1,2$ that, given an oracle $\Ocal$, output an oracle $\Hcal_i(\Ocal)$:
+    \begin{align*}
+        \Hcal_i(\Ocal)
+        &\triangleq F'_{U_n^{(1)}}\circ \cdots \circ F'_{U_n^{(i)}} \circ \Ocal \circ U_{\func_n}^{(i+2)} \circ \cdots \circ U_{\func_n}^{(2)}  \\
+        &\equiv F'_{k_1}\circ \cdots \circ F'_{k_i} \circ \Ocal \circ H_{i+2} \circ \cdots \circ H_{2}  
+        \quad \textrm{where } k_1,\ldots,k_i\Usample\bit^n \textrm{ and } H_{i+2},\ldots,H_{2}\Usample\func_n.
+    \end{align*}
+    (Intuitively, $\Hcal_i$ extends the oracle $\Ocal$ to a composition of two functions, with $\Ocal$ being the $i$th one.)
+    We also define ``hybrid distributions'' $\Hyb_i$ for $i=0,1,2$ using $\Hcal$:
+    \begin{equation}\label{eq:p2-1-2}
+        \Hyb_i \triangleq \Hcal_i(U_{\func_n}) \equiv \Hcal(H)\quad \textrm{where } H\Usample\func_n.
+    \end{equation}
+    Observe that for $i=0,1$,
+    \begin{equation}\label{eq:p2-1-3}
+        \Hyb_{i+1} = \Hcal_i(F'_{U_n}).
+    \end{equation}
+    Moreover, note that $\Hyb_0=U_{\func_n}^{(1)}\circ U_{\func_n}^{(2)}$ corresponds to composing two functions uniformly chosen from $\func_n$ and is thus equivalent to the distribution $U_{\func_n}$, which is the same as that of $H$ in \eqref{eq:p2-1-1}; likewise, $\Hyb_2 = F'_{U_n^{(1)}}\circ F'_{U_n^{(2)}}$ is equivalent to the distribution of $F'_{k_1}(F'_{k_2}(\cdot))$ in \eqref{eq:p2-1-1}.
+
+    From this, we construct a PPT oracle distinguisher (a reduction) $\Rcal$, which distinguishes oracle access to $F'_k$ (for uniform $k\Usample \bit^n$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage, by exploiting $D$ as follows: given an oracle $\Ocal$ (along with $1^n$), $\Rcal$ first samples $i\Usample\bit$, passes a modified oracle $\Hcal_i(\Ocal)$ to $D$ (along with $1^n$), and finally outputs what $D^{\Hcal_i(\Ocal)}(1^n)$ outputs.
+
+    Clearly $\Rcal$ runs in PPT. To see that $\Rcal$  distinguishes oracle accesses to $F'_{U_n}$ and $U_{\func_n}$ with nonnegligible advantage, we calculate
+    \begin{align*}
+        &\abs*{\Pr_{k\Usample\bit^n}\left[\Rcal^{F'_k}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[\Rcal^{H}(1^n)=1\right]}\\
+        =&\abs*{\Pr_{k\Usample\bit^n,i\Usample\bit}\left[D^{\Hcal_i(F'_k)}(1^n)=1\right] - \Pr_{H\Usample\func_n,i\Usample\bit}\left[D^{\Hcal_i(H)}(1^n)=1\right]}
+        &&\textrm{(by the construction of $\Rcal$)}\\
+        =&\abs*{\Pr_{i\Usample\bit}\left[D^{\Hyb_{i+1}}(1^n)=1\right] - \Pr_{i\Usample\bit}\left[D^{\Hyb_i}(1^n)=1\right]}
+        &&\textrm{(by \eqref{eq:p2-1-2} and \eqref{eq:p2-1-3})}\\
+        =&\abs*{\sum_{i=0}^1 \frac{1}{2} \Pr\left[D^{\Hyb_{i+1}}(1^n)=1\right] - \sum_{i=0}^1 \frac{1}{2} \Pr\left[D^{\Hyb_i}(1^n)=1\right]}\\
+        =&\frac{1}{2} \abs*{\sum_{i=0}^1 \left(  \Pr\left[D^{\Hyb_{i+1}}(1^n)=1\right] - \Pr\left[D^{\Hyb_i}(1^n)=1\right] \right) }\\
+        =&\frac{1}{2} \abs*{  \Pr\left[D^{\Hyb_{2}}(1^n)=1\right] - \Pr\left[D^{\Hyb_0}(1^n)=1\right] }\\
+        =&\frac{1}{2} \abs*{\Pr_{k_1,k_2\Usample\bit^n}\left[D^{F'_{k_1}(F'_{k_2}(\cdot))}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1\right]}
+        && \textrm{(by the observation we made above)}\\
+        =& \frac{\epsilon(n)}{2},
+    \end{align*}
+    which is nonnegligible by assumption.
+
+    Hence, the existence of the PPT oracle distinguisher $\Rcal$ implies $F'$ is not a PRF, which is a contradiction. This completes our proof.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[b]
+    We prove $F$ is a PRF by contradiction.
+    Suppose to the contrary that $F$ is not a PRF. As $F'$ runs in deterministic polynomial time and so does $F$, it must be that there exists a PPT oracle distinguisher $D$ such that
+    \begin{align}\label{eq:p2-2-1}
+        \epsilon(n)&\triangleq \abs*{\Pr_{k\Usample\bit^n}\left[D^{F_k}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1\right]} \notag\\
+        &=\abs*{\Pr_{k\Usample\bit^n}\left[D^{x\mapsto F'_k(x)\oplus x}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1\right]}
+    \end{align}
+    is nonnegligible, where $\func_n$ denotes the set of all functions mapping $n$-bit strings to $n$-bit strings.
+
+    \begin{intuition}
+        In the reduction, the distinguisher (as a subroutine) will give us $x$ for each query. Knowing $x$, the reduction can thereby generate $F_k(x)$ from $F'_k(x)$, whose value can be obtained though querying the challenger. 
+    \end{intuition}
+
+    From this, we construct a PPT oracle distinguisher (a reduction) $\Rcal$, which distinguishes oracle access to $F'_k$ (for uniform $k\Usample \bit^n$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage, by exploiting $D$ as follows: On input $1^n$, $\Rcal$ runs $D(1^n)$. Whenever $D$ queries $\Rcal$ on $x_i$, $\Rcal$ in turn queries the challenger on $x_i$, receives $y_i=\Ocal(x_i)$ from the challenger, and then answer $y_i\oplus x_i=\Ocal(x_i)\oplus x_i$ to $D$. Finally, when execution of $D$ is done, output the bit returned by $D$. Equivalently, $\Rcal$ wins the following distinguishing game $\Game$ of oracle accesses to $F'_{U_n}$ and $U_{\func_n}$ with nonnegligible advantage:
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & D \\
+            b\Usample\bit & & & & \\
+            k\Usample\bit^n,\; H\Usample \func_n & & & & \\
+            \Ocal \coloneqq \begin{cases}
+                F'_{k}, &b=0\\
+                H, &b=1
+            \end{cases} & & & & \\
+            & \XR{1^n} & & \XR{1^n} & \\
+            & \XL{x_1} & & \XL{x_1} & \\
+            & \XR{\Ocal(x_1)} & & \XR{\Ocal(x_1)\oplus x_1} & \\
+            & \vdots & & \vdots & \\
+            & \XL{x_q} & & \XL{x_q} & \\
+            & \XR{\Ocal(x_q)} & & \XR{\Ocal(x_q)\oplus x_q} & \\
+            & \XL{b'} & & \XL{b'} & \\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p2-game1}
+    }
+
+    Clearly $\Rcal$ runs in PPT. To see $\Rcal$ wins $\Game$ with nonnegligible advantage, observe that:
+    \begin{itemize}
+        \item If $\Ocal \coloneqq F'_k$ for uniform $k\Usample\bit^n$, then the answers it gives to $D$ are distributed exactly as if $D$ were interacting with an oracle $x\mapsto F'_k(x)\oplus x$  where $k\Usample \bit^n$.
+        
+        \item If $\Ocal \coloneqq H$ for $H$ chosen uniformly from $\func_n$, then 
+        \begin{enumerate}
+            \item for any query $x\in \bit^n$, since $H$ is uniformly chosen from $\func_n$ and therefore $H(x)$ is uniform, the answer $H(x)\oplus x$ is also uniform;
+            \item all values of the function $x\mapsto H(x)\oplus x$ (which is a random variable), namely $\{H(x)\oplus x\}_{x\in\bit^n}$, are mutually independent since $H$ is uniformly chosen from $\func_n$.
+        \end{enumerate}
+        This implies the function $x\mapsto H(x)\oplus x$ is uniformly distributed over $\func_n$, meaning that the answers $\Rcal$ gives to $D$ are distributed exactly as if $D$ were interacting with an oracle uniformly chosen from $\func_n$.
+    \end{itemize}
+    In other words, given the oracle $\Ocal$, the oracle $x\mapsto \Ocal(x)\oplus x$ that $\Rcal$ gives to $D$ is distributed identically to what $D$ expects. Using the observation above, we therefore calculate the advantage of $\Rcal$ in distinguishing between the two oracle accesses as follows.
+    \begin{align*}
+        &\abs*{\Pr_{k\Usample\bit^n}\left[\Rcal^{F'_k}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[\Rcal^{H}(1^n)=1\right]}\\
+        =& \abs*{\Pr_{k\Usample\bit^n}\left[D^{x\mapsto F'_k(x)\oplus x}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{x\mapsto H(x)\oplus x}(1^n)=1\right]}
+        && \textrm{(by the construction of $\Rcal$)}\\
+        =& \abs*{\Pr_{k\Usample\bit^n}\left[D^{x\mapsto F'_k(x)\oplus x}(1^n)=1\right] - \Pr_{H'\Usample\func_n}\left[D^{H'}(1^n)=1\right]}
+        && \textrm{(by the observation above)}\\
+        =& \epsilon(n), && \textrm{(by \eqref{eq:p2-2-1})}
+    \end{align*}
+    which is nonnegligible by assumption. 
+    
+    Hence, the existence of the PPT oracle distinguisher $\Rcal$ implies $F'$ is not a PRF, which is a contradiction. This completes our proof.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[c]
+    $F$ is not a PRF. We show this by giving a counterexample.\\
+    Assume that there exists a PRF $f_k:\bit^n\to\bit^n$ with key $k\in \bit^{n-1}$. We show that (1) the following keyed function $F'_k:\bit^n\to \bit^n$ with key $k\in\bit^n$ is a PRF whereas (2) $F_k:\bit^n\to \bit^n$ with key $k\in\bit^n$, defined by $F_k(x)\triangleq F'_k(x)\oplus k$, is not.
+    \[
+        F'_{k_1\concat k_2}(x)\triangleq \begin{cases}
+            f_{k_1}(x)_{[1:n-1]} \concat k_2 &\textrm{if } x=0^n\\
+            f_{k_1}(x) &\textrm{if } x\neq 0^n\\
+        \end{cases}
+        \quad\textrm{for all } k_1\in\bit^{n-1}, k_2\in\bit.
+    \]
+    \begin{intuition}
+        This construction is similar to that of PRG $G(x)\triangleq G'(x_{[1:\frac{n}{2}]})\concat x_{[\frac{n}{2}+1:n]}$, given a PRG $G'$. Both constructions expose part of their randomness source (key of PRF and input of PRG) in output, as the definitions of PRG and PRF allow key/input to appear in output as long as the outputs as a whole are pseudorandom (nearly uniformly random). 
+        
+        Note that for $F'_{k_1\concat k_2}$ to become a PRF, we cannot embed part of the key, $k_2$, in more than one outputs (i.e., $F'_{k_1\concat k_2}(x)=f_{k_1}(x)_{[1:n-1]} \concat k_2$ for multiple $x\in\bit^n$), since otherwise the outputs as a whole would not be pseudorandom (i.e. indistinguishable from uniformly random strings). 
+    \end{intuition}
+
+    \begin{claim}\label{claim:p2-3-1}
+         $F'_k:\bit^n\to \bit^n$ with key $k\in\bit^n$ is a PRF.
+    \end{claim}
+    \begin{proof}
+        Suppose to the contrary that $F'$ is not a PRF. As $f$ runs in deterministic polynomial time and so does $F'$, it must be that there exists a PPT oracle distinguisher $D$ such that
+        \begin{equation}\label{eq:p2-3-1}
+            \epsilon(n)\triangleq \abs*{\Pr_{k\Usample\bit^n}\left[D^{F'_k}(1^n)=1\right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1\right]} 
+        \end{equation}
+        is nonnegligible, where $\func_n$ denotes the set of all functions mapping $n$-bit strings to $n$-bit strings.
+
+        From this, we construct a PPT oracle distinguisher $\Rcal$, which distinguishes oracle access to $f_{k_1}$ (for uniform $k_1\Usample \bit^{n-1}$) from oracle access to a uniform $H\Usample\func_n$ with nonnegligible advantage for all $n\ge 2$, as follows: 
+        \begin{mdframed}[style=simplebox]
+            On input $1^n$, sample the latter part of key $k_2\Usample\bit$ and then run $D(1^n)$. Whenever receiving a query $x_i$ from $D$, query the challenger on $x_i$, receive $\Ocal(x_i)$ from the challenger, and then answer to $D$ $\Ocal(x_i)_{[1:n-1]}\concat k_2$ if $x_i=0^n$ and $\Ocal(x_i)$ otherwise. Finally, when receiving the answer $b'$ from $D$, output $b'$ back to the challenger. 
+        \end{mdframed}
+        \end{proof}\begin{proof}[cont'd]
+        Equivalently, $\Rcal$ wins the following PRF game of $f$ with nonnegligible advantage for all $n\ge 2$:
+        {
+            \[
+                \begin{array}{@{} c c c c c@{}}
+                \Ch & & \Rcal & & D \\
+                b\Usample\bit & & & & \\
+                k_1\Usample\bit^{n-1},\; H\Usample \func_n & & & & \\
+                \Ocal \coloneqq \begin{cases}
+                    f_{k_1}, &b=0\\
+                    H, &b=1
+                \end{cases} & \XR{1^n} & k_2\Usample\bit  & & \\
+                &  &  & \XR{1^n} & \\
+                & \XL{x_1} & & \XL{x_1} & \\
+                & \XR{\Ocal(x_1)} & y_1\coloneqq \begin{cases}
+                    \Ocal(x_1)_{[1:n-1]}\concat k_2 &\textrm{if } x_1=0^n\\
+                    \Ocal(x_1) &\textrm{if } x_1\neq 0^n
+                \end{cases} & \XR{y_1} & \\
+                & \vdots & & \vdots & \\
+                & \XL{x_q} & & \XL{x_q} & \\
+                & \XR{\Ocal(x_q)} & y_q\coloneqq \begin{cases}
+                    \Ocal(x_q)_{[1:n-1]}\concat k_2 &\textrm{if } x_q=0^n\\
+                    \Ocal(x_q) &\textrm{if } x_q\neq 0^n
+                \end{cases} & \XR{y_q} & \\
+                & \XL{b'} & & \XL{b'} & \\
+                \multicolumn{5}{c}{\text{$\Rcal$ wins if $b' = b$}}
+                \end{array}
+            \]
+            \captionof{figure}{PRF game of $f$}
+            \label{fig:p2-game2}
+        }
+        Clearly $\Rcal$ runs in PPT. To see that, for all $n\ge 2$, $\Rcal$ distinguishes oracle accesses to $f_{k_1}$ (for $k_1\Usample \bit^{n-1}$) and $H\Usample\func_n$ with nonnegligible advantage, observe that:
+        \begin{itemize}
+            \item If $\Ocal \coloneqq f_{k_1}$ for uniform $k_1\Usample\bit^{n-1}$, then on each query $x_i\in\bit^n$, the answer $\Rcal$ gives to $D$ is exactly $F'_{k_1\concat k_2}(x_i)$, where $k_2\Usample\bit$ is chosen by $\Rcal$ and thus fixed throughout the game. This means all answers that $D$ receives are distributed exactly as if $D$ were interacting with an oracle $F'_{k_1\concat k_2}$ for some uniform $k_1\Usample\bit^{n-1}$ and $k_2\Usample\bit$.
+            
+            \item If $\Ocal \coloneqq H$ for $H$ chosen uniformly from $\func_n$, then on each query $x_i\in\bit^n$ (including $0^n$), since $H\Usample\func_n$ and $k_2\Usample\bit$ are uniformly and independently chosen, all possible answers, namely $\{H(x)\mid x\in\bit^n\setminus\{0\}\}\cup \{H(0^n)_{[1:n-1]}\concat k_2\}$, are uniformly random and mutually independent. Notice that $H(0^n)_{[1:n-1]}\concat k_2$ is also independent of all the other possible answers.             
+            This implies all answers that $D$ receives are distributed exactly as if $D$ were interacting with an oracle uniformly chosen from $\func_n$.
+        \end{itemize}
+        Putting both together, for all $n\ge 2$, the advantage of $\Rcal$ is thus
+        \begin{align*}
+            &\abs*{\Pr_{k_1\Usample\bit^{n-1}}\left[\Rcal^{f_{k_1}}(1^n)=1 \right] - \Pr_{H\Usample\func_n}\left[\Rcal^{H}(1^n)=1 \right]}\\
+            =&\abs*{\Pr_{k_1\Usample\bit^{n-1},k_2\Usample\bit}\left[D^{F'_{k_1\concat k_2}}(1^n)=1 \right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1 \right]}\\
+            =&\abs*{\Pr_{k\Usample\bit^n}\left[D^{F'_{k}}(1^n)=1 \right] - \Pr_{H\Usample\func_n}\left[D^{H}(1^n)=1 \right]}
+            = \epsilon(n), \qquad \textrm{(by \eqref{eq:p2-3-1})}
+        \end{align*}
+        which is nonnegligible by assumption. This breaks the pseudorandomness of $f$, implying that $f$ is not a PRF, which is a contradiction. Hence $F'$ must be a PRF, as claimed.
+    \end{proof}
+
+
+    \begin{claim}
+        $F_k:\bit^n\to \bit^n$ with key $k\in\bit^n$, defined by $F_k(x)\triangleq F'_k(x)\oplus k$, is not a PRF.
+    \end{claim}
+    \begin{proof}
+        To show this, we simply construct a naive PPT oracle distinguisher $D$ that breaks the pseudorandomness of $F$, as shown below.
+        \begin{mdframed}[style=simplebox]
+            On input $1^n$, make a query $0^n$ to the challenger and receive as answer $\Ocal(0^n)$. If the last bit of $\Ocal(0^n)$ is $0$, then output $b'=0$; otherwise, output $b'=1$.
+        \end{mdframed}
+        \begin{observation}\label{obs:p2-3-1}
+            For any $k=k_1\concat k_2 \in\bit^n$ (where $k_1\in\bit^{n-1}, k_2\in\bit$),
+            \[F_{k}(0^n) = F_{k_1\concat k_2}(0^n)\triangleq F'_{k_1\concat k_2}(0^n)\oplus (k_1\concat k_2) \triangleq (f_{k_1}(0^n)_{[1:n-1]} \concat k_2) \oplus (k_1\concat k_2) = (f_{k_1}(0^n)_{[1:n-1]}\oplus k_1)\concat 0.\]
+        \end{observation}
+        We show that $D$ wins the following PRF game $\Game_{\textrm{PRF}}$ of $F$ with nonnegligible advantage for all $n\ge 2$:
+        {
+            \[
+                \begin{array}{@{} c c c @{}}
+                \Ch & & D \\
+                b\Usample\bit & & \\
+                k\Usample\bit^{n},\; H\Usample \func_n & &\\
+                \Ocal \coloneqq \begin{cases}
+                    F_{k}, &b=0\\
+                    H, &b=1
+                \end{cases} & \XR{1^n} &\\
+                & \XL{0^n} & \\
+                & \XR{\Ocal(0^n)} & \\
+                & & b'\coloneqq \begin{cases}
+                    0 &\textrm{if } \Ocal(0^n)_{[n]}=0\\
+                    1 &\textrm{otherwise}
+                \end{cases} \\
+                & \XL{b'} & \\
+                \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+                \end{array}
+            \]
+            \captionof{figure}{Game $\Game_{\textrm{PRF}}$}
+            \label{fig:p2-game3}
+        }
+        Clearly $D$ runs in PPT. Having \autoref{obs:p2-3-1}, we know the win rate of $D$ in $\Game_{\textrm{PRF}}$ for all $n\ge 2$ is:
+        \begin{align*}
+            &\Pr_{b\Usample\bit,k\Usample\bit^{n}, H\Usample \func_n}\left[ D\textrm{ wins } \Game_{\textrm{PRF}} \right]\\
+            =&\underbrace{\Pr_{b\Usample\bit}[b=0]}_{\begin{aligned}=\frac{1}{2}\end{aligned}} \underbrace{\Pr_{k\Usample\bit^{n}}\left[ F_k(0^n)_{[n]}=0\right]}_{\begin{aligned}=1\;\; (\textrm{by \autoref{obs:p2-3-1}})\end{aligned}}
+            + \underbrace{\Pr_{b\Usample\bit}[b=1]}_{\begin{aligned}=\frac{1}{2}\end{aligned}}  \underbrace{\Pr_{H\Usample \func_n}\left[ H(0^n)_{[n]}=1  \right]}_{\begin{aligned}=\frac{1}{2} \;\; (\because H(0^n)\in\bit^n \textrm{ is uniformly random})\end{aligned}}\\
+            =& \frac{1}{2}+\frac{1}{4},
+        \end{align*}
+        where the advantage $\frac{1}{4}$ is nonnegligible.
+
+        This breaks the pseudorandomness of $F$, so $F$ is not a PRF, as claimed.
+    \end{proof}
+
+    These two claims together complete our proof.
+\end{answer}

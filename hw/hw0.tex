@@ -1,0 +1,835 @@
+\vspace{1ex}
+\begin{CJK*}{UTF8}{bsmi} %if you want to use Chinese, use this 
+\noindent Name: 林致中 \\
+Student ID: b11902015\\
+Collaborator: (None)\\% Name & Student ID
+Reference: 
+\begin{enumerate}
+    \item[P1] (None)
+    \item[P2] 
+        \begin{itemize}
+            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_2.pdf}, \texttt{topic\_3.pdf})
+        \end{itemize}
+    \item[P3]
+        \begin{itemize}
+            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_1.pdf})
+        \end{itemize}
+    \item[P4] 
+        \begin{itemize}
+            \item \href{https://www.noahsd.com/crypto_lecture_notes/CS4830_Supplementary_Notes___Examples_of_reductions.pdf}{Examples of reductions for one-way functions by Noah Stephens-Davidowitz}
+        \end{itemize}
+\end{enumerate}
+\end{CJK*}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{wrap}
+\section{P1}
+\end{wrap}
+
+\begin{problem}[Working with negligible functions]\label{p1}
+A non-negative function $\nu \colon \mathbb{N} \to \mathbb{R}$  is negligible 
+if it decreases faster than the inverse of any polynomial; 
+more precisely, for each polynomial $P$ with coefficients in  $ \mathbb{R}$ (and non-negative leading coefficient), there exists some $N\in\mathbb{N}$ such that $\nu(n) <\frac{1}{P(n)}$ whenever $n>N$.  Otherwise, we say that $\nu$ is non-negligible.
+
+\begin{enumerate}[label=(\roman*)]
+    \item Show that  $\nu$ is negligible if and only if for every fixed sufficiently large integer $c$ we have 
+    \[
+    \lim_{n \to \infty} \nu(n) \cdot n^c = 0.
+    \](The displayed condition can be denoted by  $\nu(n) = o(n^{-c})$.)
+\end{enumerate}
+In the following, $\negl(n)$ denotes some arbitrary negligible function, 
+and $\poly(n)$ denotes some arbitrary polynomial in $n$. State whether each of the following functions is negligible or non-negligible, and give a brief justification.
+%(If you are not comfortable with these notion, read Section 4.2 of 
+%Lecture 2 in Peikert’s notes)
+\begin{enumerate}[label=(\roman*)]
+    \setcounter{enumii}{1}
+    \item  $\nu(n) = 1/2^{100 \log n}$.
+    \item  $\nu(n) = n^{- \log \log \log n}$.
+    \item $\nu(n) = \poly(n) \cdot \negl(n)$. 
+    (State whether $\nu$ is always negligible, or not necessarily.)
+    \item $\nu(n) = \negl(n)^{\frac{1}{\poly(n)}}$
+    . (Same instructions as previous item.)
+
+    \item Prove or disprove the following statement: $\nu(n)$ is non-negligible if and only if there exists a polynomial $P$ with coefficients in $\mathbb{R}$ (and non-negative leading coefficient), there exists some $N \in \mathbb{N}$ such that $\nu(n) \geq \frac{1}{P(n)}$ whenever $n>N$.
+
+    \item Given finitely many tuples $(n_i, y_i)\in \mathbb{N}\times  \mathbb{R}$ show that there are always a negligible function $\nu$ and a non-negligible function $f$ such that $\nu(n_i)=f(n_i)=y_i$ for each $i$. Does the same conclusion still hold for infinitely many such tuples?
+
+    \item (I have no time to type in the description of this subproblem, sorry!)
+\end{enumerate}
+\end{problem}
+\begin{proof}[(i)]
+    \phantomsection\label{pf:1-i}
+    To prove the "if" part, suppose for every integer $c\ge N_0$ we have $\lim\limits_{n\to \infty} \nu(n)n^c=0$. Now let $P(n)=a_k n^k +\ldots+a_1 n+a_0 \in \mathbb{R}[n]$ be an arbitrary polynomial with $k\in \mathbb{N}, a_k \gt 0$ (i.e. with non-negative leading coefficient) and define $c\triangleq \max(N_0, k)$. Note that for all 
+    \[ n\gt \left\lceil\max\limits_{i=0,\ldots,k-1} \sqrt[k-i]{\dfrac{k|a_i|}{a_k}}\right\rceil \in \mathbb{N} \]
+    (denoted by $N_1$), we have the inequalities
+    \[ \label{eq:1}
+    \dfrac{a_k}{k}n^k \gt |a_i|n^i, \quad i=0,\ldots,k-1,  \tag{$\ast$}
+    \]
+    which give us the following result:
+    \[\label{eq:4}
+    P(n)=a_k n^k+\sum_{i=0,\ldots,k-1} a_i n^i 
+    \ge a_k n^k-\sum_{i=0,\ldots,k-1} |a_i| n^i
+    = \sum_{i=0,\ldots,k-1} \left(\dfrac{a_k}{k} n^k - |a_i| n^i\right)
+    \overset{\eqref{eq:1}}{\gt} 0. \tag{$\clubsuit$}
+    \]
+    We can then observe that for all $n\gt N_1$, $P(n)$ is in fact bounded by the monomial $2a_kn^c$ since
+    \begin{align*}
+        P(n) &= a_k n^k+\sum_{i=0,\ldots,k-1} a_i n^i\\
+        &\le a_k n^k+\sum_{i=0,\ldots,k-1} |a_i| n^i\\
+        &\lt a_k n^k+\sum_{i=0,\ldots,k-1} \dfrac{a_k}{k}n^k && \text{using \eqref{eq:1}}\\
+        &= 2a_kn^k \le 2a_kn^c,
+    \end{align*}
+    which implies 
+    \[\label{eq:2} 
+    n^{-c}\cdot \dfrac{1}{2a_k}\lt \dfrac{1}{P(n)}. \tag{$\diamond$} 
+    \]
+    (Note also that in the above the properties that result in \eqref{eq:2}: $\forall n\gt N_1(0\lt P(n)\lt 2a_k n^c)$ are actually derived by assuming $k\gt 0$. This is because if $k=0$, it's trivial that $\forall n\gt N_1(0\lt P(n)=a_k\lt 2a_k n^c)$.)\\
+    On the other hand, since $\lim\limits_{n\to \infty} \nu(n)n^c=0$ and $\dfrac{1}{2a_k}\gt 0$, there exists some $N_2\in \mathbb{N}$ such that
+    \[\label{eq:3}
+    \nu(n)n^c=|\nu(n)n^c-0|\lt \dfrac{1}{2a_k} \tag{$\circ$}
+    \]
+    whenever $n\gt N_2$. (Note that $\nu(n)$ is non-negative.)\\
+    Hence, for all $n\gt \max(N_1, N_2)\in \mathbb{N}$, we have the inequality
+    \[
+    \nu(n) \overset{\eqref{eq:3}}{\lt} n^{-c}\cdot \dfrac{1}{2a_k} \overset{\eqref{eq:2}}{\lt} \dfrac{1}{P(n)}.
+    \]
+    This shows that $\nu(n)$ is negligible by definition.\\
+
+    To prove the "only if" part, we assume $\nu(n)$ is negligible and let $c\in \mathbb{N}$. For every $\varepsilon\gt 0$, we know there exists some $N_\varepsilon \in \mathbb{N}$ such that $\nu(n)\lt \dfrac{1}{\varepsilon^{-1}n^c}$ whenever $n\gt N_\varepsilon$ as  $\nu(n)$ is negligible and $\varepsilon^{-1}n^c\in \mathbb{R}[n]$ is a polynomial with non-negative leading coefficient, whence we have
+    \[
+    |\nu(n)n^c-0| = \nu(n)n^c \lt \varepsilon \quad \text{for all} \; n\gt N_\varepsilon
+    \]
+    where the first equality holds since $\nu(n)$ is non-negative.\\
+    Thus, by definition, $\lim\limits_{n\to \infty} \nu(n)n^c = 0$.
+
+\end{proof}
+
+\begin{proof}[(ii)]
+    Non-negligible.\\
+    This is because for any integer $c\ge 100$, 
+    \[ \lim\limits_{n\to \infty} \nu(n)n^c = \lim\limits_{n\to \infty} \dfrac{n^{c}}{2^{100\log n}} = \lim\limits_{n\to \infty} \dfrac{n^{c}}{n^{100}}=1\;\text{or}\; \infty,\] implying $\nu(n)=\Omega(n^{-c})$. This implies $\nu(n)$ is non-negligible since we've shown in \hyperref[pf:1-i]{(i)} that $\nu(n)$ is negligible iff $\nu(n)=o(n^{-c})$ for any sufficiently large integer $c$.
+\end{proof}
+
+\begin{proof}[(iii)]
+    Negligible.\\
+    This is because for any $c\in \mathbb{N}$ and $\varepsilon_c \gt 0$, 
+    \begin{align*}
+        |\nu(n)n^c-0|=\nu(n)n^c&=n^{c-\log\log\log n}\\
+        &\lt n^{c-(c+1)} && \text{since} \; n\gt 2^{2^{2^{c+1}}}\\
+        &= n^{-1} \\
+        &\lt \varepsilon_c && \text{since} \; n\gt \varepsilon_c^{-1}
+    \end{align*}
+    whenever $n\gt \left\lceil\max\left(\varepsilon_c^{-1}, 2^{2^{2^{c+1}}}\right)\right\rceil \in \mathbb{N}$, which, by definition, leads to $\lim\limits_{n\to \infty} \nu(n)n^c = 0$. This implies $\nu(n)$ is negligible since we've shown in \hyperref[pf:1-i]{(i)} that $\nu(n)$ is negligible iff $\lim\limits_{n\to \infty} \nu(n)n^c = 0$ for any sufficiently large integer $c$.
+\end{proof}
+
+
+\begin{proof}[(iv)]
+    Negligible.\\
+    To prove the negligibility, we resort to the basic definition of it this time. Let $\nu(n) \triangleq R(n)\mu(n)$ where $R(n)\in\mathbb{R}[n]$ is a  polynomial with non-negative leading coefficient and $\mu(n)$ be a negligible function. For each polynomial $P(n)\in\mathbb{R}[n]$ with non-negative leading coefficient, since $\mu(n)$ is negligible and $Q(n)\triangleq P(n)R(n)\in \mathbb{R}[n]$ is also a polynomial with non-negative leading coefficient, by definition there exists some $N\in\mathbb{N}$ such that $\mu(n)\lt \dfrac{1}{Q(n)}$ whenever $n\gt N$. It follows that for all $n\gt N$,
+    \[
+    \nu(n)=R(n)\mu(n)\lt R(n)\cdot \dfrac{1}{Q(n)}=R(n)\cdot \dfrac{1}{P(n)R(n)}=\dfrac{1}{P(n)}.
+    \]
+    This, by definition, implies $\nu(n)$ is also negligible.
+\end{proof}
+
+\begin{proof}[(v)]
+    Not necessarily.\\
+    If $\nu(n)\triangleq (2^{-n^2})^\frac{1}{n}=2^{-n}$, then $\nu(n)$ IS negligible since $\lim\limits_{n\to\infty}\nu(n)n^c =\lim\limits_{n\to\infty}\dfrac{n^c}{2^n}=0$ for any integer $c\in\mathbb{N}$ and we've shown in \hyperref[pf:1-i]{(i)} that $\nu(n)$ is negligible iff $\lim\limits_{n\to \infty} \nu(n)n^c = 0$ for any sufficiently large integer $c$.\\
+    However, if $\nu(n)\triangleq (2^{-n^2})^\frac{1}{n^2}=\dfrac{1}{2}$,  then $\nu(n)$ is NON-negligible since $\lim\limits_{n\to\infty}\nu(n)n^c =\lim\limits_{n\to\infty}\dfrac{n^c}{2}=\dfrac{1}{2}\; \text{or}\; \infty\neq 0$ for all integer $c\in\mathbb{N}$ and we've shown in \hyperref[pf:1-i]{(i)} that $\nu(n)$ is negligible iff $\lim\limits_{n\to \infty} \nu(n)n^c = 0$ for any sufficiently large integer $c$.
+\end{proof}
+
+\begin{proof}[(vi)]
+    A counterexample that violates the "only if" part: $\nu(n)\triangleq (-1)^n+1$.\\
+    For the polynomial $P(n)\triangleq n$, it's clear that $\nu(n)=2\not\lt \dfrac{1}{n}=\dfrac{1}{P(n)}$ for all even and positive $n$. Since there are infinitely many such $n$, there is no $N\in \mathbb{N}$ such that $\nu(n)\lt \dfrac{1}{P(n)}$ whenever $n\gt N$. Thus $\nu(n)$ is indeed non-negligible.\\
+    On the other hand, for any polynomial $Q(n)\in\mathbb{R}[n]$ with non-negative leading coefficient, WLOG, suppose that $Q(x)=a_k n^k +\ldots+a_1 n+a_0$ and $k\in\mathbb{N}, a_k\gt 0$, and then it follows from the reasoning for \eqref{eq:4} that for all 
+    \[ n\gt \left\lceil\max\limits_{i=0,\ldots,k-1} \sqrt[k-i]{\dfrac{k|a_i|}{a_k}}\right\rceil \in \mathbb{N} \]
+    (denoted by $N'$), we have \[Q(n)\overset{\eqref{eq:4}}{\gt} 0.\]
+    Now observe that for all odd $n\gt N'$, 
+    \[ \nu(n)=(-1)^n+1=0\lt \dfrac{1}{Q(n)}. \]
+    Since there are infinitely many such $n$, there is no $N\in \mathbb{N}$ such that $\nu(n)\ge \dfrac{1}{Q(n)}$ whenever $n\gt N$.\\
+    Hence the LHS holds while RHS does not.
+\end{proof}
+
+\begin{proof}[(vii)]
+    Let $\nu'$ and $f'$ be an arbitrary negligible function and an arbitrary non-negligible function, respectively (say, for instance, $\nu'(n)=2^{-n}$ and $f'(n)=n^{-1}$).\\
+    For finitely many tuples, say $(n_i, y_i)\in\mathbb{N}\times\mathbb{R}, i=0,1,\ldots,k-1$, we simply define
+    \[
+    \nu(n) \triangleq \begin{cases}
+        y_i & n=n_i \; \text{for some} \; i\\
+        \nu'(n) & \text{otherwise}
+    \end{cases}, \quad
+    f(n) \triangleq \begin{cases}
+        y_i & n=n_i \; \text{for some} \; i\\
+        f'(n) & \text{otherwise}
+    \end{cases}.
+    \]
+    Observe that $\nu(n)=f(n)=y_i$ for each $i$ whereas $\nu$ and $f$ are still negligible and non-negligible, respectively, just as $\nu'$ and $f'$. The reason is that the definition of negligibility only discusses the behavior of functions when $n$ is sufficiently large. Precisely speaking, one can derive the negligibility of $\nu$ by replacing $N$ by $\max(N, \max\limits_{i=0,\ldots,k-1} n_i)$ in the definition of the negligibility of $\nu'$; likewise, the non-negligibility of $f'$ means that there is a polynomial $P(n)$ with coefficients in $\mathbb{R}$ and non-negative leading coefficient such that $f'(n)\ge \dfrac{1}{P(n)}$ at infinitely many integers $n$, which must also hold for $f$ and thus $f$ is also non-negligible.\\
+    However, this is not the case anymore when there are infinitely many tuples, say $(n_i, y_i)\in\mathbb{N}\times\mathbb{R}, i\in I$ where $I$ is an infinite index set. Suppose $y_i=1$ for every $i$ and let $\nu$ be a negligible function. By definition, there is some $N\in \mathbb{N}$ such that $\nu(n)\lt \dfrac{1}{n}$ whenever $n\gt N$. This implies that $\nu(n_i)\lt \dfrac{1}{n_i}\le 1=y_i$ for any positive $n_i$ ($i\in I$). Since $n_i$'s are distinct non-negative integers and $I$ is an infinite set, there must be some $i\in I$ such that $n_i\gt 0$ and thus $\nu(n_i)\neq y_i$, which means the aforementioned conclusion does not hold anymore in this case.
+\end{proof}
+
+%$\overset{\eqref{eq:1}}{=}$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{wrap}
+\section{P2}
+\end{wrap}
+
+\begin{problem}[Large deviation bounds]\label{p2}
+Assume that $X_1, \dots , X_n$ are independent identically distributed (i.i.d.)
+random variables, each taking $1$ with probability $p$ and $0$ with probability $1 \minus p$. 
+The Chernoff’s
+bound says that for all $\epsilon > 0$,
+\[
+\mathrm{Pr}\left[\left|\frac{1}{n} \sum_{i} X_i - p\right| > \epsilon\right] \leq 2e^{\minus n \epsilon^2}.
+\]
+If you are rusty on Chernoff’s bound, read about it, e.g., here or search Google; there are lots of forms of
+the bound, the above being the most convenient for our applications.
+
+\begin{enumerate}[label=(\roman*)]
+    \item How large should $n$ be if we want the average of the $X_i$
+    to be within $\pm \epsilon$ of $p$ with
+    probability at least $1 \minus \delta$? (asymptotic expression for $n$ is enough)
+    \item Imagine we used Chebyshev’s bound instead of Chernoff’s, and if you wish, assume for simplicity that $p = 1/2$. What bound on n would you get then? Do you see any advantage of Chebyshev’s bound over Chernoff’s?
+\end{enumerate}
+\end{problem}
+
+\begin{proof}[(i)]
+    \phantomsection\label{pf:2-i}
+    Observe that
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \le \epsilon\right] 
+    =1-\Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \gt \epsilon\right] 
+    \ge 1- 2e^{-n \epsilon^2},
+    \]
+    where the inequality is given by Chernoff’s bound. Therefore, to arrive via Chernoff’s bound at
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \le \epsilon\right] 
+    \ge 1-\delta, 
+    \]
+    the Chernoff’s bound must be bounded below by $1-\delta$ first, i.e., $ 1- 2e^{-n \epsilon^2} \ge 1-\delta$, from which we deduce the requirement for $n$:
+    \[
+    1- 2e^{-n \epsilon^2} \ge 1-\delta
+    \iff 2e^{-n \epsilon^2} \le \delta
+    \iff n\ge -\epsilon^{-2}\ln(\frac{\delta}{2})
+    = \epsilon^{-2}(\ln(\delta^{-1})+\ln 2) =  \Theta(\epsilon^{-2}\ln(\delta^{-1})).
+    \]
+    Hence $n$ should be $O(\epsilon^{-2}\ln(\delta^{-1}))$.
+\end{proof}
+\begin{proof}[(ii)]
+    Since $X_1,\ldots, X_n$ are independent and Bernoulli distributed with probability $p$, i.e., $X_1,\ldots, X_n\iid \mathrm{Ber}(p)$, we calculate the following:
+    \begin{align*}
+        E[X_i]&=p, & Var[X_i]&=E[X_i^2]-E[X]^2 = p-p^2=p(1-p),\\
+        E\left[\dfrac{1}{n}\sum_{i=1}^n X_i\right]&=\dfrac{1}{n}\sum_{i=1}^nE[X_i]=p & Var\left[\dfrac{1}{n}\sum_{i=1}^n X_i\right]&=\dfrac{1}{n^2}\sum_{i=1}^n Var[X_i]=\dfrac{p(1-p)}{n}.
+    \end{align*}
+    Thus the Chebyshev’s bound says that, for all $\epsilon\gt 0$
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - E\left[\dfrac{1}{n}\sum_{i=1}^n X_i\right]\right| \gt \epsilon\right]  \le \dfrac{Var\left[\dfrac{1}{n}\sum_{i=1}^n X_i\right]}{\epsilon^2},
+    \] 
+    i.e.,
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \gt \epsilon\right]  \le \dfrac{p(1-p)}{n\epsilon^2}.
+    \]
+    
+    Similar to the reasoning in the \hyperref[pf:2-i]{previous problem}, observe that
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \le \epsilon\right] 
+    =1-\Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \gt \epsilon\right] 
+    \ge 1- \dfrac{p(1-p)}{n\epsilon^2},
+    \]
+    where the inequality is given by Chebyshev’s bound. Therefore, to arrive via Chebyshev’s bound at
+    \[
+    \Pr\left[\left|\frac{1}{n} \sum_{i=0}^n X_i - p\right| \le \epsilon\right] 
+    \ge 1-\delta, 
+    \]
+    the Chebyshev’s bound must be bounded below by $1-\delta$ first, i.e., $ 1- \dfrac{p(1-p)}{n\epsilon^2} \ge 1-\delta$, from which we deduce the requirement for $n$:
+    \[
+    1- \dfrac{p(1-p)}{n\epsilon^2} \ge 1-\delta
+    \iff \dfrac{p(1-p)}{n\epsilon^2} \le \delta
+    \iff n\ge p(1-p)\delta^{-1}\epsilon^{-2}
+    \stackrel{\textrm{if }p=\frac{1}{2}}{=} \dfrac{1}{4}(\delta^{-1}\epsilon^{-2}).
+    \]
+    Hence $n$ should be no less than $ p(1-p)\delta^{-1}\epsilon^{-2}$, or $n=O(\delta^{-1}\epsilon^{-2})$ if $p$ is constant.
+
+    We see some advantages of Chernoff’s bound over Chebyshev’s here:
+    \begin{enumerate}
+        \item Chernoff’s bound is tighter than Chebyshev’s, as the former decreases exponentially, being much faster than the latter, which decreases polynomially, both as functions of $n$. Meanwhile, the lower bound for $n$ deduced from Chernoff’s bound grows much slower and is thus tighter than that deduced from Chebyshev’s: the former gives $O(\epsilon^{-2}\ln(\delta^{-1}))$ while the latter gives $O(\delta^{-1}\epsilon^{-2})$ (supposing $p$ is a constant).
+        \item Chernoff’s lower bound for $n$ is independent of $p$, which is great compared to Chebyshev’s!
+    \end{enumerate}
+    As to the advantage of Chebyshev’s bound over Chernoff’s, I think one is that Chebyshev's bound, though being looser, requires less assumptions compared to Chernoff’s (e.g. Chernoff’s requires that $X_1,\ldots, X_n\iid \mathrm{Ber}(p)$) and thus more general, that is, it can be applied in more settings as long as the mean and variance of the random variable.
+\end{proof}
+
+
+%$\overset{\eqref{eq:1}}{=}$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{wrap}
+\section{P3}
+\end{wrap}
+
+\begin{problem}[Union bounds]\label{p3}
+Let $A$, $B_1,\dots, B_k$ be some arbitrary probabilistic events.
+\begin{enumerate}[label=(\roman*)]
+\item Show that
+    \begin{equation*}
+        \Pr[ B_1\cup B_2\cup \dots \cup B_k] 
+		\leq  \sum\limits_{i=1}^k \Pr[B_k].
+    \end{equation*}
+\item  Show that
+    \begin{equation*}
+        \Pr[ A \cap (B_1 \cup B_2\cup\dots\cup B_k)] 
+		\leq  \sum\limits_{i=1}^k \Pr[A \mid B_k ].
+    \end{equation*}
+\item Let $F$ be the set of functions mapping $\{1,2,\dots,n\}$ to $\{1,2,\dots,m\}$, where $m \geq n^2$. Show that
+\begin{equation*}
+        \Pr\limits_{f \leftarrow F}\,[f \text{ is injective}] 
+		\geq 1-\frac{n^2}{2m} .
+    \end{equation*}
+Specifically, we use $f \leftarrow F$ to denote that $f$ is chosen uniformly at random from $F$ and a function is injective if $f(x)\neq f(y)$ for any distinct $x,y$.
+\end{enumerate}
+\end{problem}
+
+\begin{proof}[(i)]
+    \phantomsection\label{pf:3-i}
+    Define $B_1^\ast\triangleq B_1$ and $B_i^\ast \triangleq B_i\setminus \bigcup_{j=1}^{i-1} B_j$ for each $i=2,3\ldots,k$. Notice that $B_i^\ast \cap B_j^\ast =\emptyset \; \forall i\neq j$ and that $B_i^\ast\subseteq B_i \; \forall i$.
+    \begin{claim}\label{clm:i-1}
+        $\bigcup_{i=1}^{k} B_i=\bigcup_{i=1}^{k} B_i^\ast$
+    \end{claim}
+    \begin{proof}
+        Let $\omega\in \bigcup_{i=1}^{k} B_i$. Then there must be some $1\le n\le k$ such that $\omega\in B_n$. By the well-ordering of $\mathbb{Z}$, choose the smallest $n_0$ such that $\omega\in B_{n_0}$. Equivalently,
+        \[
+        \omega\notin B_i\; \text{for all}\; i=1,\ldots,n_0-1\quad \text{and}\quad \omega\in B_{n_0}.
+        \]
+        Hence,
+        \[
+        \omega \in B_{n_0}\setminus \bigcup_{i=1}^{n_0-1} B_i = B_{n_0}^\ast \subseteq \bigcup_{i=1}^{k} B_i^\ast,
+        \]
+        which means $\bigcup_{i=1}^{k} B_i\subseteq \bigcup_{i=1}^{k} B_i^\ast$.\\
+        Conversely, let $\omega\in \bigcup_{i=1}^{k} B_i^\ast$. Then there must be some $1\le n\le k$ such that $\omega\in B_n^\ast$. Thus
+        \[
+        \omega\in B_n^\ast=B_{n}\setminus \bigcup_{i=1}^{n-1} B_i\subseteq B_n\subseteq  \bigcup_{i=1}^{k} B_i,
+        \]
+        which means $\bigcup_{i=1}^{k} B_i\supseteq \bigcup_{i=1}^{k} B_i^\ast$.
+    \end{proof}
+    Hence,
+    \begin{align*}
+        \Pr[ B_1\cup B_2\cup \dots \cup B_k] &=\Pr\left[\bigcup_{i=1}^k B_i\right]\\
+        &= \Pr\left[\bigcup_{i=1}^k B_i^\ast\right] && \text{by the claim}\\
+        &= \sum_{i=1}^k \Pr[B_i^\ast] && \text{since} \; B_i^\ast \cap B_j^\ast =\emptyset \; \forall i\neq j\\
+        &\le  \sum_{i=1}^k \Pr[B_i] && \text{since} \; B_i^\ast \subseteq B_i\implies \Pr[B_i^\ast] \le \Pr[B_i] \; \forall i.
+    \end{align*}
+\end{proof}
+
+\begin{proof}[(ii)]
+    \begin{align*}
+        \Pr[ A \cap (B_1\cup B_2\cup \dots \cup B_k)]
+        &= \Pr[ (A \cap B_1)\cup (A\cap B_2) \cup \dots \cup (A \cap B_k)]\\
+        &\le \sum_{i=1}^k\Pr[A\cap B_i] && \text{using the result of \hyperref[pf:3-i]{(i)}}\\
+        &= \sum_{i=1}^k\Pr[B_i]\Pr[A\mid B_i]\\
+        &\le \sum_{i=1}^k\Pr[A\mid B_i] && \text{since} \; \Pr[B_i]\le 1\; \forall i
+    \end{align*}
+\end{proof}
+
+\begin{proof}[(iii)]
+    Let $F$ be the sample space and denote by $E_{xy}$ the event in which $f(x)=f(y)$ for each $x,y\in\{1,2,\ldots, n\}$, that is,
+    \[
+    E_{xy}\triangleq \{f\in F\mid f(x)=f(y)\}.
+    \]
+    Note that since $f$ is uniformly chosen from $F$, for any distinct $x,y\in\{1,2,\ldots, n\}$, 
+    \[\label{eq:5}
+    \Pr\limits_{f \leftarrow F}\,[E_{xy}]=\dfrac{|E_{xy}|}{|F|}=\dfrac{m\cdot m^{n-2}}{m^n}=\dfrac{1}{m}. \tag{$\spadesuit$}
+    \]
+    This leads us to an upper bound for $\Pr\limits_{f \leftarrow F}\,[f \text{ is not injective}]$:
+    \begin{align*}\label{eq:6}
+        \Pr\limits_{f \leftarrow F}\,[f \text{ is not injective}]
+        &= \Pr\limits_{f \leftarrow F}\,\left[\bigcup_{1\le x\lt y\le n} E_{xy}\right] && \text{by the definition of injectivity}\\
+        &\le \sum_{1\le x\lt y\le n}\Pr\limits_{f \leftarrow F}\,\left[ E_{xy}\right] && \text{using the result of \hyperref[pf:3-i]{(i)}}\\
+        &= \sum_{1\le x\lt y\le n} \dfrac{1}{m} && \text{by}\;\eqref{eq:5}\\
+        &= \dfrac{1}{m}\cdot \binom{n}{2}
+        =\dfrac{n(n-1)}{2m}
+        \le\dfrac{n^2}{2m}. \tag{$\bigstar$}
+    \end{align*}
+    Hence,
+    \[
+    \Pr\limits_{f \leftarrow F}\,[f \text{ is injective}]
+    =1-\Pr\limits_{f \leftarrow F}\,[f \text{ is not injective}]
+    \overset{\eqref{eq:6}}{\ge}1-\dfrac{n^2}{2m}.
+    \]
+\end{proof}
+
+
+%$\overset{\eqref{eq:1}}{=}$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{wrap}
+\section{P4}
+\end{wrap}
+
+\begin{problem}[One-Way Functions]
+We first review the concept of one-way functions which we've introduced in the lecture. A function $f\colon \{0,1\}^*\to\{0,1\}^*$ is one-way if it can be efficiently computed, but no efficient algorithm can invert it. More precisely, for any probabilistic polynomial time (PPT) algorithm $\Adv$, 
+\begin{equation*}
+    \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[f(\Adv(1^n, f(x)) = f(x)\right]=\negl(n)
+\end{equation*}
+In this problem, we focus on one-way function $f$ that is length-preserving, 
+i.e., for every $x \in \{0, 1\}^*$ it holds that $|f(x)| = |x|$. 
+Note that $|$ denotes concatenation, e.g., $1011|0000 = 10110000$, $\oplus$ denotes bit-by-bit XOR,
+$\land$ denotes bit-by-bit AND, and $x_{[a:b]}$ denotes the substring of $x$ from the $a$th bit to the $b$th bits.
+
+
+\textbf{For each of the following functions $g$, assuming $f$ is a one-way function, prove that $g$ is a one-way function, or 
+provide a counter example to demonstrate that it is not always a one-way function.} 
+More specifically:
+
+\begin{itemize}
+\item In the case that $g$ is one-way, you should show a reduction from inverting $f$ to inverting $g$. In other word, you should show that if $g$ is efficiently invertible, then $f$ is also efficiently invertible.
+\item In the case that $g$ is not always one-way, you should do the following. 
+Assuming only that length-preserving one-way functions exist, 
+you should construct a length-preserving one-way function $f$ such that 
+when instantiated with $f, g$ is not a one-way function. 
+That is, you should show a polynomial-time inverting algorithm for $g$.
+\end{itemize}
+
+For example, to prove that the construction of $g(x) = f(x_{[1:n/2]}|0^{n/2})$ is not always one-way, 
+the argument goes as follows. Assume that $h$ is an arbitrary length-preserving one-way function. 
+Construct the function
+\begin{equation*}
+  f(x) =
+  \begin{cases}
+    0^{n} & x_{[n/2+1,n]}=0^{n/2} \\
+    h(x) & \text{otherwise}. 
+  \end{cases}
+\end{equation*}
+
+$f$ is one-way assuming that $h$ is one-way (you have to show this by a reduction). 
+Furthermore, $g$ constructed using this $f$ is not one-way (you have to show this by exhibiting a polynomial-time attack). 
+In general, your solutions should contain complete proofs that the counter examples are valid.
+In the following, assume $|x| = n$,
+\begin{enumerate}[label=(\roman*)]
+    \item $g(x) = f(x_{[1:\frac{n}{2}]})|x_{[\frac{n}{2}+1:n]}$
+    \item $g(x) = f(x)|f(f(x))$
+    \item $g(x) = f(f(x))$ where $f$ is a one-way permutation, i.e., $f$ is one-way and bijective.
+    \item $g(x)=f(x)\oplus x$
+    \item $g(x|x') = f(x \land x')$ for all $x,x'\in \{0,1\}^n$. Here $g:\{0,1\}^{2n}\to \{0,1\}^n$.
+\end{enumerate}
+\end{problem}
+    For the following subproblems we will prove a trivial property first:
+    \begin{lemma}\label{lemma:1}
+        Let $\nu,\mu:\mathbb{N}\to \mathbb{R}$ be non-negative functions such that there exists $N\in\mathbb{N}$ such that $\nu(n)\ge \mu(n)$ for all $n\gt N$. If $\mu$ is non-negligible, then $\nu$ is also non-negligible.
+    \end{lemma}
+    \begin{proof}[Proof of Lemma \ref{lemma:1}]
+        We prove this by contradiction.\\
+        Suppose to the contrary that $\nu$ is negligible, which implies from the conclusion we have in problem \ref{p1}\hyperref[pf:1-i]{(i)} that for every fixed sufficiently large integer $c$ we have
+        \[
+        \lim\limits_{n\to\infty} \nu(n)n^{c}=0;
+        \]
+        equivalently, for any $\varepsilon_c\gt 0$ there is $N_{\varepsilon_c}\in\mathbb{N}$ such that $\nu(n)n^{c}=|\nu(n)n^{c}-0|\lt \varepsilon_c$ whenever $n\gt N_{\varepsilon_c}$.
+        Therefore, for every fixed sufficiently large integer $c$ and any $\varepsilon_c\gt 0$, we have
+        \[
+        |\mu(n)n^c-0|=\mu(n)n^c\le \nu(n)n^c\lt \varepsilon_c
+        \]
+        whenever $n\gt \max(N_{\varepsilon_c}, N)\in\mathbb{N}$. Equivalently,
+        \[
+        \lim\limits_{n\to\infty} \mu(n)n^{c}=0.
+        \]
+        for every fixed sufficiently large integer $c$. Hence $\mu$ must be negligible as well, which is contradictory to the antecedent.
+    \end{proof}
+    \begin{lemma}\label{lemma:2}
+        Let $\nu,\mu:\mathbb{N}\to \mathbb{R}$ be non-negative functions such that there exists $N\in\mathbb{N}$ such that $\nu(n)\ge \mu(n)$ for all $n\gt N$. If $\nu$ is negligible then so is $\mu$.
+    \end{lemma}
+    \begin{proof}[Proof of Lemma \ref{lemma:2}]
+        This is simply the contrapositive of lemma \ref{lemma:1}.
+    \end{proof}
+\begin{proof}[(i)]
+    We prove $g$ is one-way via reduction.\\
+    Suppose to the contrary that $g$ is not one-way, i.e., there exists a PPT algorithm $\Adv$ such that
+    \[
+    \varepsilon(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(\Adv(1^n, g(x))) = g(x)\right]
+    \]
+    is non-negligible. That is to say, $\Adv$ efficiently inverts $g$ with non-negligible probability. (Note that we've ignored the scenario where $g$ is neither efficiently invertible nor efficiently computable. This is however impossible here since $f$ can be computed in PPT and so can $g$.) Our goal is to construct another PPT algorithm $\Adv^\ast$ that inverts $f$ with non-negligible probability. Since $f$ is one-way by assumption, this is a contradiction.
+
+    We construct $\Adv^\ast$ as follows: $\Adv^\ast$ takes as input $1^{m}$ and $y\coloneq f(x)$, where $x\xleftarrow{}\{0,1\}^m$. Then, it uniformly samples $s\xleftarrow{}\{0,1\}^m$ and runs $\Adv$ on input $(1^{2m}, y|s)$, receiving as output $x'$. Finally, it outputs $x'_{[1:m]}$. Namely,
+    \[
+    \Adv^\ast(1^{m}, y) \triangleq \Adv(1^{2m}, y|s)_{[1:m]}
+    \;\; \text{where} \;\; s\xleftarrow{\$}\{0,1\}^m.
+    \]
+    \hyperref[diag:adv1]{The following diagram} illustrates the algorithm we've just constructed.
+    \[\phantomsection\label{diag:adv1}
+        \begin{array}{@{} c c c c c @{}}
+        \textrm{Challenger} && \Adv^\ast & & \Adv \\
+        \text{sample}\;x\xleftarrow{\$}\{0,1\}^m &&&&\\
+        &\XR{(1^m, y\coloneq f(x))} &&&\\
+        &&\text{sample}\;s\xleftarrow{\$}\{0,1\}^m &&\\
+        &&&\XR{(1^{2m}, y|s)} &\\
+        &&&& [\cdots]\\
+        &&&\XL{x'} &\\
+        &\XL{x'_{[1:m]}} &&&
+        \end{array}
+    \]
+
+    It suffices to verify that $\Adv^\ast$ is a PPT algorithm that inverts $f$ with non-negligible probability. Firstly, it's clear that $\Adv^\ast$ runs in PPT as it simply samples $m$ bits, concatenates bit strings once, runs $\Adv$ on a $2m$-bit input, which also runs in PPT, and splits a bit string. For the second part, we claim that
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is non-negligible. To see this, observe that for any $m\in\mathbb{N}$
+    \begin{align*}
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+        &= \Pr_{x,s\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv(1^{2m}, f(x)|s)_{[1:m]}) = f(x)\right] \\
+        &\ge \Pr_{x,s\xleftarrow{\$}\{0,1\}^m}\left[g(\Adv(1^{2m}, f(x)|s)) = f(x)|s\right] \\
+        &= \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{2m}}\left[g(\Adv(1^{2m}, f(x^\ast_{[1,m]})|x^\ast_{[m+1,2m]})) = f(x^\ast_{[1,m]})|x^\ast_{[m+1,2m]}\right] \\
+        &\qquad (\text{since } x|s \text{ is distributed identically to a uniformly random }2m\text{-bit string})\\
+        &= \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{2m}}\left[g(\Adv(1^{2m}, g(x^\ast))) = g(x^\ast)\right]\\
+        &\qquad (\text{by def. of } g) \\
+        &= \varepsilon(2m),
+    \end{align*}
+    where the inequality comes from the fact that
+    \begin{align*}
+    g(\Adv(1^{2m}, f(x)|s)) = f(x)|s
+    &\iff f(\Adv(1^{2m}, f(x)|s)_{[1:m]})|\Adv(1^{2m}, f(x)|s)_{[m+1,2m]} = f(x)|s \\
+    &\implies f(\Adv(1^{2m}, f(x)|s)_{[1:m]}) = f(x).
+    \end{align*}
+    As $\varepsilon(2m)$ is non-negligible, which follows from the fact that $\varepsilon(m)$ is non-negligible, by lemma \ref{lemma:1},
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is also non-negligible. This proves that $\Adv^\ast$ runs in PPT and inverts $f$ with non-negligible probability, contradicting the assumption that $f$ is one-way.
+\end{proof}
+
+
+
+\begin{proof}[(ii)]
+    We prove $g$ is one-way via reduction.\\
+    Suppose to the contrary that $g$ is not one-way, i.e., there exists a PPT algorithm $\Adv$ such that
+    \[
+    \varepsilon(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(\Adv(1^n, g(x))) = g(x)\right]
+    \]
+    is non-negligible, i.e., that $\Adv$ efficiently inverts $g$ with non-negligible probability. (Note that we've ignored the scenario where $g$ is neither efficiently invertible nor efficiently computable. This is however impossible here since $f$ can be computed in PPT and so can $g$.) Our goal is to construct another PPT algorithm $\Adv^\ast$ that inverts $f$ with non-negligible probability. Since $f$ is one-way by assumption, this is a contradiction.
+
+    We construct $\Adv^\ast$ as follows: $\Adv^\ast$ takes as input $1^{m}$ and $y\coloneq f(x)$, where $x\xleftarrow{}\{0,1\}^m$. Then, it runs $\Adv$ on input $(1^{m}, y|f(y))$, receiving as output $x'$. Finally, it simply outputs $x'$. Namely,
+    \[
+    \Adv^\ast(1^{m}, y) \triangleq \Adv(1^{m}, y|f(y)).
+    \]
+    \hyperref[diag:adv2]{The following diagram} illustrates the algorithm we've just constructed.
+    \[\phantomsection\label{diag:adv2}
+        \begin{array}{@{} c c c c c @{}}
+        \textrm{Challenger} && \Adv^\ast & & \Adv \\
+        \text{sample}\;x\xleftarrow{\$}\{0,1\}^m &&&&\\
+        &\XR{(1^m, y\coloneq f(x))} &&&\\
+        && z\coloneq y|f(y) &&\\
+        &&&\XR{(1^{m}, z)} &\\
+        &&&& [\cdots]\\
+        &&&\XL{x'} &\\
+        &\XL{x'} &&&
+        \end{array}
+    \]
+
+    It suffices to verify that $\Adv^\ast$ is a PPT algorithm that inverts $f$ with non-negligible probability. Firstly, it's clear that $\Adv^\ast$ runs in PPT as it simply computes $f$, which is computable in PPT as $f$ is one-way by assumption, concatenates bit strings once, and then runs $\Adv$ on a $2m$-bit input, which also runs in PPT. For the second part, we claim that
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is non-negligible. To see this, observe that for any $m\in\mathbb{N}$
+    \begin{align*}
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv(1^{m}, f(x)|f(f(x)))) = f(x)\right]\\
+        &\labelrel={eq:8} \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[g(\Adv(1^{m}, f(x)|f(f(x)))) = f(x)|f(f(x))\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[g(\Adv(1^{m}, g(x)) = g(x)\right]\\
+        &= \varepsilon(m),
+    \end{align*}
+    where equality \eqref{eq:8} comes from the fact that
+    \begin{align*}
+    &&g(\Adv(1^{m}, f(x)|f(f(x)))) &= f(x)|f(f(x))\\
+    \iff&& f(\Adv(1^{m}, f(x)|f(f(x))))|f(f(\Adv(1^{m}, f(x)|f(f(x))))) &= f(x)|f(f(x)) \\
+    \iff&& f(\Adv(1^{m}, f(x)|f(f(x)))) &= f(x).
+    \end{align*}
+    As $\varepsilon(m)$ is non-negligible by assumption,
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is also non-negligible. This proves that $\Adv^\ast$ runs in PPT and inverts $f$ with non-negligible probability, contradicting the assumption that $f$ is one-way.
+\end{proof}
+
+
+
+\begin{proof}[(iii)]
+    We prove $g$ is one-way via reduction.\\
+    Suppose to the contrary that $g$ is not one-way, i.e., there exists a PPT algorithm $\Adv$ such that
+    \[
+    \varepsilon(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(\Adv(1^n, g(x))) = g(x)\right]
+    \]
+    is non-negligible, i.e., that $\Adv$ efficiently inverts $g$ with non-negligible probability. (Note that we've ignored the scenario where $g$ is neither efficiently invertible nor efficiently computable. This is however impossible here since $f$ can be computed in PPT and so can $g$.) Our goal is to construct another PPT algorithm $\Adv^\ast$ that inverts $f$ with non-negligible probability. Since $f$ is one-way by assumption, this is a contradiction.
+
+    We construct $\Adv^\ast$ as follows: $\Adv^\ast$ takes as input $1^{m}$ and $y\coloneq f(x)$, where $x\xleftarrow{}\{0,1\}^m$. Then, it computes $z\coloneq f(y)$ and runs $\Adv$ on input $(1^{m}, z)$, receiving as output $x'$. Finally, it simply outputs $x'$. Namely,
+    \[
+    \Adv^\ast(1^{m}, y) \triangleq \Adv(1^{m}, f(y)).
+    \]
+    \hyperref[diag:adv3]{The following diagram} illustrates the algorithm we've just constructed.
+    \[\phantomsection\label{diag:adv3}
+        \begin{array}{@{} c c c c c @{}}
+        \textrm{Challenger} && \Adv^\ast & & \Adv \\
+        \text{sample}\;x\xleftarrow{\$}\{0,1\}^m &&&&\\
+        &\XR{(1^m, y\coloneq f(x))} &&&\\
+        && z\coloneq f(y) &&\\
+        &&&\XR{(1^{m}, z)} &\\
+        &&&& [\cdots]\\
+        &&&\XL{x'} &\\
+        &\XL{x'} &&&
+        \end{array}
+    \]
+
+    It suffices to verify that $\Adv^\ast$ is a PPT algorithm that inverts $f$ with non-negligible probability. Firstly, it's clear that $\Adv^\ast$ runs in PPT as it simply computes $f$, which is computable in PPT as $f$ is one-way by assumption, and then runs $\Adv$ on an $m$-bit input, which also runs in PPT. For the second part, we claim that
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is non-negligible. To see this, observe that for any $m\in\mathbb{N}$
+    \begin{align*}
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv(1^{m}, f(f(x)))) = f(x)\right] \\
+        &\labelrel={eq:9} \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[g(\Adv(1^{m}, f(f(x)))) = f(f(x))\right] \\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[g(\Adv(1^{m}, g(x))) = g(x)\right] \\
+        &= \varepsilon(m),
+    \end{align*}
+    where equality \eqref{eq:9} comes from the fact that $f$ is injective (as it is a permutation by assumption) and therefore
+    \begin{align*}
+    g(\Adv(1^{m}, f(f(x)))) = f(f(x))
+    &\stackrel{\textrm{definition of } g}{\iff} f(f(\Adv(1^{m}, f(f(x))))) = f(f(x)) \\
+    &\stackrel{\textrm{injectivity of } f}{\iff}  f(\Adv(1^{m}, f(f(x)))) = f(x).
+    \end{align*}
+    As $\varepsilon(m)$ is non-negligible by assumption,
+    \[
+    \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv^\ast(1^m, f(x))) = f(x)\right]
+    \]
+    is also non-negligible. This proves that $\Adv^\ast$ runs in PPT and inverts $f$ with non-negligible probability, contradicting the assumption that $f$ is one-way.
+\end{proof}
+
+
+
+
+\begin{proof}[(iv)]
+    We show $g$ is not always one-way by providing a counterexample, i.e., a length-preserving one-way function $f$ such that the corresponding $g$ is not one-way.
+    
+    Let $h$ be an arbitrary length-preserving one-way function (which exists by the assumption that a length-preserving one-way function $f$ exists). We define our $f:\{0,1\}^\ast\to \{0,1\}^\ast$ as
+    \[
+    f(x)\triangleq h(x_{[\frac{n}{2}+1, n]})|0^{\frac{n}{2}}
+    \;\; \text{where } n \text{ denotes } |x|,
+    \]
+    which we claim to be length-preserving and one-way.
+    \newpage
+    \begin{claim}\label{clm:iv-1}
+        $f$ is a length-preserving one-way function.
+    \end{claim}
+    \begin{proof}
+        Firstly, it's immediate that $f$ is length-preserving as $h$ is as well. Notice that $f$ can be computed in PPT since $h$ is one-way and thus can be computed in PPT by definition. Then, we prove $f$ is one-way via reduction.
+
+        Suppose to the contrary that $f$ is not one-way. As $f$ can be computed in PPT, it must be that there exists a PPT algorithm $\Adv$ such that
+        \[
+        \varepsilon(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[f(\Adv(1^n, f(x))) = f(x)\right]
+        \]
+        is non-negligible. Then, we construct another PPT algorithm $\Adv^\ast$ that inverts $h$ with non-negligible probability. Since $h$ is one-way by assumption, this is a contradiction.
+    
+        We construct $\Adv^\ast$ as follows: $\Adv^\ast$ takes as input $1^{m}$ and $y\coloneq h(x)$, where $x\xleftarrow{}\{0,1\}^m$. Then, it runs $\Adv$ on input $(1^{2m}, y|0^m)$, receiving as output $x'$, and finally outputs $x'_{[m+1, 2m]}$. Namely,
+        \[
+        \Adv^\ast(1^{m}, y) \triangleq \Adv(1^{2m}, y|0^m)_{[m+1,2m]}.
+        \]
+        % \hyperref[diag:adv4]{The following diagram} illustrates the algorithm we've just constructed.
+        % \[\phantomsection\label{diag:adv4}
+        %     \begin{array}{@{} c c c c c @{}}
+        %     \textrm{Challenger} && \Adv^\ast & & \Adv \\
+        %     \text{sample}\;x\xleftarrow{\$}\{0,1\}^m &&&&\\
+        %     &\XR{(1^m, y\coloneq h(x))} &&\XR{(1^{2m}, y|0^m)}&\\
+        %     &&&& [\cdots]\\
+        %     &\XL{x'_{[m+1,2m]}} &&\XL{x'}&
+        %     \end{array}
+        % \]
+    
+        It suffices to verify that $\Adv^\ast$ is a PPT algorithm that inverts $h$ with non-negligible probability. Firstly, it's clear that $\Adv^\ast$ runs in PPT as it simply concatenates bit strings, runs $\Adv$ on a $2m$-bit input, which also runs in PPT, and then splits a bit string. For the second part, we claim
+        \[
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+        \]
+        is non-negligible. To see this, observe that for any $m\in\mathbb{N}$
+        \begin{align*}
+            \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+            &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv(1^{2m}, h(x)|0^m)_{[m+1,2m]}) = h(x)\right]\\
+            &\labelrel={eq:10} \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[f(\Adv(1^{2m}, h(x)|0^m)) = h(x)|0^m\right]\\
+            &= \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{2m}}\left[f(\Adv(1^{2m}, h(x^\ast_{[m+1, 2m]})|0^m)) = h(x^\ast_{[m+1, 2m]})|0^m\right]\\
+            &\qquad (\text{since } x \text{ is distributed identically to the last } m \text{ bits of }x^\ast\xleftarrow{\$}\{0,1\}^{2m})\\
+            &= \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{2m}}\left[f(\Adv(1^{2m}, f(x^\ast))) = f(x^\ast)\right]
+            = \varepsilon(2m),
+        \end{align*}
+        where equality \eqref{eq:10} comes from the fact that
+        \begin{align*}
+        f(\Adv(1^{2m}, h(x)|0^m)) = h(x)|0^m
+        &\iff h(\Adv(1^{2m}, h(x)|0^m)_{[m+1,2m]})|0^m = h(x)|0^m \\
+        &\iff h(\Adv(1^{2m}, h(x)|0^m)_{[m+1,2m]}) = h(x).
+        \end{align*}
+        As $\varepsilon(m)$ is non-negligible by assumption and so is $\varepsilon(2m)$,
+        \[
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+        \]
+        is also non-negligible. This proves that $\Adv^\ast$ runs in PPT and inverts $h$ with non-negligible probability, contradicting the assumption that $h$ is one-way.
+    \end{proof}
+
+    Next, to show $g$ is not one-way given the $f$ we've just defined, we provide a PPT algorithm $\Adv^\bigstar$ that inverts $g$ with non-negligible probability, i.e., that
+    \[
+    \nu(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(\Adv^\bigstar(1^n, g(x))) = g(x)\right]
+    \]
+    is non-negligible. We construct $\Adv^\bigstar$ as follows: $\Adv^\ast$ takes as input $1^{n}$ and $y\coloneq g(x)$, where $x\xleftarrow{}\{0,1\}^n$. Then, it outputs $h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}$. Namely,
+    \[
+    \Adv^\bigstar(1^{n}, y) \triangleq h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}.
+    \]
+
+    It suffices to verify that $\Adv^\bigstar$ is a PPT algorithm that inverts $g$ with non-negligible probability. Firstly, it's clear that $\Adv^\bigstar$ runs in PPT as it simply computes $h$, which is computable in PPT as it is one-way by assumption, taking XOR, and concatenates bit strings together. For the second part, observe that for any $n\in\mathbb{N}$
+    \begin{align*}
+        \nu(n)&\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(\Adv^\bigstar(1^n, g(x)) = g(x)\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(h(g(x)_{[\frac{n}{2}+1, n]})\oplus g(x)_{[1,\frac{n}{2}]}|g(x)_{[\frac{n}{2}+1, n]}) = g(x)\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[g(h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}) = y\right]\\
+        &\qquad (\text{denote } g(x) \text{ by } y)\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[f\left(h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}\right)\oplus \left(h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}\right) = y\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[\left(h(y_{[\frac{n}{2}+1, n]}) | 0^{\frac{n}{2}}\right)\oplus \left(h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}|y_{[\frac{n}{2}+1, n]}\right) = y\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[\left(h(y_{[\frac{n}{2}+1, n]}) \oplus h(y_{[\frac{n}{2}+1, n]})\oplus y_{[1,\frac{n}{2}]}\right) \Big| \left( 0^{\frac{n}{2}} \oplus y_{[\frac{n}{2}+1, n]}\right) = y\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[y_{[1,\frac{n}{2}]} | y_{[\frac{n}{2}+1, n]}= y\right]\\
+        &= \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[y = y\right] =1.
+    \end{align*}
+    This implies $\nu(n)$ is non-negligible, following from the conclusion of problem \ref{p1}\hyperref[pf:1-i]{(i)} and the fact that\
+    \[
+    \lim\limits_{n\to\infty}\nu(n)\cdot n^c
+    =\lim\limits_{n\to\infty} 1\cdot n^c = 1\text{ or }\infty \neq 0
+    \] 
+    for any fixed integer $c\in\mathbb{N}$. This proves that $\Adv^\bigstar$ runs in PPT and inverts $g$ with non-negligible probability, yielding that $g$ is not one-way.
+\end{proof}
+
+
+
+
+
+\begin{proof}[(v)]
+    We show $g$ is not always one-way by providing a counterexample, i.e., a length-preserving one-way function $f$ such that the corresponding $g$ is not one-way.
+    
+    Let $h$ be an arbitrary length-preserving one-way function (which exists by the assumption that a length-preserving one-way function $f$ exists) and $c$ be an arbitrary real number in $\left(\dfrac{1}{4},\dfrac{1}{2}\right)$ (say, $c\triangleq \dfrac{1.14514}{4}$). We define our $f:\{0,1\}^\ast\to \{0,1\}^\ast$ as
+    \[
+    f(x)\triangleq \begin{cases}
+        0^{n} & \text{if}\; \dfrac{|x|_1}{n} \lt c \\
+        1|h(x_{[2,n]}) & \text{otherwise}
+    \end{cases}
+    \]
+    where we denote $n\triangleq |x|$ and define $|\cdot |_1$ as the number of $1$'s in a bit string, i.e.,
+    \[
+    |b_1b_2\ldots b_n|_1 \triangleq \sum_{i=1}^n b_n\quad \text{for each}\; x=b_1b_2\ldots b_n\in \{0,1\}^\ast.
+    \]
+
+    
+    
+    We claim that $f$ is length-preserving and one-way, with a detailed proof deferred until later (see claim \ref{clm:v-1}). Next, we claim that $g$ is not one-way given the $f$ we've just defined, which is supposed to be length-preserving and one-way. Likewise, we postpone the detailed proof of $g$ being non-one-way until later (see claim \ref{clm:v-2}).
+    
+    
+    Before verifying the (non-)one-wayness of $f$ and $g$, we make some observations that come in handy later. Notice that given an $n$-bit string $x=B_1B_2\ldots B_n\xleftarrow{\$}\{0,1\}^n$ sampled uniformly, each bit of $x$ is in fact an independent, Bernoulli distributed random variable $B_i$ with probability $p=\frac{1}{2}$, i.e., $B_1,B_2,\ldots, B_n \iid \mathrm{Ber}(\frac{1}{2})$. Therefore the Chernoff's bound says that
+    \begin{align*}
+    \mu_1(n)\triangleq \Pr\limits_{x\xleftarrow{\$}\{0,1\}^n}\left[\dfrac{|x|_1}{n}\lt c\right]
+    &= \Pr\limits_{B_1,\ldots, B_n \iid \mathrm{Ber}(\frac{1}{2})}\left[\frac{1}{n} \sum_{i=1}^n B_i\lt c\right]\\
+    &\le \Pr\limits_{B_1,\ldots, B_n \iid \mathrm{Ber}(\frac{1}{2})}\left[\left|\frac{1}{n} \sum_{i=1}^n B_i - \frac{1}{2} \right|\ge \frac{1}{2}- c\right]\\
+    &\le 2e^{-n (\frac{1}{2}- c)^2}. \tag{$\twemoji{pleading face}$}
+    \end{align*}
+    Since $\lim\limits_{n\to\infty}2e^{-n (\frac{1}{2}- c)^2}n^{c'}=0$ for any $c'\in\mathbb{N}$ and thus $2e^{-n (\frac{1}{2}- c)^2}$ is negligible (by problem \ref{p1}(i)), by lemma \ref{lemma:2} it follows that $\mu_1$ is negligible.
+    
+    Moreover, given $2$ uniformly and independently sampled $n$-bit strings $x_1=B_1B_2\ldots B_n, x_2=C_1C_2\ldots C_n \xleftarrow{\$}\{0,1\}^n$, we know that $B_1,\ldots, B_n,C_1,\ldots, C_n \iid \mathrm{Ber}(\frac{1}{2})$. Then each bit of the bitwise AND $x_1\land x_2=D_1,\ldots, D_n$ of $x_1$ and $x_2$ is in fact an independent, Bernoulli distributed random variable $D_i$ with probability $p=\frac{1}{4}$ since $\Pr[D_i=1]=\Pr[B_i\land C_i=1]=\Pr[B_i=1]\Pr[C_i=1]=\dfrac{1}{2}\cdot \dfrac{1}{2}=\dfrac{1}{4}$; equivalently, $D_1,D_2,\ldots, D_n \iid \mathrm{Ber}(\frac{1}{4})$. Likewise, the Chernoff's bound hence says that
+    \begin{align*}
+    \mu_2(n)\triangleq\Pr\limits_{x_1,x_2\xleftarrow{\$}\{0,1\}^n}\left[\dfrac{|x_1\land x_2|_1}{n}\lt c\right]
+    &= \Pr\limits_{D_1,\ldots, D_n \iid \mathrm{Ber}(\frac{1}{4})}\left[\frac{1}{n} \sum_{i=1}^n D_i\lt c\right]\\
+    &\ge \Pr\limits_{D_1,\ldots, D_n \iid \mathrm{Ber}(\frac{1}{4})}\left[\left|\frac{1}{n} \sum_{i=1}^n D_i - \frac{1}{4} \right|\lt c-\frac{1}{4}\right]\\
+    &= 1-\Pr\limits_{D_1,\ldots, D_n \iid \mathrm{Ber}(\frac{1}{4})}\left[\left|\frac{1}{n} \sum_{i=1}^n D_i - \frac{1}{4} \right|\ge c-\frac{1}{4}\right]\\
+    &\ge 1- 2e^{-n (c-\frac{1}{4})^2}, \tag{$\twemoji{face with raised eyebrow}$}
+    \end{align*}
+    which is non-negligible as $1$ is clearly non-negligible and $2e^{-n (c-\frac{1}{4})^2}$ has been shown to be negligible. Thus, from lemma \ref{lemma:1} it follows that $\mu_2$ is non-negligible.
+
+    \begin{observation}\label{obs:v-1}
+        $\mu_1$ is negligible while $\mu_2$ is non-negligible.
+    \end{observation}
+
+    It remains to actually show that (1) $f$ is length-preserving and one-way and that (2) $g$ is not one-way given $f$.
+
+    \begin{claim}
+        \label{clm:v-1}
+        $f$ is a length-preserving one-way function.
+    \end{claim}
+    \begin{proof}
+        Firstly, it's immediate that $f$ is length-preserving as $h$ is as well. Notice that $f$ can be computed in PPT since $h$ is one-way and thus can be computed in PPT by definition. Then, we prove $f$ is one-way via reduction.
+
+        Suppose to the contrary that $f$ is not one-way. As $f$ can be computed in PPT, it must be that there exists a PPT algorithm $\Adv$ such that
+        \[
+        \varepsilon(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[f(\Adv(1^n, f(x))) = f(x)\right]
+        \]
+        is non-negligible. Then, we construct another PPT algorithm $\Adv^\ast$ that inverts $h$ with non-negligible probability. Since $h$ is one-way by assumption, this is a contradiction.
+    
+        We construct $\Adv^\ast$ as follows: $\Adv^\ast$ takes as input $1^{m}$ and $y\coloneq h(x)$, where $x\xleftarrow{}\{0,1\}^m$. Then, it runs $\Adv$ on input $(1^{m+1}, 1|y)$, receiving as output $x'$, and finally outputs $x'_{[2, m+1]}$. Namely,
+        \[
+        \Adv^\ast(1^{m}, y) \triangleq \Adv(1^{m+1}, 1|y)_{[2,m+1]}.
+        \]
+        
+        It suffices to verify that $\Adv^\ast$ is a PPT algorithm that inverts $h$ with non-negligible probability. Firstly, it's clear that $\Adv^\ast$ runs in PPT as it simply concatenates bit strings, runs $\Adv$ on an $(m+1)$-bit input, which also runs in PPT, and then splits a bit string. For the second part, we claim
+        \[
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+        \]
+        is non-negligible. 
+        
+        \end{proof}\begin{proof}[cont'd]
+        
+        To see this, observe that for any $m\in\mathbb{N}$
+        \begin{align*}
+            \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+            &= \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv(1^{m+1}, 1|h(x))_{[2,m+1]}) = h(x)\right]\\
+            &= \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{m+1}}\left[h(\Adv(1^{m+1}, 1|h(x^\ast_{[2,m+1]}))_{[2,m+1]}) = h(x^\ast_{[2,m+1]})\right]\\
+            &\labelrel\ge{eq:11} \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{m+1}}\left[f(\Adv(1^{m+1}, f(x^\ast))) = f(x^\ast) \land \frac{|x^\ast|_1}{m+1}\ge c \right]\\
+            &\labelrel\ge{eq:12} \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{m+1}}\left[f(\Adv(1^{m+1}, f(x^\ast))) = f(x^\ast)\right] - \Pr_{x^\ast\xleftarrow{\$}\{0,1\}^{m+1}}\left[ \frac{|x^\ast|_1}{m+1}\lt c \right]\\
+            &= \varepsilon(m+1) - \mu_1(m+1),
+        \end{align*}
+        where inequality \eqref{eq:11} comes from the fact that
+        \begin{align*}
+        f(\Adv(1^{m+1}, f(x^\ast))) = f(x^\ast) \land \frac{|x^\ast|_1}{m+1}\ge c
+        &\implies f(\Adv(1^{m+1}, 1|h(x^\ast_{[2,m+1]}))) = 1|h(x^\ast_{[2,m+1]})\\
+        &\implies 1|h(\Adv(1^{m+1}, 1|h(x))_{[2, m+1]}) = 1|h(x^\ast_{[2,m+1]}) \\
+        &\iff h(\Adv(1^{m+1}, 1|h(x^\ast_{[2,m+1]}))_{[2, m+1]}) = h(x^\ast_{[2,m+1]}),
+        \end{align*}
+        and inequality \eqref{eq:12} we have used the union bounds proved in problem \ref{p3}(i) (by taking set complement on both sides).
+        
+        Since $\varepsilon(m+1)$ is non-negligible and $\mu_1(m+1)$ is negligible by observation \ref{obs:v-1}, $\varepsilon(m+1) - \mu_1(m+1)$ is non-negligible. Therefore,
+        \[
+        \Pr_{x\xleftarrow{\$}\{0,1\}^m}\left[h(\Adv^\ast(1^m, h(x))) = h(x)\right]
+        \]
+        is also non-negligible. This proves that $\Adv^\ast$ runs in PPT and inverts $h$ with non-negligible probability, contradicting the assumption that $h$ is one-way.
+    \end{proof}
+
+    \newpage
+    \begin{claim}
+        \label{clm:v-2}
+        $g$ is not one-way given the $f$ defined above.
+    \end{claim}
+    \begin{proof}
+        To see this, we provide a PPT algorithm $\Adv^\bigstar$ that inverts $g$ with non-negligible probability, i.e., that
+        \[
+        \nu(n)\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^{2n}}\left[g(\Adv^\bigstar(1^{2n}, g(x))) = g(x)\right]
+        \]
+        is non-negligible. We construct $\Adv^\bigstar$ as follows: $\Adv^\ast$ takes as input $1^{2n}$ and $y\coloneq g(x)$, where $x\xleftarrow{}\{0,1\}^{2n}$. Then, it directly outputs (i.e. ``guesses'') $0^{2n}$. Namely,
+        \[
+        \Adv^\bigstar(1^{n}, y) \triangleq 0^{2n}.
+        \]
+        
+        It suffices to verify that $\Adv^\bigstar$ is a PPT algorithm that inverts $g$ with non-negligible probability. Indeed, by construction $\Adv^\bigstar$ trivially runs in PPT. As for the second part, observe that for any $n\in\mathbb{N}$
+        \begin{align*}
+            \nu(n)&\triangleq \Pr_{x\xleftarrow{\$}\{0,1\}^{2n}}\left[g(\Adv^\bigstar(1^{2n}, g(x))) = g(x)\right]\\
+            &= \Pr_{x\xleftarrow{\$}\{0,1\}^{2n}}\left[g(0^{2n})=g(x)\right]\\
+            &= \Pr_{x\xleftarrow{\$}\{0,1\}^{2n}}\left[ f(0^{n})=g(x)\right]\\
+            &= \Pr_{x\xleftarrow{\$}\{0,1\}^{2n}}\left[0^{n}=g(x)\right]\\
+            &= \Pr_{x_1,x_2\xleftarrow{\$}\{0,1\}^{n}}\left[0^n= f(x_1\land x_2)\right]\\
+            &= \Pr_{x_1,x_2\xleftarrow{\$}\{0,1\}^{n}}\left[\frac{|x_1\land x_2|_1}{n}\lt c\right]\\
+            &= \mu_2(n),
+        \end{align*}
+        which is non-negligible by observation \ref{obs:v-1}. This proves that $\Adv^\bigstar$ runs in PPT and inverts $g$ with non-negligible probability, yielding that $g$ is not one-way.
+    \end{proof}
+    Now we've completed the proof.
+\end{proof}
+
+
+
+
+
+%$\overset{\eqref{eq:1}}{=}$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

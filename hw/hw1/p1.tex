@@ -1,0 +1,89 @@
+\begin{problem}[Uniformity]\label{p1}
+\leavevmode\par
+\begin{enumerate}[label=(\roman*)]
+    \item Check that $(\bit^n, \oplus)$, where $n\in\Nbb$ and $\oplus$ denotes the bitwise exclusive-or operation on $\bit^n$, forms a group.
+\end{enumerate}
+Let $U$ and $V$ be random variables over $G$. Note that the group operation $\cdot$ induces the random
+variable $\cdot\;(U, V )$ over $G$, which will be denoted by $U \cdot  V$. Suppose that $U$ is uniformly random.
+\begin{enumerate}[label=(\roman*)]
+    \setcounter{enumi}{1}
+    \item Suppose that $U$ and $V$ are independent. Prove that the random variable $U \cdot V$ is uniformly random.
+    \item Show that $U$ and $V$ may not be independent even if both $V$ and $U \cdot V$ are uniformly random. (Hint: $(G, \cdot) = (\Zbb_3, +)$ and $V = U$.)
+\end{enumerate}
+\end{problem}
+
+
+
+
+\begin{answer}[i]
+    \leavevmode\par
+    \begin{itemize}
+        \item (Associativity): For any bits $b_1,b_2,b_3\in\bit$, by enumerating all possible values of $b_1,b_2,b_3$,  we see that $(b_1\oplus b_2)\oplus b_3= b_1\oplus(b_2\oplus b_3)$. Therefore, for any $a,b,c\in \bit^n$, $(a\oplus b)\oplus c= a\oplus(b\oplus c)$. 
+        \item (Identity): For any $a\in \bit^n$, $a\oplus 0^n = 0^n\oplus a=a$. Thus, $0^n$ is an (or rather, \textit{the}) identity.
+        \item (Inverse): For any $a\in\bit^n$, $a\oplus a=0^n$, which is the identity of $(\bit^n, \oplus)$. That is, $a$ is an (or rather, \textit{the}) inverse of itself, for all $a\in\bit^n$. 
+    \end{itemize}
+    Hence $(\bit^n, \oplus)$ forms a group.
+\end{answer}
+
+\begin{answer}[ii]
+    \leavevmode\par
+    \begin{lemma}\label{lemma:p1-1}
+        For any $a\in G$, $f_a: G\to G$ defined by $x\mapsto x\cdot a$ is a bijection.
+    \end{lemma}
+    \begin{proof}[Proof of lemma]
+        Since  $f_a$ has inverse defined by $f_a^{-1}:x\mapsto x\cdot a^{-1}$ (one can check by definition that $f_a^{-1}\circ f_a = f_a\circ f_a^{-1}=\text{id}_G$), $f_a$ (and also $f_a^{-1}$) is bijective.
+    \end{proof}
+
+    \begin{lemma}\label{lemma:p1-2}
+        For any $a\in G$, $f_{-1}: G\to G$ defined by $x\mapsto x^{-1}$ is a bijection.
+    \end{lemma}
+    \begin{proof}[Proof of lemma]
+        This is immediate since $f_{-1}$ is the inverse of itself, implying $f_{-1}$ is bijective.
+    \end{proof}
+
+    We calculate that for every $w\in G$
+    \begin{align*}
+        p_{U\cdot V}(w) 
+        &= \sum_{u,v\in G,\ uv=w} p_{U,V}(u,v) \\
+        &= \sum_{u\in G} p_{U,V}(u,u^{-1}w) \\
+        &= \sum_{u\in G} p_{U}(u) p_V(u^{-1}w) &&\textrm{(since $U,V$ are independent)}\\
+        &= \frac{1}{|G|}\sum_{u\in G}   p_V(u^{-1}w) &&\textrm{(since $U$ is uniformly distributed)}\\
+        &= \frac{1}{|G|}\sum_{x\in G}   p_V(x) &&\textrm{(by \autoref{lemma:p1-1} and \autoref{lemma:p1-2}, $(f_w\circ f_{-1}):u\mapsto u^{-1}w$ is a bijection)}\\
+        &= \frac{1}{|G|}\cdot 1 = \frac{1}{|G|},
+    \end{align*}
+    from which it follows that $U\cdot V$ is also uniformly distributed.
+\end{answer}
+
+
+\begin{answer}[iii]
+    A counterexample is given by taking $(G,\cdot)\triangleq (\Zbb_3, +)$ and $U=V$, where $U$ is uniformly distributed. First, $U$ and $V$ is clearly not independent since, for example,
+    \[
+        p_{U,V}(0,1)=0\neq \frac{1}{3}\cdot \frac{1}{3}=p_{U}(0)p_{V}(1)
+    \]
+    and thus $p_{U,V}(x,y)\neq p_{U}(x)p_{V}(y)$.
+    However, since $U+ V=U+U=2U$ and $U$ is uniformly distributed,
+    \[
+        p_{U+V}(0)=p_{2U}(0)=p_{U}(0)=\frac{1}{3},\quad p_{U+V}(1)=p_{2U}(1)=p_{U}(2)=\frac{1}{3},\quad p_{U+V}(2)=p_{2U}(2)=p_{U}(1)=\frac{1}{3},
+    \]
+    $U+V$ is also uniformly distributed.
+\end{answer}
+
+
+\begin{answer}[iv]
+    (Note that in $\Zbb_2$, $+$ is equivalent to $\oplus$.)
+    Since $U\cdot V$ and $U$ are uniformly distributed,
+    \begin{align}
+        \frac{1}{2}=p_{U+ V}(0) &= p_{U,V}(0,0)+p_{U,V}(1,1) \label{p1-4-1}\\
+        \frac{1}{2}=p_{U+ V}(1) &= p_{U,V}(0,1)+p_{U,V}(1,0) \label{p1-4-2}\\
+        \frac{1}{2}=p_{U}(0) &= p_{U,V}(0,0)+p_{U,V}(0,1) \label{p1-4-3}\\
+        \frac{1}{2}=p_{U}(1) &= p_{U,V}(1,0)+p_{U,V}(1,1) \label{p1-4-4}
+    \end{align}
+    Therefore,
+    \begin{align}
+        \eqref{p1-4-1}-\eqref{p1-4-3} \implies p_{U,V}(0,1)=p_{U,V}(1,1) &\implies p_V(1) =  p_{U,V}(0,1) +p_{U,V}(1,1) = 2p_{U,V}(0,1) = 2p_{U,V}(1,1) \notag\\
+        &\implies p_{U,V}(u,1) = \frac{1}{2}p_V(1) = p_U(u)p_V(1)\;\; \textrm{for every} \; u\in \Zbb_2 \label{p1-4-5}  \\
+        \eqref{p1-4-2}-\eqref{p1-4-3} \implies p_{U,V}(0,0) =p_{U,V}(1,0) &\implies p_V(0) =  p_{U,V}(0,0) +p_{U,V}(1,0) = 2p_{U,V}(0,0) = p_{U,V}(1,0) \notag\\
+        &\implies p_{U,V}(u,0) = \frac{1}{2}p_V(0) = p_U(u)p_V(0)\;\; \textrm{for every} \; u\in \Zbb_2. \label{p1-4-6} 
+    \end{align}
+    Combining \eqref{p1-4-5} and \eqref{p1-4-6}, we conclude that $p_{U,V}(u,v)=p_U(u)p_V(v)$ for all $u,v\in \Zbb_2$, which by definition means that $U$ and $V$ are independent. 
+\end{answer}

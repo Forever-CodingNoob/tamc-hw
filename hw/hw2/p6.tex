@@ -1,0 +1,372 @@
+\begin{problem}[Commitment Scheme from PRG]\label{p6}
+    \leavevmode\par
+    Let $G:\bit^n\to\bit^{3n}$ be a PRG. The construction of interactive commitment scheme $(\langle S, R\rangle, \Open)$ is defined as follows:\\
+    \textbf{Construction of $\langle S(b,1^n),R(1^n)\rangle \to (d_S,\tau)$:}
+    \begin{enumerate}
+        \item R sample a random string $r\in\bit^{3n}$ and send $r$ to $S$.
+        \item $S$ receives the message $r$. Then $S$ samples a random string $s\in\bit^n$ and compute $c\sample \Com(s,r,b)$ by
+        \[
+            c=\Com(s,r,b)\coloneqq\begin{cases}
+                G(s) &\textrm{if } b=0\\
+                G(s)\oplus r &\textrm{if } b=1
+            \end{cases}.
+        \]
+        Lastly, $S$ sends $c$ back to $R$ and output $s$ as its opening information $d_S$.
+        \item The transcript $\tau\coloneqq(r,c)$ which include the first message $r$ and the second message $c$.
+    \end{enumerate}
+    \textbf{Construction of $\Open(b,d_S,\tau) \to \{\top,\bot\}$:}
+    \begin{enumerate}
+        \item Parse $\tau\coloneqq (r,c)$.
+        \item If $\Com(d_s,r,b)=c$, then output $\top$ and otherwise output $\bot$.
+    \end{enumerate}
+    Below are the problem statements.
+    \begin{enumerate}[label=(\alph*)]
+        \item Show that the above scheme satisfies the correctness.
+        \item Show that the above scheme is computational hiding.
+        \item Show that the above scheme is statistically binding.
+        \item Show that there is no interactive commitment scheme that satisfies both statistical hiding and statistical binding.
+    \end{enumerate}
+\end{problem}
+
+
+
+
+\begin{answer}[a]
+    We prove this by simply expanding the construction of $S$, $R$, and $\Open$.
+    Let $b\in\bit$ and $n\in\Nbb$.
+    Given $(d_S, \tau)\sample \langle S(b,1^n), R(1^n)\rangle$, we have 
+    \[
+        d_S =s,\;\; \tau=\left(r, c\triangleq \begin{cases}
+            G(s) &\textrm{if } b=0\\
+            G(s)\oplus r &\textrm{if } b=1
+        \end{cases} \right)
+    \]
+    for some $s\Usample\bit^n$ and $r\Usample\bit^{3n}$.
+    Therefore, in $\Open(b, d_S,\tau)$, it always holds that
+    \[
+        \Com(d_S,r',b)= \Com(s,r,b) \stackrel{\textrm{def}}=  \left.\begin{cases}
+            G(s) &\textrm{if } b=0\\
+            G(s)\oplus r &\textrm{if } b=1
+        \end{cases} \right\}
+        = c = c',
+    \]
+    where $(r',c')\coloneqq \tau$, in which case $\Open$ will output $\top$. This implies that $\Open(b, d_S,\tau)$ always outputs $\top$, i.e., that
+    \[
+        \Pr\biggl[\Open(b, d_S,\tau)=\top :  (d_S, \tau)\sample \langle S(b,1^n), R(1^n)\rangle \biggr] = 1,
+    \]
+    which, by definition, means that the interactive commitment scheme $(\langle S, R\rangle, \Open)$ is correct.
+\end{answer}
+
+
+
+
+
+\begin{answer}[b]
+    We prove this by contradiction. Suppose to the contrary that the interactive commitment scheme $(\langle S, R\rangle, \Open)$ is not computational hiding. Then, by definition, we know there exist a PPT receiver $R^\ast$, internal randomness $r_{R^\ast}\in\bit^{3n}$ chosen by $R^\ast$, and a PPT distinguisher $D$ such that
+    \begin{align}
+        \epsilon(n)&\triangleq
+        \abs*{\Pr_{r_S\Usample\bit^n}\left[D\left(\view^{\langle S, R^\ast \rangle}_{R^\ast}((0,1^n),1^n;r_S, r_{R^\ast})\right)=1 \right]
+        -\Pr_{r_S\Usample\bit^n}\left[D\left(\view^{\langle S, R^\ast \rangle}_{R^\ast}((1,1^n),1^n;r_S, r_{R^\ast})\right)=1 \right]} \notag\\
+        &= \abs*{\Pr_{s \Usample\bit^n}\left[D\left(1^n, r_{R^\ast}, (r_{R^\ast}, G(s))\right)=1 \right]
+        -\Pr_{s \Usample\bit^n}\left[D\left(1^n, r_{R^\ast}, (r_{R^\ast}, G(s) \oplus r_{R^\ast})\right)=1 \right]} \label{eq:p6-2-1}
+    \end{align}
+    is nonnegligible. Having \eqref{eq:p6-2-1}, we slightly transform $D$ to get another PPT distinguisher $D'$ such that
+    \begin{align}
+        \epsilon(n)&=
+        \abs*{\Pr_{s \Usample\bit^n}\left[D'\left(r_{R^\ast}, G(s)\right)=1 \right]
+        -\Pr_{s \Usample\bit^n}\left[D'\left(r_{R^\ast}, G(s) \oplus r_{R^\ast}\right)=1 \right]}.
+    \end{align}
+    Notice that we've discarded $1^n$ since $D'$ can always infer $n$ from either of the two inputs, which is of length $3n$. Equivalently, this means that $D'$ wins the following distinguishing game $\Game_{\textrm{hiding}}$ with probability $\frac{1}{2}+\frac{1}{2}\epsilon(n)$.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & D' \\
+            b \Usample \bit & & \\
+            s \Usample \bit^n & & \\
+            c\coloneqq \begin{cases} 
+                G(s) &\textrm{if } b = 0 \\
+                G(s)\oplus r_{R^\ast} &\textrm{if }b = 1 
+            \end{cases} & & \\
+            & \XR{(r_{R^\ast}, c)} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D'$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $\Game_{\textrm{hiding}}$}
+        \label{fig:p6-game1}
+    }
+
+    By abusing $D'$, we construct a PPT distinguisher (a reduction) $\Rcal$ that wins the  PRG game $\Game_{\textrm{PRG}}$ of $G:\bit^n\to\bit^{3n}$, i.e., that distinguishes between the ensembles $\ensemble{G(U_n)}{n}$ and $\ensemble{U_{3n}}{n}$), with nonnegligible advantage, as shown below.
+    Namely, on input $y\in\bit^{3n}$, $\Rcal$ plays as the challenger in $\Game_{\textrm{hiding}}$, but with $G(s)$ (for $s \Usample \bit^n$) replaced by $y$, to interact with $D'$. When $D'$ terminates, $\Rcal$ receives as output $b'$ from $D'$ and then outputs $0$ if $b'=b$ (i.e. $D'$ wins $\Game_{\textrm{hiding}}$), and outputs $1$ otherwise. Note that if $d=0$, then $y=G(x)$ for some $x \Usample \bit^n$; if $d=1$, then $y\sample U_{3n}$ is uniform and independent of $r_{R^\ast}$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & D' \\
+            d\Usample\bit & &  & & \\
+            y \sample \begin{cases}
+                G(U_n) &\textrm{if } d=0\\
+                U_{3n} &\textrm{if } d=1
+            \end{cases} & & & & \\
+            & \XR{y} & &  & \\
+            & & b \Usample \bit & & \\
+            & & c\coloneqq \begin{cases} 
+                y &\textrm{if } b = 0 \\
+                y\oplus r_{R^\ast} &\textrm{if } b = 1 
+            \end{cases} & &\\
+            & & & \XR{(r_{R^\ast}, c)} & \\
+            & & & \XL{b'} & \\
+            & & d'\coloneqq \begin{cases}
+                0 &\textrm{if } b'=b\\
+                1 &\textrm{if } b'\neq b 
+            \end{cases} & & \\
+            & \XL{d'} & & & \\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $d' = d$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game_{\textrm{PRG}}$}
+        \label{fig:p6-game2}
+    }
+
+    Clearly $\Rcal$ is a PPT algorithm since $D'$ is a PPT algorithm.
+    To analyze the win rate of $\Rcal$, observe that, as mentioned earlier, for all $n\in\Nbb$:
+    \begin{itemize}
+        \item If $d=0$, meaning $y=G(x)$ for some $x \Usample \bit^n$, then the $c$ that $\Rcal$ sends to $D'$ is distributed identically to the $c$ in $\Game_{\textrm{hiding}}$. Consequently, the probability that $D'$ correctly guesses $b$ in $\Game_{\textrm{PRG}}$ is the same as the probability that $D'$ wins $\Game_{\textrm{hiding}}$, that is,
+        \begin{equation}\label{eq:p6-2-2}
+            \Pr_{b\Usample\bit,y\sample G(U_n)}\left[ b'=b \mid d=0\right]
+            =\Pr_{b\Usample\bit,s \Usample \bit^n}\left[ D' \textrm{ wins } \Game_{\textrm{hiding}}\right]
+            =\frac{1}{2}+\frac{1}{2}\epsilon(n).
+        \end{equation}
+
+        \item If $d=1$, meaning $y\Usample \bit^{3n}$, then we see that since $y$ is uniformly random and independent of $r_{R^\ast}$, the resulting $c\coloneqq \textrm{if } b=0 \textrm{ then } y \textrm{ else } y\oplus r_{R^\ast}$ is uniformly random, regardless of the value of $b$. Thus, the $c$ that $D'$ receives is independent of $b$, implying that $D'$ can only correctly guess the value of $b$ with probability exactly $\frac{1}{2}$. (Intuitively speaking, the $c$ that $D'$ receives leaks zero information of the bit $b$.) In other words,
+        \begin{equation}\label{eq:p6-2-3}
+            \Pr_{b\Usample\bit,y\Usample \bit^{3n}}\left[ b'=b \mid d=1\right]
+            = \Pr_{b\Usample\bit,y\Usample \bit^{3n}}\left[ D'(r_{R^\ast}, c)=b \mid d=1\right]
+            =\frac{1}{2}
+        \end{equation}
+        since $D'(r_{R^\ast}, c) \indep b$ and $b\in\bit$ is uniform.
+    \end{itemize}
+    Putting all together, we see that for all $n\in\Nbb$, the probability that $\Rcal$ wins $\Game_{\textrm{PRG}}$ is
+    \begin{align*}
+        &\Pr_{d\Usample\bit}\Bigl[ \Rcal \textrm{ wins } \Game_{\textrm{PRG}} : y \sample \left.\begin{cases}
+                G(U_n) &\textrm{if } d=0\\
+                U_{3n} &\textrm{if } d=1
+            \end{cases}\right\} \Bigr]\\
+        =&\Pr_{d\Usample\bit}\Bigl[ d'=d : y \sample \left.\begin{cases}
+                G(U_n) &\textrm{if } d=0\\
+                U_{3n} &\textrm{if } d=1
+            \end{cases}\right\} \Bigr]\\
+        =& \frac{1}{2}\Pr_{d\Usample\bit,y\sample G(U_n)}\Bigl[ d'=0 \Bigm\vert d=0 \Bigr] + \frac{1}{2}\Pr_{d\Usample\bit,y\Usample \bit^{3n}}\Bigl[ d'=0 \Bigm\vert d=1 \Bigr]\\
+        =& \frac{1}{2}\Pr_{d\Usample\bit,y\sample G(U_n)}\Bigl[ b'=b \Bigm\vert d=0 \Bigr] + \frac{1}{2}\Pr_{d\Usample\bit,y\Usample \bit^{3n}}\Bigl[ b'\neq b \Bigm\vert d=1 \Bigr]\\
+        =& \frac{1}{2}\left(\frac{1}{2}+\frac{1}{2}\epsilon(n)\right)+ \frac{1}{2}\left(1-\frac{1}{2}\right) && \textrm{(by \eqref{eq:p6-2-2} and \eqref{eq:p6-2-3})}\\
+        =& \frac{1}{2}+\frac{1}{4}\epsilon(n),
+    \end{align*}
+    where the advantage $\frac{1}{4}\epsilon(n)$ is nonnegligible.
+
+    Since the PPT distinguisher $\Rcal$ distinguishes between $\ensemble{G(U_n)}{n}$ and $\ensemble{U_{3n}}{n}$) with nonnegligible advantage for all $n\in\Nbb$, $G$ is not a PRG, contradicting our assumption from the start that $G$ is.
+\end{answer}
+
+
+
+
+
+
+
+
+\begin{answer}[c]
+    Let  $S^\ast$ be an unbounded adversarial sender and $n\in\Nbb$ . We show that $S^\ast$ can open the commitment as both $b=0$ and $b=1$ with only negligible probability. 
+    Given $(\out_{S^\ast}=(d^0_{S^\ast},d^1_{S^\ast}), \tau=(r,c))\sample \langle S^\ast(1^n), R(1^n)\rangle$, we reason
+    \begin{align}
+        &\Open(0,d^0_{S^\ast},\tau=(r,c)) = \Open(1,d^1_{S^\ast},\tau=(r,c))=\top\notag\\
+        \iff& \Com(d^0_{S^\ast},r,0)= \Com(d^1_{S^\ast},r,1)= c\notag\\
+        \iff& G(d^0_{S^\ast})= G(d^1_{S^\ast})\oplus r= c \notag\\
+        \implies& G(d^0_{S^\ast})\oplus G(d^1_{S^\ast}) = r. \label{eq:p6-3-1}
+    \end{align}
+    (Intuitively,
+    \[
+        \Open(0,d^0_{S^\ast},\tau=(r,c)) = \top \land \Open(1,d^1_{S^\ast},\tau=(r,c))=\top
+    \]
+    means that despite the fact that the value of $c$ is fixed after the commit phase, the adversary $S^\ast$ can still choose at will whether to open $c$ as $b=0$ or $b=1$ by sending $d^0_{S^\ast}$ or $d^1_{S^\ast}$, respectively, to the honest receiver $R$ in the reveal phase.)
+
+    Notice in \eqref{eq:p6-3-1} that $d^0_{S^\ast},d^1_{S^\ast} \in \bit^n$ are forged by the adversarial sender $S^\ast$ whereas $r\in\bit^{3n}$ is chosen by the honest receiver $R$ and is thus uniformly random. Even though the distributions of $d^0_{S^\ast},d^1_{S^\ast}\in \bit^n$ are unknown, observe that there are, however, at most $2^n\cdot 2^n=2^{2n}$ possible values of $G(d^0_{S^\ast})\oplus G(d^1_{S^\ast})$, far less than all possible values of the uniform $r\in\bit^{3n}$. Thus, the possibility that the adversarial $S^\ast$ can find $d^0_{S^\ast},d^1_{S^\ast}$ such that $G(d^0_{S^\ast})\oplus G(d^1_{S^\ast}) = r$ holds is negligible. Formally speaking,
+    \begin{align*}
+        \Pr_{r\Usample\bit^{3n}}\Bigr[\Open(0,d^0_{S^\ast},(r,c)) = \Open(1,d^1_{S^\ast},(r,c))=\top\Bigr]
+        &\le\Pr_{r\Usample\bit^{3n}}\Bigr[G(d^0_{S^\ast})\oplus G(d^1_{S^\ast}) = r \Bigr]
+        \qquad \textrm{(by \eqref{eq:p6-3-1})}\\
+        &\le \Pr_{r\Usample\bit^{3n}}\Bigr[ r\in \mathop{\textrm{im}} (f) \Bigr]\\
+        &= \frac{\abs*{\mathop{\textrm{im}} (f) }}{\abs*{\bit^{3n}}}\\
+        &\le \frac{\abs*{\mathop{\textrm{dom}} (f) }}{\abs*{\bit^{3n}}}\\
+        &= \frac{\abs*{ \bit^n\times \bit^n }}{\abs*{\bit^{3n}}}\\
+        &= \frac{2^{2n}}{2^{3n}} = 2^{-n},
+    \end{align*}
+    is negligible, where $f:\bit^n\times \bit^n\to \bit^{3n}$ is defined by
+    \[
+        f(s_1, s_2)\triangleq G(s_1)\oplus G(s_2).
+    \]
+
+    Putting all together, we have
+    \begin{align*}
+        &\Pr\left[ \begin{array}{c}
+             \out_{S^\ast}=(d^0_{S^\ast},d^1_{S^\ast})  \\
+             \Open(0,d^0_{S^\ast},\tau=(r,c)) = \Open(1,d^1_{S^\ast},\tau=(r,c))=\top
+        \end{array} : (\out_{S^\ast} , \tau=(r,c))\sample \langle S^\ast(1^n), R(1^n)\rangle \right]\\
+        =& \Pr_{r\Usample\bit^{3n}}\Bigr[\Open(0,d^0_{S^\ast},(r,c)) = \Open(1,d^1_{S^\ast},(r,c))=\top : ((d^0_{S^\ast}, d^1_{S^\ast}), \cdot , (\cdot,c))\sample \langle S^\ast(1^n), R(1^n)\rangle \Bigr]\\
+        \le& 2^{-n} =\negl(n),
+    \end{align*}
+    which, by definition, means that the interactive commitment scheme $(\langle S, R\rangle, \Open)$ is statistically binding.
+\end{answer}
+
+
+
+
+
+
+
+\clearpage
+\begin{answer}[d]
+    To show there is no interactive commitment scheme that satisfies both statistical hiding and statistical binding, we instead show that for all interactive commitment scheme, statistical-hiding implies non-statistical-binding.
+    \begin{intuition}
+        If an interactive commitment scheme is statistical hiding, then the commitments for $0$ and $1$ generated by an honest sender are statistically indistinguishable to any unbounded distinguisher. This however allows an unbounded adversarial sender to open either commitment as any bit in the reveal phase albeit the commitment has already been sent to the receiver and cannot be altered.
+    \end{intuition}
+
+    Let $(\langle S,R\rangle,\Open)$ be an interactive commitment scheme and assume that it is statistical hiding. WLOG, suppose that in every execution $\langle S(b,1^n), R(1^n)\rangle\to (d_S, \tau)$, the decommitment $d_S\in \bit^{l(n)}$ is always $l(n)$-bit, where $l=O(\poly(n))$.  For convenience, let random variables $d_{\langle S,R\rangle}^b$ and $\tau_{\langle S,R\rangle}^b$ denote the decommitment and transcript of the execution $\langle S(b,1^n), R(1^n)\rangle$ for $b\in\bit$, i.e., 
+    \[
+        (d_{\langle S,R\rangle}^b), \tau_{\langle S,R\rangle}^b) \sample \langle S(b,1^n), R(1^n)\rangle \quad \forall b\in\bit,
+    \] and let $r_R, r_S$ denote the internal randomness of $R,S$, respectively. Our goal is to show that $(\langle S,R\rangle,\Open)$ is not statistical binding.
+    \begin{goal}
+        $(\langle S,R\rangle,\Open)$ is not statistical binding, i.e., there exists an unbounded sender $S^\ast$ such that
+        \[
+            \Pr\left[ \begin{array}{c}
+                 \out_{S^\ast}=(d^0_{S^\ast},d^1_{S^\ast})  \\
+                 \Open(0,d^0_{S^\ast},\tau) = \Open(1,d^1_{S^\ast},\tau)=\top
+            \end{array} : (\out_{S^\ast} , \tau)\sample \langle S^\ast(1^n), R(1^n)\rangle \right]
+        \]
+        is nonnegligible (as a function of $n$).
+    \end{goal}
+
+    We first derive from the formal guarantee of statistical hiding by taking $R^\ast\triangleq R$ (the honest receiver) that for every unbounded distinguisher $D$ and all $n\in\Nbb$,
+    \begin{align*}
+        &\abs*{\Pr\left[D\left(\view^{\langle S, R^\ast \rangle}_{R}((0,1^n),1^n;r_S, r_{R})\right)=1 \right]
+        -\Pr\left[D\left(\view^{\langle S, R \rangle}_{R}((1,1^n),1^n;r_S, r_{R})\right)=1 \right]} \le \negl(n) \\
+        \iff& \abs*{\Pr\left[D\left(1^n, r_{R}, \tau_{\langle S,R\rangle}^0 \right)=1 \right]
+        -\Pr\left[D\left(1^n, r_{R}, \tau_{\langle S,R\rangle}^1 \right)=1 \right]}  \le \negl(n),
+    \end{align*}
+    Since distinguishing between $(1^n, r_{R}, \tau_{\langle S,R\rangle}^0)$ and $(1^n, r_{R}, \tau_{\langle S,R\rangle}^1)$ is no harder than distinguishing between $\tau_{\langle S,R\rangle}^0$ and $\tau_{\langle S,R\rangle}^1$, for every unbounded distinguisher $D'$ and all $n\in\Nbb$, we also have 
+    \begin{equation}\label{eq:p6-4-1}
+        \abs*{\Pr\left[D'\left(\tau_{\langle S,R\rangle}^0\right)=1 \right]
+        -\Pr\left[D'\left(\tau_{\langle S,R\rangle}^1 \right)=1 \right]}  \le \negl(n).
+    \end{equation} 
+    (To be exact, this is because given a distinguisher $D'$ of $\tau_{\langle S,R\rangle}^0$ and $\tau_{\langle S,R\rangle}^1$ with advantage $\epsilon(n)$, we may in fact construct a distinguisher $D$ of $(1^n, r_{R}, \tau_{\langle S,R\rangle}^0)$ and $(1^n, r_{R}, \tau_{\langle S,R\rangle}^1)$ with advantage greater or equal to $\epsilon(n)$.)
+    Intuitively, since the scheme is statistical hiding, the transcript (or rather, the commitment) leaks zero information about the committed bit $b\in\bit$, so $\tau_{\langle S,R\rangle}^0$ and $\tau_{\langle S,R\rangle}^1$ must be indistinguishable for any unbounded distinguisher. Since every unbounded distinguisher knows how a commitment is opened (i.e. know $\Open$) and can thus run $\Open$, for any committed bit $b\in\bit$ and all $n\in\Nbb$, it must be that
+    \[
+        \Pr\left[\exists d^\ast\in\bit^{l(n)} \textrm{ such that } \Open(\bar{b}, d^\ast,\tau_{\langle S,R\rangle}^b)=\top\right] =1-\negl(n),
+    \]
+    which means that there exists a decommitment $d^\ast$ that opens $\tau_{\langle S,R\rangle}^b$ as the other bit $\bar{b}$.
+    We show that if that were not the case, then \eqref{eq:p6-4-1} would fail to hold.
+    \begin{claim}\label{claim:p6-4-1}
+        For any $b\in\bit$ and all $n\in\Nbb$, 
+        \[
+            \Pr\left[\exists d^\ast\in\bit^{l(n)} \textrm{ such that } \Open(\bar{b}, d^\ast,\tau_{\langle S,R\rangle}^b)=\top\right] =1-\negl(n).
+        \]
+    \end{claim}
+    \begin{proof}
+        Suppose to the contrary that for some $b\in\bit$ (WLOG, assume $b=0$) and all $n\in\Nbb$
+        \begin{equation}\label{eq:p6-4-2}
+            \Pr\left[\exists d^\ast\in\bit^{l(n)} \textrm{ such that } \Open(\bar{b}=1, d^\ast,\tau_{\langle S,R\rangle}^{b=0})=\top\right] =1-\epsilon(n),
+        \end{equation}
+        where $\epsilon(n)$ is nonnegligible.
+        Then the following unbounded distinguisher $D'$ distinguishes commitments (transcripts) to $0$ and $1$, namely $\tau_{\langle S,R\rangle}^0$ and $\tau_{\langle S,R\rangle}^1$, with non-negl. prob. for infinitely many $n\in\Nbb$: 
+        \begin{mdframed}[style=simplebox]
+            On input $\tau\sample \tau_{\langle S,R\rangle}^b$ for $b\Usample\bit$, check whether there exists $d^\ast\in\bit^{l(n)}$ such that $\Open(1, d^\ast,\tau)=\top$. If true, then output $b'=1$; otherwise output $b'=0$.
+        \end{mdframed}
+        \noindent To see that the advantage of $D'$ is nonnegligible, we calculate 
+        \noindent\begin{align*}
+            &\abs*{\Pr\left[D'\left(\tau_{\langle S,R\rangle}^0\right)=1 \right]
+            -\Pr\left[D'\left(\tau_{\langle S,R\rangle}^1 \right)=1 \right]}\\
+            =&\abs*{\underbrace{\Pr\left[\exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top\right]}_{\begin{aligned}=1-\epsilon(n)\;\; (\textrm{by \eqref{eq:p6-4-2})}\end{aligned}} 
+            - \underbrace{\Pr\left[\exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^1)=\top\right]}_{\mathclap{\begin{aligned}&\stackrel{\twemoji{mushroom}}{\ge} \Pr\left[\Open(1, d_{\langle S,R\rangle}^1,\tau_{\langle S,R\rangle}^1)=\top\right]\\ &=1 \;\; (\textrm{by the \textbf{correctness} of } (\langle S,R\rangle,\Open) \end{aligned}}}}\\
+            \ge&\abs*{(1-\epsilon(n)) - 1}
+            = \epsilon(n),
+        \end{align*}
+        which is nonnegligible, implying the advantage of $D'$ is also nonnegligible. Note that the inequality (\twemoji{mushroom}) follows from the fact that
+        \[
+            \Open(1, d_{\langle S,R\rangle}^1,\tau_{\langle S,R\rangle}^1)=\top
+            \implies \exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^1)=\top,
+        \]
+        where $d_{\langle S,R\rangle}^1$ is exactly the correct decommitment for committed bit $b=1$ and transcript $\tau_{\langle S,R\rangle}^1$.
+        However, this contradicts \eqref{eq:p6-4-1}, which states that $D'$ has only negligible advantage in distinguishing between $\tau_{\langle S,R\rangle}^0$ and $\tau_{\langle S,R\rangle}^1$.
+    \end{proof}
+
+
+    With \autoref{claim:p6-4-1}, we can construct as follows an unbounded adversarial sender $S^\ast$ that opens the commitment (transcript) $\tau_{\langle S,R\rangle}^0$ as both $b=0$ and $b=1$, thereby breaking the requirement of statistical binding. Roughly speaking, $S^\ast$ is basically $S$, with the exception that it outputs as decommitment an additional $d^\ast$ alongside the default $d_{\langle S,R\rangle}^0$, where  $d^\ast\in\bit^{l(n)}$ is such that $\Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top$. Note that $S^\ast$ can find such $d^\ast$ by enumerating all values in $\bit^{l(n)}$ since $S^\ast$ has an unbounded time limit and \autoref{claim:p6-4-1} guarantees that such $d^\ast$ exists with very high probability.
+    \begin{mdframed}[style=simplebox]
+        On input $1^n$, run $S(0, 1^n)$ (the honest sender) as a subroutine and, during its execution, forward all messages from $R$ to $S$ and from $S$ to $R$, while recording all forwarded messages as the transcript $\tau = \tau_{\langle S,R\rangle}^0$. Upon the termination of $S$, collect its output $d_S = d_{\langle S,R\rangle}^0$. As an extra step, find $d^\ast\in\bit^{l(n)}$ such that $\Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top$. Finally, output $(d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1) \coloneqq (d_{\langle S,R\rangle}^0,  d^\ast)$ if $d^\ast$ is found, and abort (i.e. output $(d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1) \coloneqq (d_{\langle S,R\rangle}^0, \bot)$) otherwise.
+    \end{mdframed}
+    \noindent The following diagram illustrates the execution $\langle S^\ast(1^n), R(1^n)\rangle \to ((d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1), \tau_{\langle S^\ast,R\rangle})$.
+    {
+        \vspace{-0.5cm}
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            S & & S^\ast & & R\\
+            \multirow{5}{*}{\fbox{\rule{4em}{0pt}\rule{0pt}{25ex}}} & \multirow{7}{*}{$\makecell[c]{
+                \XL{(0, 1^n)} \\
+                \\
+                \XL{m_1}\\
+                \vdots\\
+                \XR{m_q}\\
+                \\
+                \XR{d_S}
+            }$} & \multirow{7}{*}{$\makecell[c]{
+                \\
+                \\
+                \tau \coloneqq (m_1)\\
+                \vdots\\
+                \tau \coloneqq (\tau, m_q)\\
+                \\
+            }$} & \multirow{7}{*}{$\makecell[c]{
+                \\
+                \\
+                \XL{m_1}\\
+                \vdots\\
+                \XR{m_q}\\
+                \\
+            }$} & \\
+            \rule{0pt}{21ex} & & d_{\langle S^\ast,R\rangle}^0 \coloneqq d_S & & \\
+            & & \makecell{\textrm{Find } d^\ast\in\bit^{l(n)} \textrm{ s.t. } \\  \Open(1, d^\ast,\tau)=\top}  & &\\
+            & & d_{\langle S^\ast,R\rangle}^1\coloneqq\begin{cases}
+                d^\ast &\textrm{if } d^\ast \textrm{ is found}\\
+                \bot   &\textrm{otherwise}
+            \end{cases}  & &\\
+            & & \XD{(d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1)}  & &
+            \end{array}
+        \]
+        \vspace{-0.8cm}
+        \captionof{figure}{Execution $\langle S^\ast(1^n), R(1^n)\rangle \to ((d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1), \tau_{\langle S^\ast,R\rangle})$}
+        \label{fig:p6-game3}
+    }
+    \noindent Note that since $S^\ast$ acts as the man in the middle between $S$ and $R$, 
+    \begin{equation}\label{eq:p6-4-3}
+        \tau_{\langle S^\ast,R\rangle} = \tau= \tau_{\langle S,R\rangle}^0 
+        \textrm{  and  }
+        d_{\langle S^\ast,R\rangle}^0 = d_S = d_{\langle S,R\rangle}^0.
+    \end{equation}
+    For all $n\in\Nbb$, the probability that $S^\ast$ finds two valid decommitments for $b=0$ and $b=1$  is thus
+    \begin{align*}
+        &\Pr\left[ \begin{array}{c}
+             \out_{S^\ast}=(d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1)  \\
+             \Open(0,d_{\langle S^\ast,R\rangle}^0,\tau_{\langle S^\ast,R\rangle}) = \Open(1,d_{\langle S^\ast,R\rangle}^1,\tau_{\langle S^\ast,R\rangle})=\top
+        \end{array} : (\out_{S^\ast} , \tau_{\langle S^\ast,R\rangle})\sample \langle S^\ast(1^n), R(1^n)\rangle \right]\\
+        \ge &\Pr\left[ \Open(0,d_{\langle S^\ast,R\rangle}^0,\tau_{\langle S^\ast,R\rangle}) = \Open(1,d_{\langle S^\ast,R\rangle}^1,\tau_{\langle S^\ast,R\rangle})=\top \land d_{\langle S^\ast,R\rangle}^1 \neq \bot \right.\\
+        &\hspace{10cm} \left. : ((d_{\langle S^\ast,R\rangle}^0,d_{\langle S^\ast,R\rangle}^1) , \tau_{\langle S^\ast,R\rangle})\sample \langle S^\ast(1^n), R(1^n)\rangle  \right]\\
+        =&\Pr\left[ \Open(0,d_{\langle S,R\rangle}^0,\tau_{\langle S,R\rangle}^0) = \Open(1,d_{\langle S^\ast,R\rangle}^1,\tau_{\langle S,R\rangle}^0)=\top \land (\exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top) \right]
+        \qquad \textrm{(by \eqref{eq:p6-4-3})}\\
+        =&\Pr\left[\exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top \right] \\
+        &\qquad\qquad\qquad \Pr\left[ \Open(0,d_{\langle S,R\rangle}^0,\tau_{\langle S,R\rangle}^0) = \Open(1,d^\ast,\tau_{\langle S,R\rangle}^0)=\top \mid \Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top \right]\\
+        =& \underbrace{\Pr\left[\exists d^\ast\in\bit^{l(n)}. \Open(1, d^\ast,\tau_{\langle S,R\rangle}^0)=\top \right]}_{\begin{aligned}=1-\negl(n)\;\; \textrm{(by \autoref{claim:p6-4-1})}\end{aligned}} \cdot
+        \underbrace{\Pr\left[ \Open(0,d_{\langle S,R\rangle}^0,\tau_{\langle S,R\rangle}^0) =\top \right]}_{\begin{aligned}=1 \;\; (\textrm{by the \textbf{correctness} of } (\langle S,R\rangle,\Open))\end{aligned}}
+        = 1-\negl(n),
+    \end{align*}
+    which is nonnegligible, implying the probability is also nonnegligible.
+    This implies that $(\langle S,R\rangle,\Open))$ is not statistical binding, as desired.
+
+    Hence, there can't be interactive commitment scheme that is both statistically hiding and statistically binding.
+\end{answer}

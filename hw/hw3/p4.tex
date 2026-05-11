@@ -1,0 +1,92 @@
+\begin{problem}[CPA-secure Symmetric-Key Encryption (SKE) from PRF]\label{p4}
+    \leavevmode\par
+    Consider the PRF-based SKE scheme constructed from a PRF $F:\bit^n\times \bit^n\to \bit^n$, defined as following : (general key length/output length also works, but we here just consider the simple case.)
+    \begin{itemize}
+        \item $\Gen(1^n)$: sample a uniformly random $k\in\bit^n$.
+        \item $\Enc_k(m)$: choose a uniformly random $r\in\bit^n$, and output $ct = (r, F_k(r)\oplus m)$.
+        \item $\Dec_k((r,t))$: output $F_k(r)\oplus t$. 
+    \end{itemize}
+    \begin{enumerate}[label=(\roman*)]
+        \item Show that this scheme satisfies the correctness condition.
+        \item Show that this scheme is CPA-secure.
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    This is extremely trivial. To see this, notice that for all $n\in\Nbb$ and $m\in \Mcal_n$,
+    \begin{align*}
+        \Pr_{k\sample\Gen(1^n)}[\Dec_k(\Enc_k(m))=m]
+        &= \Pr_{k\sample\Gen(1^n)}[\Dec_k((r, F_k(r)\oplus m))=m]\\
+        &= \Pr_{k\sample\Gen(1^n)}[F_k(r)\oplus ( F_k(r)\oplus m)=m]\\
+        &= \Pr_{k\sample\Gen(1^n)}[m=m]\\
+        &= 1\ge 1-0.
+    \end{align*}
+    Since $0$ is a negligible function of $n$, the SKE scheme $(\Gen, \Enc,\Dec)$ is hence correct.  
+\end{answer}
+
+
+
+
+\begin{answer}[ii]
+    We prove by contradiction. Suppose to the contrary that the SKE scheme $(\Gen, \Enc,\Dec)$ is not CPA-secure.
+    Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\SKE^{CPA}$ we have
+    \begin{equation}\label{eq:p4-2-1}
+        \Pr[\Adv \textrm{ wins}] =\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    We then construct a PPT oracle distinguisher (a reduction) $\Rcal$ that breaks the pseudorandomness of the function $F$ with nonnegligible advantage, as illustrated in the following PRF game $\Game^{\textrm{PRF}}$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal & & \Adv \\
+            b_1\Usample\bit & & & & \\
+            k\Usample\bit^n,\; H\Usample \func_n & & & & \\
+            \Ocal \coloneqq \begin{cases}
+                F_{k}  &\textrm{if } b_1=0\\
+                H  &\textrm{if } b_1=1
+            \end{cases} &  \XR{(1^n, \Ocal(\cdot))} & \makecell{\textrm{Define }\Enc^\Ocal(m)\triangleq (r, \Ocal(r)\oplus m)\\ \textrm{for fresh } r\Usample\bit^n}  & \XR{(1^n, \Enc^\Ocal(\cdot))} & \\
+            && b_2\Usample\bit & \XL{(m_0, m_1)} & \\
+            && ct\sample \Enc^\Ocal(m_{b_2}) & \XR{ct} &\\
+            \Rcal \textrm{ wins if } b_1'=b_1 & \XL{b_1'} & b_1'\coloneqq \begin{cases}
+                0 &\textrm{if } b_2' = b_2\\
+                1 &\textrm{if } b_2' \neq b_2
+            \end{cases} & \XL{b_2'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game^{\textrm{PRF}}$}
+        \label{fig:p4-game1}
+    }
+    \noindent Note that $\func_n$ denotes the set of all functions mapping $n$-bit strings to $n$-bit strings.
+
+    Clearly $\Rcal$ is a PPT algorithm since $\Adv$ is a PPT algorithm. To see $\Rcal$ wins $\Game^{\textrm{PRF}}$ with nonnegligible advantage, observe that for all $n\in\Nbb$:
+    \begin{itemize}
+        \item If $b_1=0$ and thus $\Ocal \coloneqq F_k$ for uniform $k\Usample\bit^{n}$, then \[\Enc^\Ocal = m\mapsto (U_n, F_k(U_n)\oplus m)  = \Enc_k.\] This means that the encryption oracle access $\Enc^\Ocal(\cdot)$ and ciphertext $ct\sample \Enc^\Ocal(m_{b_2})$ that are given by $\Rcal$ to $\Adv$ are distributed identically to those in the experiment $\SKE^{CPA}$.
+        That is, the \textit{view} of $\Adv$ in $\Game^{\textrm{PRF}}$ is distributed as if $\Adv$ were interacting with the challenger in the experiment $\SKE^{CPA}$. Consequently, $\Rcal$ wins here iff $\Adv$ correctly guesses $b_2$, whose probability is equal to the probability that $\Adv$ wins in $\SKE^{CPA}$, that is,
+        \begin{equation}\label{eq:p4-2-2}
+            \Pr_{b_1\Usample\bit}[ \Rcal \textrm{ wins}\mid b_1=0]
+            =\Pr_{b_1,b_2\Usample\bit}[ b_2'=b_2 \mid b_1=0]
+            =\Pr_{b_1,b_2\Usample\bit}[ \Adv \textrm{ wins in } \SKE^{CPA}]
+            \stackrel{\eqref{eq:p4-2-1}}= \frac{1}{2}+\epsilon(n).
+        \end{equation}
+        
+        \item If $b_1=1$ and thus $\Ocal\coloneqq H$ for $H$ chosen uniformly from $\func_n$, then $\Enc^\Ocal = m\mapsto (U_n, H(U_n)\oplus m)$, and the ciphertext $ct=(r, H(r)\oplus m_{b_2})$ where $r\Usample \bit^n$. For any fresh $r'\Usample\bit^n$, since $H$ is uniformly chosen from $\func_n$, $H(r')\in\bit^n$ is uniformly random and independent of $r'$. Therefore, even though $\Adv$ has access to  $\Enc^\Ocal = m\mapsto (U_n, H(U_n)\oplus m)$ and can thus infer the value of $H(r'')$ (for a fresh $r''\Usample\bit^n$) for each query to $\Enc^\Ocal$, $H(r)$ (which is used to pad $m_{b_2}$) is still independent of the message pair $(m_0, m_1)$ chosen by $\Adv$. Lastly, since $H(r)$ is uniform (as reasoned above) and independent of $m_{b_2}$ ($\because H(r)\indep (m_0, m_1)$), by the uniformity property proven in Problem 1-(ii) in HW1, $H(r)\oplus m_{b_2}$ is uniformly random and, more importantly, independent of $m_{b_2}$ and thus $b_2$. 
+        Hence, the ciphertext $ct=(r, H(r)\oplus m_{b_2})$ given by $\Rcal$ to $\Adv$ is independent of $b_2$, and so does the output $b_2'$ of $\Adv$. Since $b_2\Usample\bit$ is uniformly random, this implies that $\Pr[b_2'=\bar{b_2}\mid b_1=1]=\frac{1}{2}$. Intuitively speaking, $ct$ leaks to $\Adv$ zero information of the bit $b_2$, so $\Adv$ correctly guesses the value of $b_2$ with probability only $\frac{1}{2}$. In other words,
+        \begin{align}\label{eq:p4-2-3}
+            \Pr_{b_1\Usample\bit}[ \Rcal \textrm{ wins}\mid b_1=1]
+            &=\Pr_{b_1,b_2\Usample\bit}[ b_2'=\bar{b_2} \mid b_1=1]\notag\\
+            &=\Pr_{\substack{b_2\Usample\bit\\H\Usample\func_n\\r\Usample\bit^n\\(m_0,m_1)\sample\Adv(1^n, \Enc^H(\cdot))}}[ \Adv(\Enc^H(\cdot), (r, H(r)\oplus m_{b_2}))=\bar{b_2}]
+            =\frac{1}{2}
+        \end{align}
+        since $b_2\in\bit$ is independent of LHS and is uniformly random. 
+    \end{itemize}
+    Putting both together, we see that for all $n\in\Nbb$
+    \[
+        \Pr_{b_1\Usample\bit}[ \Rcal \textrm{ wins}]
+        =\frac{1}{2}\Pr_{b_1\Usample\bit}[ \Rcal \textrm{ wins}\mid b_1=0]+\frac{1}{2}\Pr_{b_1\Usample\bit}[ \Rcal \textrm{ wins}\mid b_1=1]
+        \stackrel{\eqref{eq:p4-2-2}+\eqref{eq:p4-2-3}}= \frac{1}{2}\left(\frac{1}{2}+\epsilon(n)\right)+\frac{1}{2}\cdot \frac{1}{2}
+        = \frac{1}{2}+\frac{\epsilon(n)}{2},
+    \]
+    where the advantage $\frac{\epsilon(n)}{2}$ of $\Rcal$ in $\Game^{\textrm{PRF}}$ is nonnegligible.
+    Therefore, by definition, $F$ is not a PRF, contradicting our assumption. 
+\end{answer}

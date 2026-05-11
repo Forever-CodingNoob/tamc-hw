@@ -1,0 +1,129 @@
+\begin{problem}[Statistical distance]\label{p1}
+    \leavevmode\par
+    Given two distributions $(\Xcal, \Ycal)$ over a finite set $\Omega$, their statistical distance (also known as variational or $L_1$ distance) is defined as
+    \[
+        \Delta(\Xcal, \Ycal)\triangleq \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}.
+    \]
+    Where $\Xcal(\omega)\triangleq \Pr[x\sample \Xcal: x=\omega]$  is the probability of getting output $\omega$ when sampling from $\Xcal$.
+    \begin{enumerate}[label=(\roman*)]
+        \item Show that the following is an equivalent definition:
+        \[
+            \Delta(\Xcal, \Ycal)\triangleq \sup_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)}
+            = \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)},
+        \]
+        where $\Xcal(A)$ denotes the probability of $\Xcal$ to be in $A$, and similarly for $\Ycal(A)$. The second equation holds because we only consider $\Omega$ being a finite set in this problem.
+        \item Show that, if $\Xcal \ind_{t,\epsilon} \Ycal$ holds for all $t$, then $\Delta(\Xcal,\Ycal)\le \epsilon$. In this case, we write $\Xcal \ind_{s} \Ycal$.
+        \item Show that for two distribution $\Xcal, \Ycal$ where $\Delta(\Xcal,\Ycal)\lt \epsilon$, $\Xcal \ind_{t,\epsilon} \Ycal$ holds for any $t$.
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    \leavevmode\par
+    \begin{goal}
+    \[
+        \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)} = \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}
+    \]
+    \end{goal}
+    For every event $A\subseteq \Omega$, by triangle inequality we have
+    \begin{align*}
+        \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}
+        &= \frac{1}{2}\left(\sum_{\omega\in A}\abs*{\Xcal(\omega)-\Ycal(\omega)}+\sum_{\omega\in \bar{A}}\abs*{\Xcal(\omega)-\Ycal(\omega)} \right)\\
+        &\stackrel{\twemoji{mushroom}}{\ge} \frac{1}{2}\left(\abs*{\sum_{\omega\in A}\left(\Xcal(\omega)-\Ycal(\omega)\right)}+\abs*{ \sum_{\omega\in \bar{A}}\left(\Xcal(\omega)-\Ycal(\omega) \right)} \right)
+        \qquad (\textrm{by triangle inequality})\\
+        &= \frac{1}{2}\left(\abs*{\Xcal(A)-\Ycal(A)}+\abs*{\Xcal(\bar{A})-\Ycal(\bar{A})} \right)\\
+        &= \frac{1}{2}\left(\abs*{\Xcal(A)-\Ycal(A)}+\abs*{(1-\Xcal(A))-(1-\Ycal(A))} \right)\\
+        &= \frac{1}{2}\left(\abs*{\Xcal(A)-\Ycal(A)}+\abs*{\Xcal(A)-\Ycal(A)} \right)\\
+        &= \abs*{\Xcal(A)-\Ycal(A)},
+    \end{align*}
+    so
+    \begin{equation}\label{eq:p1-1-1}
+        \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)} \le  \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}.
+    \end{equation}
+
+    Notice that in the step $(\twemoji{mushroom})$ where we applied triangle inequality, the equality holds iff all $\Xcal(\omega)-\Ycal(\omega)$ share the same sign (some possibly being $0$) for $\omega\in A$ and all $\Xcal(\omega)-\Ycal(\omega)$ share the same sign (some possibly being $0$) for $\omega\in \bar{A}$.
+    Therefore, the event
+    \begin{equation}\label{eq:p1-1-2}
+        A^\ast\triangleq \{\omega\in\Omega\mid \Xcal(\omega)\ge \Ycal(\omega)\}\subseteq \Omega
+    \end{equation}
+    is a maximizer of $\abs*{\Xcal(A)-\Ycal(A)}$. 
+    (One may check by definition that $\Xcal(\omega)-\Ycal(\omega)\ge 0$ for $\omega\in A^\ast$ and $\Xcal(\omega)-\Ycal(\omega)\lt 0$ for $\omega\in \bar{A^\ast}$.)
+    To see this, observe that
+    \[
+        \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)} 
+        \ge\abs*{\Xcal(A^\ast)-\Ycal(A^\ast)} 
+        \stackrel{\textrm{equality in (\twemoji{mushroom}) holds}}= \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}
+        \stackrel{\textrm{by \eqref{eq:p1-1-1}}}\ge \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)},
+    \]
+    which collapses into
+    \begin{equation}\label{eq:p1-1-3}
+        \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)}  
+        = \abs*{\Xcal(A^\ast)-\Ycal(A^\ast)} 
+        = \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}
+        \triangleq \Delta(\Xcal, \Ycal),
+    \end{equation}
+    as desired.
+    
+\end{answer}
+
+
+
+
+\begin{answer}[ii]
+    We prove this by contradiction. Suppose to the contrary that $\Delta(\Xcal, \Ycal)\gt \epsilon$. We construct as follows a probabilistic distinguisher $\Dcal$ with bounded running time that distinguishes $\Xcal$ and  $\Ycal$ with advantage greater than $\epsilon$.
+    \begin{simplebox}
+        On input $\omega\in\Omega$, return $0$ if $T(\omega)=1$ and $1$ otherwise, where $T: \Omega\to \bit$ is an $|\Omega| \times 1$ bit table preconstructed by $T(\omega')\coloneqq [\Xcal(\omega) \ge \Ycal(\omega)]$ for every $\omega' \in \Omega$.
+    \end{simplebox}
+    Since the preconstruction time for $T$ is not counted in the running time of $\Dcal$, $\Dcal$ runs in only $O(|\Omega|)$ time, which is bounded. (Note that in the worst case $\Dcal$ has to iterate the table $T$, which has size $|\Omega|$.)
+    Moreover, the advantage of $\Dcal$ is indeed greater than $\epsilon$ since
+    \begin{align*}
+        \abs*{\Pr_{\omega\sample \Xcal}[\Dcal(\omega)=1]-\Pr_{\omega\sample \Ycal}[\Dcal(\omega)=1]}
+        &=\abs*{\Pr_{\omega\sample \Xcal}[\Xcal(\omega)\lt \Ycal(\omega)]-\Pr_{\omega\sample \Ycal}[\Xcal(\omega)\lt \Ycal(\omega)]}\\
+        &=\abs*{\Pr_{\omega\sample \Xcal}[\omega\in \bar{A^\ast}]-\Pr_{\omega\sample \Ycal}[\omega\in \bar{A^\ast}]}
+        && (\textrm{by definition of } A^\ast)\\
+        &=\abs*{\Xcal(\bar{A^\ast})-\Ycal(\bar{A^\ast})}\\
+        &= \frac{1}{2}\sum_{\omega\in\Omega}\abs*{\Xcal(\omega)-\Ycal(\omega)}
+        && \textrm{(by \eqref{eq:p1-1-3})}\\
+        &\triangleq \Delta(\Xcal, \Ycal)\gt \epsilon,
+    \end{align*}
+    where $A^\ast$ is the event defined in \eqref{eq:p1-1-2}.
+
+    Hence, by definition, $\Xcal\not\ind_{t,\epsilon} \Ycal$ for some $t\in\Nbb$, contradicting the assumption.
+\end{answer}
+
+
+
+\begin{answer}[iii]
+    We prove this by contradiction. Suppose to the contrary that $\Xcal\not\ind_{t,\epsilon} \Ycal$ for some $t\in\Nbb$, which means that there exists a probabilistic distinguisher $\Dcal$ running in time $t$ such that
+    \[
+        \abs*{\Pr_{\omega\sample \Xcal}[\Dcal(\omega)=1]-\Pr_{\omega\sample \Ycal}[\Dcal(\omega)=1]} \gt \epsilon.
+    \]
+    Let $r\sample \Zcal$ denote the internal randomness (or rather, random coin) of $\Dcal$ for some distribution $\Zcal$ over $\bit^{\ell}$, which allows us to write $\Dcal$ as a deterministic function $\widetilde{\Dcal}: \Omega\times \bit^{\ell} \to \bit$:
+    \[
+        \Dcal(\omega) \equiv \widetilde{\Dcal}(\omega; r) \quad \textrm{where } r\Usample \bit^{\ell}.
+    \]
+    
+    To arrive at a contradiction, consider the events $A^\bigstar_r\subseteq \Omega$ defined by
+    \[ 
+        A^\bigstar_r\triangleq \left\{\omega \in \Omega \bigm\vert \widetilde{\Dcal}(\omega; r)=1 \right\}
+    \]
+    for every $r\in\bit^{\ell}$. We then deduce that
+    \begin{align*}
+        \epsilon &\lt \abs*{\Pr_{\omega\sample \Xcal}[\Dcal(\omega)=1]-\Pr_{\omega\sample \Ycal}[\Dcal(\omega)=1]}\\
+        &= \abs*{\Pr_{\omega\sample \Xcal, r\sample \bit^{\ell}}[\widetilde{\Dcal}(\omega;r)=1]-\Pr_{\omega\sample \Ycal, r\sample \bit^{\ell}}[\widetilde{\Dcal}(\omega; r)=1]}\\
+        &= \abs*{\Pr_{\omega\sample \Xcal, r\sample \bit^{\ell}}[\omega\in A^\bigstar_r]-\Pr_{\omega\sample \Ycal, r\sample \bit^{\ell}}[\omega\in A^\bigstar_r]}
+        && (\textrm{by definition of } A^\bigstar_r)\\
+        &= \abs*{\sum_{r\in \bit^{\ell}}\Pr_{r'\sample \Zcal}[r'=r]\Pr_{\omega\sample \Xcal}[\omega\in A^\bigstar_r]- \sum_{r\in \bit^{\ell}}\Pr_{r'\sample \Zcal}[r'=r]\Pr_{\omega\sample \Ycal}[\omega\in A^\bigstar_r]}
+        && (\textrm{by disjoint events and cond. prob.})\\
+        &= \abs*{\sum_{r\in \bit^{\ell}} \Zcal(r) \Pr_{\omega\sample \Xcal}[\omega\in A^\bigstar_r]- \sum_{r\in \bit^{\ell}} \Zcal(r)\Pr_{\omega\sample \Ycal}[\omega\in A^\bigstar_r]}\\
+        &= \abs*{\sum_{r\in \bit^{\ell}} \Zcal(r) \left(\Pr_{\omega\sample \Xcal}[\omega\in A^\bigstar_r]- \Pr_{\omega\sample \Ycal}[\omega\in A^\bigstar_r] \right)} \\
+        &\le \sum_{r\in \bit^{\ell}} \Zcal(r) \abs*{\Pr_{\omega\sample \Xcal}[\omega\in A^\bigstar_r]- \Pr_{\omega\sample \Ycal}[\omega\in A^\bigstar_r]} 
+        && (\textrm{by triangle inequality})\\
+        &= \sum_{r\in \bit^{\ell}} \Zcal(r) \abs*{\Xcal(A^\bigstar_r)- \Ycal( A^\bigstar_r)} \\
+        &\le \sum_{r\in \bit^{\ell}} \Zcal(r) \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)}\\
+        &= \max_{A\subseteq \Omega}\abs*{\Xcal(A)-\Ycal(A)} \cdot 1\\
+        &= \Delta(\Xcal, \Ycal), && (\textrm{by \eqref{eq:p1-1-3}})
+    \end{align*}
+    which contradicts the assumption that $\Delta(\Xcal, \Ycal)\lt \epsilon$. Hence proved.
+\end{answer}

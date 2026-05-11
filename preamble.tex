@@ -1,0 +1,463 @@
+% This configuration is adapted from: https://github.com/sleepymalc/LaTeX-Template/blob/main/Note/header.tex
+
+%----------------------------------------------------------------------------------------
+%	FORMATTING
+%----------------------------------------------------------------------------------------
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.5\baselineskip}
+\setlength{\voffset}{-15pt}
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry} % Sets margin to 2.5cm for A4 Paper
+\usepackage[onehalfspacing]{setspace} % Sets Spacing to 1.5
+
+\usepackage[T1]{fontenc} % Use European encoding
+\usepackage[utf8]{inputenc} % Use UTF-8 encoding
+%\usepackage{CJKutf8} % Chinese
+\usepackage{charter} % Use the Charter font cuz why not
+%\usepackage{newpxtext} % Use the NewPX font cuz why not
+%\usepackage{newpxmath} % Use the NewPX font cuz why not
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+
+\usepackage{amsthm, amsmath, amssymb} % Mathematical typesetting
+\numberwithin{equation}{section}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}} % number this equation
+
+\usepackage{marvosym, wasysym} % More symbols
+\usepackage{centernot} % centered not
+\usepackage{float} % Improved interface for floating objects
+\usepackage[final, colorlinks = true, 
+            linkcolor = cyan, 
+            citecolor = violet,
+            urlcolor = magenta]{hyperref} % For hyperlinks in the PDF
+\usepackage{graphicx, multicol} % Enhanced support for graphics
+\usepackage[usenames,dvipsnames]{xcolor} % Driver-independent color extensions
+\usepackage{rotating} % Rotation tools
+\usepackage{listings, style/lstlisting} % Environment for non-formatted code, !uses style file!
+\usepackage{pseudocode} % Environment for specifying algorithms in a natural way
+\usepackage{style/avm} % Environment for f-structures, !uses style file!
+\usepackage{booktabs} % Enhances quality of tables
+
+\usepackage{tikz-qtree} % Easy tree drawing tool
+\usetikzlibrary{arrows.meta,decorations.pathmorphing,backgrounds,positioning,fit,petri,calc}
+\tikzset{every tree node/.style={align=center,anchor=north},
+         level distance=2cm} % Configuration for q-trees
+\usepackage{style/btree} % Configuration for b-trees and b+-trees, !uses style file!
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\arabic{section}} % Arabic numerals for the sections
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\renewcommand\thesubsection{\alph{subsection})} % Alphabetic numerals for subsections
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\renewcommand\thesubsubsection{\roman{subsubsection}.} % Roman numbering for subsubsections
+\titleformat{\subsubsection}{\large}{\thesubsubsection}{1em}{}
+
+\usepackage[all]{nowidow} % Removes widows
+
+\usepackage{framed} % framed
+
+%\usepackage[backend=biber,style=alphabetic,
+%            sorting=nyt, natbib=true]{biblatex} % Complete reimplementation of bibliographic facilities
+
+
+\usepackage{csquotes} % Context sensitive quotation facilities
+
+\usepackage[yyyymmdd]{datetime} % Uses YEAR-MONTH-DAY format for dates
+\renewcommand{\dateseparator}{-} % Sets dateseparator to '-'
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{}\renewcommand{\headrulewidth}{0pt} % Blank out the default header
+\fancyfoot[L]{} % Custom footer text
+\fancyfoot[C]{} % Custom footer text
+\fancyfoot[R]{} % Custom footer text
+
+\usepackage{lipsum}
+\usepackage{enumitem}
+\usepackage{caption}
+\captionsetup{belowskip=0pt}
+
+\usepackage{bigdelim} % for the big braces
+
+\usepackage{makecell} % for cool table cells \makecell
+
+
+
+
+% correct
+\definecolor{correct}{HTML}{009900}
+\newcommand\correct[2]{\ensuremath{\:}{\color{red}{#1}}\ensuremath{\to }{\color{correct}{#2}}\ensuremath{\:}}
+\newcommand\green[1]{{\color{correct}{#1}}}
+
+% hide parts
+\newcommand\hide[1]{}
+
+% footnote
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+% Enables comments in red on margin
+\newcommand{\comment}[1]{\marginpar{\scriptsize \textcolor{red}{#1}}} 
+
+% Clear out the item autoref name
+\makeatletter
+\def\itemautorefname{\@gobble}
+\makeatother
+
+% set "enumerate" env spacing
+\setlist[enumerate]{topsep=0pt, partopsep=0pt}
+
+% invisible sections (copied from https://tex.stackexchange.com/a/68296)
+\newcommand\invisiblesection[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+  \sectionmark{#1}}
+
+%----------------------------------------------------------------------------------------
+%	MATH CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+\input{math.tex}
+
+
+%----------------------------------------------------------------------------------------
+%	THEOREM CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+% \newtheorem{theorem}{Theorem}[section]
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{proposition}[theorem]{Proposition}
+% \newtheorem{conjecture}[theorem]{Conjecture}
+% \newtheorem{lemma}[theorem]{Lemma}
+% \newtheorem{claim}[theorem]{Claim}
+% \newtheorem{fact}[theorem]{Fact}
+% \newtheorem{corollary}[theorem]{Corollary}
+% \newtheorem*{theorem*}{Theorem}
+% \newtheorem*{assumption*}{Assumption}
+
+% \theoremstyle{remark}
+% \newtheorem{remark}[theorem]{Remark}
+
+% \theoremstyle{definition}
+% \newtheorem{definition}[theorem]{Definition}
+% \newtheorem*{definition*}{Definition}
+% \newtheorem{example}[theorem]{Example}
+% \newtheorem{oq}[theorem]{Open Question}
+
+
+\makeatother
+\usepackage{thmtools}
+\usepackage[framemethod=TikZ]{mdframed}
+
+\mdfsetup{skipabove=1em,skipbelow=0em}
+
+\theoremstyle{definition}
+
+% simple textbox
+\mdfdefinestyle{simplebox}{
+    linewidth=1pt,
+    linecolor=black,
+    backgroundcolor=white,
+    leftline=true,
+    rightline=true,
+    topline=true,
+    bottomline=true,
+    roundcorner=0pt,
+    skipabove=0.3em,
+    skipbelow=0em
+}
+
+
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{ForestGreen!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=ForestGreen, backgroundcolor=ForestGreen!5,
+			nobreak=false
+		}
+]{thmgreenbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{ForestGreen!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=ForestGreen, backgroundcolor=ForestGreen!8,
+			nobreak=false
+		}
+]{thmgreen2box}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{ForestGreen!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=ForestGreen,
+			nobreak=false
+		}
+]{thmgreenline}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{NavyBlue!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=NavyBlue, backgroundcolor=NavyBlue!5,
+			nobreak=false
+		}
+]{thmbluebox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{TealBlue!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=TealBlue,
+			nobreak=false
+		}
+]{thmblueline}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{RawSienna!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=RawSienna, backgroundcolor=RawSienna!5,
+			nobreak=false
+		}
+]{thmredbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{RawSienna!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=RawSienna, backgroundcolor=RawSienna!8,
+			nobreak=false
+		}
+]{thmred2box}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{SeaGreen!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=SeaGreen, backgroundcolor=SeaGreen!2,
+			nobreak=false
+		}
+]{thmgreen3box}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{WildStrawberry!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=WildStrawberry, backgroundcolor=WildStrawberry!5,
+			nobreak=false
+		}
+]{thmpinkbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{WildStrawberry!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=WildStrawberry,
+			nobreak=false
+		}
+]{thmpinkline}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{MidnightBlue!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=MidnightBlue, backgroundcolor=MidnightBlue!5,
+			nobreak=false
+		}
+]{thmblue2box}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{Gray!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=Gray, backgroundcolor=Gray!5,
+			nobreak=false
+		}
+]{notgraybox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{Gray!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=Gray,
+			nobreak=false
+		}
+]{notgrayline}
+
+% \declaretheoremstyle[
+% 	headfont=\bfseries\sffamily\color{RawSienna!70!black}, bodyfont=\normalfont,
+% 	numbered=no,
+% 	mdframed={
+% 			linewidth=2pt,
+% 			rightline=false, topline=false, bottomline=false,
+% 			linecolor=RawSienna, backgroundcolor=RawSienna!1,
+% 		},
+% 	qed=\qedsymbol
+% ]{thmproofbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{NavyBlue!70!black}, bodyfont=\normalfont,
+	numbered=no,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=NavyBlue, backgroundcolor=NavyBlue!1,
+			nobreak=false
+		}
+]{thmexplanationbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{WildStrawberry!70!black}, bodyfont=\normalfont,
+	numbered=no,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=WildStrawberry, backgroundcolor=WildStrawberry!1,
+			nobreak=false
+		}
+]{thmanswerbox}
+
+\declaretheoremstyle[
+	headfont=\bfseries\sffamily\color{Violet!70!black}, bodyfont=\normalfont,
+	mdframed={
+			linewidth=2pt,
+			rightline=false, topline=false, bottomline=false,
+			linecolor=Violet, backgroundcolor=Violet!1,
+			nobreak=false
+		}
+]{conjpurplebox}
+
+% shared counter "stmt", resets within section
+\declaretheorem[style=thmblue2box, name=, numberwithin=section]{stmt}
+
+\declaretheorem[style=thmgreenbox, name=Definition, numberwithin=section]{definition}
+\declaretheorem[style=thmgreen2box, name=Definition, numbered=no]{definition*}
+\declaretheorem[style=thmredbox, name=Theorem, numberwithin=section]{theorem}
+\declaretheorem[style=thmred2box, name=Theorem, numbered=no]{theorem*}
+\declaretheorem[style=thmredbox, name=Lemma, numberwithin=section]{lemma}
+\declaretheorem[style=thmred2box, name=Lemma, numbered=no]{lemma*}
+\declaretheorem[style=thmredbox, name=Proposition, numberwithin=section]{proposition}
+\declaretheorem[style=thmredbox, name=Corollary, numberwithin=section]{corollary}
+\declaretheorem[style=thmpinkbox, name=Problem, numberwithin=section]{problem}
+\declaretheorem[style=thmpinkbox, name=Problem, numbered=no]{problem*}
+\declaretheorem[style=thmblue2box, name=Claim, sibling=stmt]{claim}
+\declaretheorem[style=thmblue2box, name=Claim, numbered=no]{claim*}
+\declaretheorem[style=conjpurplebox, name=Conjecture, numberwithin=section]{conjecture}
+\declaretheorem[style=thmblueline, name=Observation, sibling=stmt]{observation}
+\declaretheorem[style=thmblueline, name=Observation, numbered=no]{observation*}
+
+\renewcommand\theproblem{\thesection} %\renewcommand\theproblem{\thesection.\arabic {problem}}
+\renewcommand\thelemma{\thesection.\arabic {lemma}}
+\renewcommand\theclaim{\thesection.\arabic {claim}}
+\renewcommand\theobservation{\thesection.\arabic {observation}}
+
+\renewcommand\theHdefinition{\thesection.\arabic {definition}}
+\renewcommand\theHtheorem{\thesection.\arabic {theorem}}
+\renewcommand\theHlemma{\thesection.\arabic {lemma}}
+\renewcommand\theHclaim{\thesection.\arabic {claim}}
+\renewcommand\theHobservation{\thesection.\arabic {observation}}
+\renewcommand\theHproposition{\thesection.\arabic {proposition}}
+\renewcommand\theHcorollary{\thesection.\arabic {corollary}}
+\renewcommand\theHproblem{\thesection {problem}} %\renewcommand\theHproblem{\thesection.\arabic {problem}}
+\renewcommand\theHconjecture{\thesection.\arabic {conjecture}}
+
+% Redefine proof environment to get a full control.
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{\par
+	\pushQED{\qed}%
+	\normalfont \topsep-2\p@\@plus6\p@\relax
+	\trivlist
+	\item[\hskip\labelsep
+	            \color{RawSienna!70!black}\sffamily\bfseries
+	            #1\@addpunct{.}]\ignorespaces
+	\begin{mdframed}[linewidth=2pt,rightline=false, topline=false, bottomline=false,linecolor=RawSienna, backgroundcolor=RawSienna!1]
+        \setlength{\parindent}{1.5em}  % set indent here
+		}{%
+		\popQED\endtrivlist\@endpefalse
+	\end{mdframed}
+}
+\makeatother
+
+\declaretheorem[style=thmbluebox, numbered=no, name=Example]{eg}
+\declaretheorem[style=thmexplanationbox, numbered=no, name=Proof]{tmpexplanation}
+\newenvironment{explanation}[1][]{\vspace{-10pt}\pushQED{\(\circledast\)}\begin{tmpexplanation}}{\null\hfill\popQED\end{tmpexplanation}}
+
+\declaretheorem[style=thmblueline, numbered=no, name=Remark]{remark}
+\declaretheorem[style=thmblueline, numbered=no, name=Note]{note}
+\declaretheorem[style=thmpinkbox, numbered=no, name=Exercise]{exercise}
+\declaretheorem[style=notgrayline, numbered=no, name=As previously seen]{prev}
+\declaretheorem[style=thmgreen3box, numbered=no, name=Intuition]{intuition}
+\declaretheorem[style=thmpinkline, numbered=no, name=Idea]{idea}
+\declaretheorem[style=thmgreenline, numbered=no, name=Goal]{goal}
+\declaretheorem[style=notgraybox, numbered=no, name=Notation]{notation}
+\declaretheorem[style=thmanswerbox, numbered=no, name=Answer]{tmpanswer}
+\newenvironment{answer}[1][]{%
+  \vspace{-10pt}%
+  \pushQED{\(\circledast\)}%
+  \ifstrempty{#1}
+    {\begin{tmpanswer}}
+    {\begin{tmpanswer}[#1]}%
+}{%
+  \null\hfill\popQED\end{tmpanswer}%
+}
+
+% simple textbox
+\newenvironment{simplebox}
+{\begin{mdframed}[style=simplebox]}
+{\end{mdframed}}
+
+
+\usepackage{etoolbox}
+\renewcommand{\qed}{\null\hfill\(\blacksquare\)}
+
+\makeatletter
+
+
+\usepackage{comment}
+\excludecomment{wrap}
+
+%%% https://tex.stackexchange.com/a/439785
+\newcounter{relctr} %% <- counter for relations
+\everydisplay\expandafter{\the\everydisplay\setcounter{relctr}{0}} %% <- reset every eq
+\renewcommand*\therelctr{\alph{relctr}} %% <- label format
+
+\newcommand\labelrel[2]{%
+  \begingroup
+    \refstepcounter{relctr}%
+    \stackrel{\textnormal{(\alph{relctr})}}{\mathstrut{#1}}%
+    \originallabel{#2}%
+  \endgroup
+}
+\AtBeginDocument{\let\originallabel\label} %% <- store original definition
+
+
+%----------------------------------------------------------------------------------------
+%	MISC
+%----------------------------------------------------------------------------------------
+% Fix some stuff
+% %http://tex.stackexchange.com/questions/76273/multiple-pdfs-with-page-group-included-in-a-single-page-warning
+\pdfsuppresswarningpagegroup=1

@@ -1,0 +1,476 @@
+\begin{problem}[Recap on Hardness Amplification]\label{p5}
+\leavevmode\par
+In this problem, you would be asked to review and extend the hardness amplification proof. We first give a brief recap to the outline of proof. In this proof, we aim to show that given a $(t,\epsilon)$-one way function $f$, we can construct a $(t',\epsilon')$-one-way function $f^{(k)}$, where
+\[
+    f^{(k)}(x_1,\ldots,x_k) = (f(x_1),\ldots,f(x_k)).
+\]
+We showed that we can achieve an $\epsilon'=((1+\delta)\epsilon)^k+\gamma$, which is almost exponentially smaller to $\epsilon$. 
+
+The proof of the one-wayness of $f^{(k)}$, not surprisingly, requires reduction. In other words, we must start from an adversary $\Adv_k$ with at least $\epsilon'$ (which is smaller) winning rate on inverting $f^{(k)}$, and construct an reduction $\Rcal$, using $\Adv_k$ as a subroutine, and achieve at least $\epsilon$ (which is larger) winning rate on inverting $f$.
+
+The reduction R is sketched as follows:
+\begin{enumerate}
+    \item $\Rcal$ receives an challenge $y = f(x)$ for random $x\sample\bit^n$ from the challenger.
+    \item For each $i\in [k]$:
+    \begin{itemize}
+        \item Retry the following procedure for $l$ times:
+        \begin{enumerate}
+            \item For each $j\neq i$, sample random $x_j\sample\bit^n$ and compute $y_j=f(x_j)$. Also set $y_i=y$.
+            \item Run $\Adv_k$ with input $\vv{y}=(y_1,\ldots,y_k)$, obtain output $\vv{x}=(x_1,\ldots,x_k)$.
+            \item If $f(x_i)=y$, return $x_i$ to the challenger.
+        \end{enumerate}
+    \end{itemize}
+\end{enumerate}
+
+In this problem, we will discuss the details on the proof showing that $\Rcal$ indeed inverts $f$ with probability at least $\epsilon$. 
+
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{(Tightness)} Show that given an $\Adv_k$ with win rate $\epsilon^k$, no matter how large $l$ is set, the win rate of the given reduction $\Rcal$ cannot always be amplified to larger than $\epsilon$. (\textbf{Hint.} You probably need to ``design'' an $\Adv_k$ with specific winning pattern.)
+    \item \textbf{(Achieving Strong One-Way)} In the lecture, we proved a concrete version of hardness amplification. Now try to apply the concrete result and get the asymptotic version. Prove that, given a $\epsilon(n)$-weak one-way function $f$, where $1-\epsilon(n) \ge \frac{1}{p(n)}$ for some polynomial $p(n)$. You can choose a suitable $k$ (probably as a function of $n$) such that $f^{(k)}$ is strong one-way. (\textbf{Hint.} As always, you should prove by contradiction. Try starting with an $\Adv_k$ with some non-negligible win rate $q(n)$ and get the parameters tuned. Note that you cannot directly set $\gamma$ to negligible. (Why?))
+    \item \textbf{(Twisting the Reductions)} Let us try to change the way we choose $i$ (the starred line in $\Rcal$) in the reduction $\Rcal$. Consider a reduction $\Rcal_{\textsf{random}}$ which, instead of looping for each $i$, only sample one random $i \in \{1,\ldots,k\}$ to try for the $l$ iterations. Does $\Rcal_{\textsf{random}}$ give a similar amplification result?
+\end{enumerate}
+\end{problem}
+
+\begin{answer}[i]
+    % Denote by $\Game_k$ the inversion game of $f^{(k)}$, which $\Adv_k$ wins with probability $\epsilon^k$ by assumption.
+    % Thus we have
+    % \[
+    %     \Pr_{x_1,\ldots,x_k \sample \bit^n}[f^{(k)}(\Adv_k(1^{nk}, (f(x_1), \ldots, f(x_k))) = (f(x_1), \ldots, f(x_k)) ] = \epsilon^k.
+    % \]
+    Let $S$ be an arbitrary subset of $\bit^n$ of size $\lceil \epsilon 2^n\rceil$  (say, $S\triangleq \{(0)_2,(1)_2,\ldots,(\lceil \epsilon 2^n\rceil-1)_2\}$), and denote $(\cdot)_i$ by the $i$th entry of a vector.
+    Assume that $\epsilon 2^n\in\Nbb$ and that for all $(x_1,\ldots,x_k)\in S^k$,
+    \begin{align}
+        \Pr\left[\forall i\in[k]. f\left(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i \right) = f(x_i) \right]
+        &= \frac{\epsilon^k 2^{nk}}{\lceil \epsilon 2^n\rceil^k} \label{eq:in-S-all-correct}\\
+        \Pr\left[\forall i\in[k]. f\left(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i \right) \neq f(x_i) \right]
+        &= 1- \frac{\epsilon^k 2^{nk}}{\lceil \epsilon 2^n\rceil^k} \label{eq:in-S-all-wrong},
+    \end{align}
+    and for all  $(x_1,\ldots,x_k)\notin S^k$,
+    \begin{align}
+        \Pr\left[\forall i\in[k]. f\left(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i \right) \neq f(x_i) \right]
+        &= 1. \label{eq:not-in-S}
+    \end{align}
+    This assumption is valid because
+    \[
+        0\lt \frac{\epsilon^k 2^{nk}}{\lceil \epsilon 2^n\rceil^k} \le \frac{\epsilon^k 2^{nk}}{( \epsilon 2^n)^k} =1
+    \]
+    and
+    \begin{align*}
+        &\Pr[\Adv_k \textrm{ wins}]\\
+        \equiv&\Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ f^{(k)}(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))) = (f(x_1),\ldots,f(x_k)) \right]\\
+        =& \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ \forall i\in [k].f(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i) = f(x_i) \right]\\
+        =& \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ (x_1,\ldots,x_k)\in S^k \right]\\
+            &\qquad\qquad\qquad \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ \forall i\in [k].f(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i) = f(x_i) \mid (x_1,\ldots,x_k)\in S^k \right]\\
+            &+ \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ (x_1,\ldots,x_k)\notin S^k \right]\\
+            &\qquad\qquad\qquad \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ \forall i\in [k].f(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i) = f(x_i) \mid (x_1,\ldots,x_k)\notin S^k \right]\\
+        =& \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ (x_1,\ldots,x_k)\in S^k \right]
+            \cdot \frac{\epsilon^k 2^{nk}}{\lceil \epsilon 2^n\rceil^k}
+            + \Pr_{x_1,\ldots,x_k\sample\bit^n}\left[ (x_1,\ldots,x_k)\notin S^k \right]
+            \cdot 0
+            \;\; \textrm{(by assumptions \eqref{eq:in-S-all-correct} and\eqref{eq:not-in-S})}\\
+        =& \frac{\lceil \epsilon 2^n\rceil^k}{2^{nk}}
+            \cdot \frac{\epsilon^k 2^{nk}}{\lceil \epsilon 2^n\rceil^k}
+            + \left(1-\frac{\lceil \epsilon 2^n\rceil^k}{2^{nk}}\right) \cdot 0
+            \qquad \textrm{(by the definition of $S$)}\\
+        =& \epsilon^k,
+    \end{align*}
+    the latter of which is consistent with our assumption that $\Adv_k$ wins with probability $\epsilon^k$.
+
+    Then we make an observation:
+    \begin{observation}\label{obs:p5-1-1}
+        \begin{align*}
+            \textrm{$\Adv_k$ correctly inverts $f(x_i)$ for \textbf{some} $i\in[k]$}
+            &\iff \textrm{$\Adv_k$ correctly inverts $f(x_i)$ for \textbf{all} $i\in[k]$} \\
+            &\implies  \textrm{every $x_i$ is in $S$}.
+        \end{align*}
+        That is,
+        \begin{align*}
+            \exists i\in[k]. f(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i)=f(x)
+            &\iff \forall i\in[k]. f(\Adv_k(1^{nk}, (f(x_1),\ldots,f(x_k)))_i)=f(x) \\
+            &\implies  (x_1,\ldots,x_k)\in S^k.
+        \end{align*}
+    \end{observation}
+
+    The winning rate of $\Rcal$ is therefore upper bounded by
+    \begin{align*}
+        &\Pr\left[ \Rcal \textrm{ wins} \right] \\
+        \equiv& \Pr_{x\sample\bit^n}\biggl[ f(\Rcal(1^n, f(x)))=f(x) \biggr] \\
+        =&  \Pr_{x\sample\bit^n,\; \forall i\in[k]\ \forall t\in l\ \forall j\in [k-1]\setminus [i]. x_j^{(i,t)}\sample\bit^{n}} \biggl[\exists i\in[k]\; \exists t\in[l] \textrm{ s.t.}\biggr.\\
+        &\qquad  \biggl. f\left(\Adv_k\left(1^{nk}, \left(f(x_1^{(i,t)}),\ldots,\underbrace{f(x)}_{i\textrm{th entry}},\ldots,f(x_{k}^{(i,t)})\right)\right)_i\right)=f(x) \textrm{ in the $(i,t)$th trial} \biggr] \\
+        \le&  \Pr_{x\sample\bit^n,\; \forall i\in[k]\ \forall t\in l\ \forall j\in [k-1]\setminus [i]. x_j^{(i,t)}\sample\bit^{n}} \biggl[ (f(x_1^{(i,t)}),\ldots,\underbrace{f(x)}_{i\textrm{th entry}},\ldots,f(x_{k}^{(i,t)}))\in S^k \biggr] \qquad  (\textrm{by \autoref{obs:p5-1-1}})\\
+        \le&  \Pr_{x\sample\bit^n} \biggl[ f(x)\in S \biggr]\\
+        =& \frac{\lceil \epsilon 2^n\rceil}{2^n} \qquad \textrm{(by the definition of $S$)}\\
+        =&  \frac{\epsilon 2^n}{2^n} \qquad \textrm{(by the assumption that $\epsilon 2^n\in\Nbb$)}\\
+        =& \epsilon,
+    \end{align*}
+    as desired.
+    
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[ii]
+    Let $k(n)\triangleq np(n)$. We prove that $f^{(k(n))}$ is strongly OW.
+
+    To show this, suppose to the contrary that $f^{(k(n))}$ is NOT strongly OW, i.e., there exists a PPT adversary $\Adv_{k}$ such that
+    \begin{align*}
+        q(n)
+        &\triangleq\Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k\right]\\
+        &\equiv \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[ f^{(k(n))}(\Adv_k(1^{nk(n)}, (f(x_1),\ldots,f(x_{k(n)})))) = (f(x_1),\ldots,f(x_{k(n)})) \right]
+    \end{align*}
+    is non-negligible, where $\Game_k$ is the following game.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & \Adv_k \\
+            x_1,\ldots,x_{k(n)}\sample \bit^n & & \\
+            & \XR{(1^{nk(n)}, \vv{y}=f^{(k(n))}(x_1,\ldots,x_{k(n)})=(f(x_1),\ldots,f(x_{k(n)})))} & \\
+            & \XL{\vv{x'}=(x'_1, \ldots, x'_{k(n)})} & \\
+            \multicolumn{3}{c}{\text{$\Adv_k$ wins if $f(x'_i)=f(x_i)\;\forall i\in[k(n)]$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game_k$}
+        \label{fig:p5-game1}
+    }
+
+    Since $q(n)$ is non-negligible, by definition, there exists $c\gt 0$ such that
+    \begin{equation}\label{eq:p5-2-1}
+        q(n)\ge \frac{1}{n^c}
+    \end{equation}
+    for infinitely many $n\in\Nbb$. In the following context, we consider only these $n$'s, and show that we can construct a PPT reduction $\Rcal$ that efficiently inverts $f$ (i.e., wins the game $\Game$) with probability at least $\epsilon(n)$ for these (infinitely many) $n\in\Nbb$ that are sufficiently large. By definition, this breaks the $\epsilon(n)$-weak one-wayness of $f$, contradicting to the assumption that $f$ is $\epsilon(n)$-weak OW.
+
+    We construct $\Rcal$ as described in the following game $\Game$:
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \text{Ch} & & \Rcal & & \Adv_k \\
+            x\sample \bit^n & & & & \\
+            y\coloneqq f(x) & & & & \\
+            & \XR{(1^{n}, y)} & & & \\
+            & & \makecell{
+                \textrm{Repeat $\frac{k(n)}{\alpha(n)}\cdot n$ times }\left(l\in \left[\frac{k(n)}{\alpha(n)}\cdot n\right]\right):\\
+                \textrm{For $i\in [k(n)]$:}\\
+                x_j^{(i,l)}\sample\bit^n \; \forall j\in [k(n)]\setminus \{i\}
+            } & & \\
+            & & & \XR{(1^{nk(n)}, (f(x_1^{(i,l)}),\ldots,\overbrace{y}^{i\textrm{th entry}},\ldots,f(x_{k(n)}^{(i,l)})))} & \\
+            & & & \XL{({x'_1}^{(i,l)},\ldots,{x'_{k(n)}}^{(i,l)})} & \\
+            & & \makecell{
+                \textrm{Set } x^\bigstar\coloneqq {x'_i}^{(i,l)} \textrm{ if } f({x'_i}^{(i,l)})=y; \\
+                \textrm{repeat the double loop otherwise.}
+            } & &\\
+            & \XL{x^\bigstar} & & &\\
+            \multicolumn{5}{c}{\text{$\Rcal$ wins if $f(x^\bigstar)=f(x)$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p5-game2}
+    }
+    where $\alpha(n)$ denotes
+    \begin{equation}\label{eq:p5-2-2}
+        \alpha(n)\triangleq \frac{1}{2n^cp(n)}.
+    \end{equation}
+
+    For $i\in[k(n)]$, we define a \textit{good} set $G_i$ of \textit{good} elements by
+    \[
+        G_i\triangleq \biggl\{
+            x\in\bit^n \biggm\vert 
+            \Pr_{x_1\ldots,x_{k(n)}\sample \bit^n}\bigr[\Adv_k\textrm{ wins }\Game_k \bigm\vert x_i=x \bigl]
+            \ge \frac{\alpha(n)}{k(n)}
+        \biggr\}.
+    \]
+    
+    Before lower bounding the probability that $\Rcal$ wins $\Game$, we claim two properties of the set $G_i$.
+
+    \begin{claim}\label{claim:p5-2-1}
+        If $x\in G_i$ for some $i\in[k(n)]$, then
+        \[
+            \Pr\left[ \Rcal \textrm{ wins } \Game   \right] \ge 1-e^{-n}.
+        \]
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        \begin{align*}
+            \Pr\left[ \Rcal \textrm{ wins } \Game   \right]
+            &\ge \Pr\left[ \exists l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right].
+            \Rcal \textrm{ finds an answer in the $(i,l)$th trial}\right] \\
+            &\ge  \Pr_{\forall l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right].\forall j\in[k(n)]\setminus\{i\}. x_j^{(i,l)}\sample\bit^n}
+            \left[ \exists l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right].
+            \Adv_k \textrm{ wins } \Game_k \textrm{ in the $(i,l)$th trial}\right] \\
+            &=  1- \Pr_{\forall l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right].\forall j\in[k(n)]\setminus\{i\}. x_j^{(i,l)}\sample\bit^n}
+            \left[ \forall l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right].
+            \Adv_k \textrm{ loses } \Game_k \textrm{ in the $(i,l)$th trial}\right] \\
+            &=  1- \prod_{l\in\left[\frac{k(n)}{\alpha(n)}\cdot n\right]}\left( 1-
+            \Pr_{\forall j\in[k(n)]\setminus\{i\}. x_j^{(i,l)}\sample\bit^n}\left[\Adv_k \textrm{ wins } \Game_k \textrm{ in the $(i,l)$th trial}\right] \right) \\
+            &=  1- \left( 1-\Pr_{x_1,\ldots,x_{k(n)}\sample\bit^n}\left[\Adv_k \textrm{ wins } \Game_k \mid x_i = x \right] \right)^{\frac{k(n)}{\alpha(n)}\cdot n} \\
+            &\ge 1- \left( 1-\frac{\alpha(n)}{k(n)} \right)^{\frac{k(n)}{\alpha(n)}\cdot n}
+            \qquad \textrm{(by the definition of $G_i$)}\\
+            &\ge 1- \left(\lim_{m\to\infty}\left( 1-\frac{1}{m} \right)^m \right)^n
+            \quad \textrm{(since $\left\{\left(1-\frac{1}{n}\right)^n\right\}_{n\in\Nbb}$ is an increasing sequence with limit at $\infty$)}\\
+            &= 1-e^{-n} \qquad\qquad\qquad\qquad\quad \textrm{(since $\lim_{m\to\infty}\left( 1-\frac{1}{m}\right)^m=e^{-1}$)}
+        \end{align*}
+    \end{proof}
+
+    \begin{claim}\label{claim:p5-2-2}
+        For infinitely many $n\in\Nbb$, there exists $i^\ast\in[k(n)]$ such that $\Pr\limits_{x\sample \bit^n}[x\in G_{i^\ast}]\ge (\frac{1}{n^c}-\alpha(n))^{\frac{1}{k(n)}}$.
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        Let $n\in Nbb$ be such that \eqref{eq:p5-2-1} holds.
+        Suppose to the contrary that $\Pr\limits_{x\sample \bit^n}[x\in G_{i}]\lt (\frac{1}{n^c}-\alpha(n))^{\frac{1}{k(n)}}$ for all $i\in[k(n)]$. Observe that 
+        \begin{align*}
+            &\Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land (\exists i\in[k(n)]. x_i\notin G_i) \right]\\
+            =& \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land \left(\bigvee_{i\in[k(n)]} x_i\notin G_i\right) \right] \\
+            \le& \sum_{i\in[k(n)]}\Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land x_i\notin G_i \right] 
+            & \textrm{(by union bound)}\\
+            \le& \sum_{i\in[k(n)]}\Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \mid x_i\notin G_i \right] \\
+            \lt& \sum_{i\in[k(n)]} \frac{\alpha(n)}{k(n)} =\alpha(n).
+            & \textrm{(by the definition of $G_i$)}\\
+        \end{align*}
+        \end{proof}\begin{proof}[Proof of claim (cont'd)]
+        Observe also that 
+        \begin{align*}
+            \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land (\forall i\in[k(n)]. x_i\in G_i) \right]
+            &\le \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\forall i\in[k(n)]. x_i\in G_i \right]\\
+            &= \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\bigwedge_{i\in[k(n)]} x_i\in G_i \right]\\
+            &= \prod_{i\in[k(n)]} \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[ x_i\in G_i \right]\\
+            &\lt \prod_{i\in[k(n)]}  (\frac{1}{n^c}-\alpha(n))^{\frac{1}{k(n)}}
+            \qquad \textrm{(by assumption)}\\
+            &= \frac{1}{n^c}-\alpha(n).
+        \end{align*}
+
+        Combining both observations, we can upper bound the winning probability of $\Adv_k$ by $q(n)$:
+        \begin{align*}
+            q(n)
+            &\triangleq \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k\right]\\
+            &= \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land (\exists i\in[k(n)]. x_i\notin G_i) \right]\\
+            &\qquad\qquad\qquad+ \Pr_{x_1,\ldots,x_{k(n)}\sample \bit^{n}}\left[\Adv_{k} \textrm{ wins } \Game_k \land (\forall i\in[k(n)]. x_i\in G_i) \right]\\
+            &\lt \alpha(n)+\left(\frac{1}{n^c}-\alpha(n)\right) \\
+            &= \frac{1}{n^c}\\
+            &\le q(n) \qquad \textrm{(by \eqref{eq:p5-2-1})},
+        \end{align*}
+        which is a contradiction.
+    \end{proof}
+
+    Moreover, we show several inequalities that come in handy later in our proof.
+
+    \begin{observation}\label{obs:p5-2-1}
+        Since $\epsilon(n)$ represents a probability, $p(n)\ge \frac{1}{1-\epsilon(n)}\ge \frac{1}{1-0}=1$.
+    \end{observation}
+    
+    \begin{claim}\label{claim:p5-2-3}
+        There exists $N_1\in\Nbb$ such that $np(n)\ge 1+2c\ln(n)p(n)$ for all $n\ge N_1$. 
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        Since $\lim\limits_{n\to\infty} \frac{1+2c\ln(n)}{n}=0$, there exists $N_1\in\Nbb$ such that $\abs*{\frac{1+2c\ln(n)}{n}-0}\le 1$ and thus $1+2c\ln(n)\le n$ for all $n\ge N_1$. 
+        Hence, for all $n\ge N_1$
+        \[
+            np(n)\ge (1+2c\ln(n))p(n)=p(n)+2c\ln(n)p(n)\stackrel{\textrm{by \autoref{obs:p5-2-1}}}{\ge} 1+2c\ln(n)p(n).
+        \]
+    \end{proof}
+    
+    \begin{claim}\label{claim:p5-2-4}
+        $-\ln\left(1-\dfrac{1}{2p(n)}\right)\ge \dfrac{1}{2p(n)}$
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        Since $\left(1-\frac{1}{x}\right)^x$ is increasing for $x\in [1,\infty)$ and $2p(n)\ge 2$ by \autoref{obs:p5-2-1}, we have 
+        \[
+            \left(1-\frac{1}{2p(n)}\right)^{2p(n)}
+            \le \lim_{x\to\infty}\left(1-\frac{1}{x}\right)^{x}
+            =e^{-1}.
+        \]
+        Taking $\ln(\cdot)$ on both sides, we deduce
+        \[
+            \left(1-\frac{1}{2p(n)}\right)^{2p(n)}\le e^{-1}
+            \iff 2p(n)\ln\left(1-\frac{1}{p(n)}\right)\le -1
+            \iff -\ln\left(1-\dfrac{1}{2p(n)}\right)\ge \dfrac{1}{2p(n)}.
+        \]
+    \end{proof}
+
+    \begin{claim}\label{claim:p5-2-5}
+        There exists $N_2\in\Nbb$ such that $1-\dfrac{1}{2p(n)}\ge \dfrac{1-\dfrac{1}{p(n)}}{1-e^{-n}}$ for all $n\ge N_2$. 
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        Observe that
+        \begin{equation}\label{eq:p5-2-3}
+            1-\dfrac{1}{2p(n)}\ge \dfrac{1-\dfrac{1}{p(n)}}{1-e^{-n}}
+            \iff 1-e^{-n} \ge \dfrac{1-\dfrac{1}{p(n)}}{1-\dfrac{1}{2p(n)}}
+            =1-\frac{1}{2p(n)-1}
+            \iff e^n \ge 2p(n)-1.
+        \end{equation}
+        Since $p(n)=\poly(n)$, $\lim\limits_{n\to\infty} \frac{e^n}{2p(n)-1}=\infty$, which implies there exists $N_2\in\Nbb$ such that $\abs*{\frac{e^n}{2p(n)-1}-0}\ge 1$ and thus $e^n\ge 2p(n)-1$ for all $n\ge N_2$. Therefore, by \eqref{eq:p5-2-3}, $\left(1-\dfrac{1}{2p(n)}\right)(1-e^{-n})\ge 1-\dfrac{1}{p(n)}$ for all $n\ge N_2$.
+    \end{proof}
+
+    Combining these claims, we see that for $n\ge \max\{N_1,N_2\}$ such that \eqref{eq:p5-2-1} holds (of which there are infinitely many),
+    \begin{align*}
+        \Pr_{x\sample\bit^n}\left[\Rcal \textrm{ wins } \Game\right]
+        &\ge \Pr_{x\sample\bit^n}\left[\Rcal \textrm{ wins } \Game \land x\in G_{i^\ast}\right]\\
+        &=  \Pr_{x\sample\bit^n}\left[x\in G_{i^\ast}\right]\Pr_{x\sample\bit^n}\left[\Rcal \textrm{ wins } \Game \mid x\in G_{i^\ast}\right]\\
+        &\ge \left(\frac{1}{n^c}-\alpha(n)\right)^{\frac{1}{k(n)}} (1-e^{-n})
+        & \textrm{(by \autoref{claim:p5-2-1} and \autoref{claim:p5-2-2})}\\
+        &\stackrel{\bigstar}{\ge} 1-\frac{1}{p(n)}\\
+        &\ge \epsilon(n),
+    \end{align*}
+    where the second-to-last inequality $(\bigstar)$ is given by
+    \begin{align*}
+        &\left(\frac{1}{n^c}-\alpha(n)\right)^{\frac{1}{k(n)}} (1-e^{-n}) \ge 1-\frac{1}{p(n)}\\
+        \impliedby& \left(\frac{1}{n^c}-\alpha(n)\right)^{\frac{1}{k(n)}} \ge 1-\dfrac{1}{2p(n)} \stackrel{\textrm{by \autoref{claim:p5-2-5}}}{\ge} \frac{1-\frac{1}{p(n)}}{1-e^{-n}}\\
+        \impliedby& \left(\frac{1}{n^c}-\alpha(n)\right)^{\frac{1}{k(n)}} \stackrel{\textrm{by def. of } \alpha(n)}= \left(\frac{1}{n^c}\left(1-\frac{1}{2p(n)}\right)\right)^{\frac{1}{k(n)}}  \ge 1-\dfrac{1}{2p(n)} \\
+        \impliedby& \frac{1}{n^c}\left(1-\frac{1}{2p(n)}\right)  \ge \left(1-\dfrac{1}{2p(n)} \right)^{k(n)} \\
+        \impliedby& -c\ln(n) +\ln\left(1-\frac{1}{2p(n)}\right)  \ge k(n)\ln\left(1-\dfrac{1}{2p(n)} \right) 
+        &(\textrm{taking $\ln(\cdot)$ on both sides})\\
+        \impliedby& k(n)\ge  1+\frac{c\ln(n)}{\frac{1}{2p(n)}} \stackrel{\textrm{by \autoref{claim:p5-2-4}}}{\ge} 1+\frac{c\ln(n)}{-\ln\left(1-\dfrac{1}{2p(n)} \right)}
+        &(\textrm{since }\ln\left(1-\dfrac{1}{2p(n)} \right) \lt 0)\\
+        \impliedby& k(n)\stackrel{\textrm{by def. of } k(n)}{=}np(n)\ge 1+2c\ln(n)p(n) \\
+        \impliedby& np(n)\stackrel{\textrm{by \autoref{claim:p5-2-3}}}{\ge} 1+2c\ln(n)p(n).
+    \end{align*}
+
+    Now it suffices to show that $\Rcal$ runs in PPT. To see this, notice that the (maximum) running time of $\Rcal$ is upper bounded by
+    \[
+        k(n)\left(\frac{k(n)}{\alpha(n)}\cdot n\right) ((k(n)-1) t_f(n) +t_{\Adv_k}(nk(n))+t_f(n)) 
+        = 2n^{c+3}p^3(n) (np(n)t_f(n)+t_{\Adv_k}(n^2p(n))),
+    \]
+    where $t_f(m)$ and $t_{\Adv_k}(m)$ denotes the computation time of $f$ and running time of $\Adv_k$, respectively, on an input of length $m$. Note that $t_f(m)$ is a polynomial as $f$ is $\epsilon(m)$-weak OW, and that $t_{\Adv_k}(m)$ is a probabilistic polynomial of $m$ because $\Adv_k$ runs in PPT. In addition, since $t_{\Adv_k}(m)$ and $n^2p(n)$ are both (probabilistic) polynomials (of $m$ and $n$, respectively), $t_{\Adv_k}(n^2p(n))$ is a probabilistic polynomial of $n$. 
+    Therefore, since $p(n)$, $t_f(n)$  are polynomials and $t_{\Adv_k}(n^2p(n))$ is a probabilistic polynomial, the running time of $\Rcal$ is a probabilistic polynomial as well, i.e.,  $\Rcal$ runs in PPT.
+
+    Hence, $\Rcal$ runs in PPT and inverts $f$ (i.e., wins the game $\Game$) with probability at least $\epsilon(n)$ for infinitely many $n\in\Nbb$ (that are sufficiently large), $f$ is not $\epsilon(n)$-weak OW, contradicting the assumption that $f$ is. This completes the proof, yay!
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[iii]
+    In the proof of hardness amplification (concrete version), if we replace $\Rcal$ with the following reduction $\Rcal_{\textsf{random}}$:
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \text{Ch} & & \Rcal_{\textsf{random}} & & \Adv_k \\
+            x\sample \bit^n & & & & \\
+            y\coloneqq f(x) & & & & \\
+            & \XR{y} & & & \\
+            & & \makecell{
+                i\sample [k]\\
+                \textrm{Repeat $\frac{2kn}{\gamma}$ times }\left(l\in \left[\frac{2kn}{\gamma}\right]\right):\\
+                x_j\sample\bit^n \; \forall j\in [k]\setminus \{i\}
+            } & & \\
+            & & & \XR{(f(x_1^{(l)}),\ldots,\overbrace{y}^{i\textrm{th entry}},\ldots,f(x_{k}^{(l)}))} & \\
+            & & & \XL{({x'_1}^{(l)},\ldots,{x'_{k}}^{(l)})} & \\
+            & & \makecell{
+                \textrm{Set } x^\bigstar\coloneqq {x'_i}^{(l)} \textrm{ if } f({x'_i}^{(l)})=y; \\
+                \textrm{repeat the loop otherwise.}
+            } & &\\
+            & \XL{x^\bigstar} & & &\\
+            \multicolumn{5}{c}{\text{$\Rcal_{\textsf{random}}$ wins if $f(x^\bigstar)=f(x)$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game$}
+        \label{fig:p5-game2'}
+    }
+    \noindent then the last step of our original proof will no longer work:
+    \begin{align*}
+        &\Pr_{x\sample\bit^n}\Bigl[ \Rcal_{\textsf{random}} \textrm{ wins } \Game \Bigr]\\
+        \ge&  \Pr_{x\sample\bit^n,i\sample [k]}\Bigl[ \Rcal_{\textsf{random},i} \textrm{ wins } \Game \land x\in G_{i^\ast} \land i=i^\ast \Bigr]\\
+        =&   \Pr_{x\sample\bit^n}[x\in G_{i^\ast}]  \Pr_{i\sample [k]}[i=i^\ast] \Pr_{x\sample\bit^n}\Bigl[ \Rcal_{\textsf{random},i} \textrm{ wins } \Game \Bigm\vert x\in G_{i^\ast} \land i=i^\ast \Bigr]
+        &&\textrm{(by cond. prob. and independence)}\\
+        \ge& (1+\delta)\epsilon \cdot \frac{1}{k} \cdot (1-e^{-n})
+        &&\textrm{(by \autoref{claim:p5-3-1} and \autoref{claim:p5-3-2})}\\
+        \gt& \frac{\epsilon}{k} 
+        &&(\textrm{since } \delta\gt \frac{e^{-n}}{1-e^{-n}})\\
+        \not\ge& \epsilon,
+    \end{align*}
+    where $\Rcal_{\textsf{random},i}$ denotes $\Rcal_{\textsf{random}}$ in which $i\in [k]$ is sampled, and the aforementioned claims are the following.
+    \begin{claim}\label{claim:p5-3-1}
+        If $x\in G_i$ for some $i\in[k]$, then
+        \[
+            \Pr\left[ \Rcal_{\textsf{random}} \textrm{ wins } \Game   \right] \ge 1-e^{-n}.
+        \]
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        The argument is identical to the one for $\Rcal$ in the original proof.
+    \end{proof}
+
+    \begin{claim}\label{claim:p5-3-2}
+        There exists $i^\ast\in[k]$ such that $\Pr\limits_{x\sample \bit^n}[x\in G_{i^\ast}]\ge (1+\delta)\epsilon$.
+    \end{claim}
+    \begin{proof}[Proof of claim]
+        This is proven in the original proof.
+    \end{proof}
+
+    As a side note here, recall that in the original proof we define a \textit{good} set $G_i$ as
+    \[
+        G_i\triangleq \biggl\{
+            x\in\bit^n \biggm\vert 
+            \Pr_{x_1\ldots,x_{k(n)}\sample \bit^n}\bigr[\Adv_k\textrm{ wins }\Game_k \bigm\vert x_i=x \bigl]
+            \ge \frac{\gamma}{2k}
+        \biggr\}.
+    \]
+
+    Notice that the last step will not work because we couldn't guarantee $(1+\delta)(1-e^{-n})k^{-1} \gt 1$.  Therefore, if we must use $\Rcal_{\textsf{random}}$ as the reduction, we can still prove a somewhat weaker theorem albeit the original proof does not work.
+    \begin{theorem*}[Our modified theorem]
+        Let $k\in\Nbb$. If $f:\bit^n\to \bit^m$ is $(t,\epsilon)$-OW, then the function $f^{(k)}:\bit^{n\times k}\to \bit^{m\times k}$ defined by $f^{(k)}(x_1,\ldots,x_k)=(f(x_1),\ldots,f(x_k))$ is $(t',\epsilon')$-OW with
+        \begin{itemize}
+            \item $t'=\frac{\gamma}{4kn}t$
+            \item $\epsilon' = ((1+\delta)\epsilon)^k+\gamma$ for $\delta \gt \frac{k}{1-e^{-n}}-1$
+        \end{itemize}
+        provided that $t'\ge kt_f$, where $t_f$ denotes the computation time of $f$.
+    \end{theorem*}
+    \begin{proof}[Proof of the modified theorem]
+        The proof of this theorem is essentially the same as that of hardness amplification (concrete version) proven in class, except for the running time analysis part and the last step, which shows the reduction inverts $f$ with probability more than $\epsilon$ and thus yields a contradiction.
+
+        In the last step of our proof, we deduce:
+        \begin{align*}
+            &\Pr_{x\sample\bit^n}\Bigl[ \Rcal_{\textsf{random}} \textrm{ wins } \Game \Bigr]\\
+            \ge&  \Pr_{x\sample\bit^n,i\sample [k]}\Bigl[ \Rcal_{\textsf{random},i} \textrm{ wins } \Game \land x\in G_{i^\ast} \land i=i^\ast \Bigr]\\
+            =&   \Pr_{x\sample\bit^n}[x\in G_{i^\ast}]  \Pr_{i\sample [k]}[i=i^\ast] \Pr_{x\sample\bit^n}\Bigl[ \Rcal_{\textsf{random},i} \textrm{ wins } \Game \Bigm\vert x\in G_{i^\ast} \land i=i^\ast \Bigr]
+            &&\textrm{(by cond. prob. and independence)}\\
+            \ge& (1+\delta)\epsilon \cdot \frac{1}{k} \cdot (1-e^{-n})
+            &&\textrm{(by \autoref{claim:p5-3-1} and \autoref{claim:p5-3-2})}\\
+            \gt& \epsilon.
+            &&(\textrm{since } \delta\gt \frac{k}{1-e^{-n}}-1)
+        \end{align*}
+
+        Moreover, $\Rcal_{\textsf{random}}$ runs in time $t$ since
+        \[
+            \frac{2kn}{\gamma}\cdot ((k-1)t_f +t'+t_f)
+            \le \frac{2kn}{\gamma}\cdot 2t'
+            = \frac{2kn}{\gamma}\cdot 2\cdot \frac{\gamma}{4kn}t
+            =t.
+        \]
+
+        We then conclude that $\Rcal_{\textsf{random}}$  breaks the $(t,\epsilon)$-one-wayness of $f$, which is a contradiction. Thus the proof is completed.
+    \end{proof}
+    
+\end{answer}

@@ -1,0 +1,93 @@
+\begin{problem}[Fun with indistinguishability]\label{p1}
+    \leavevmode\par
+    In this problem, you are allowed to use the computational assumptions taught in class. For instance, you are allowed to assume the existence of $(t, \epsilon)$-OWF for some $(t, \epsilon)$.
+    \begin{enumerate}[label=(\alph*)]
+        \item Let $\Acal$ be some algorithm that runs in time $T$. Show that if $X\ind_{t,\epsilon} Y$  for some $t\gt T$, then $\Acal(X)\ind_{(t-T),\epsilon} \Acal(Y)$.
+        \item Following the previous question, show that $\Acal(X) \ind_{t,\epsilon} \Acal(Y)$ is not necessarily true.
+        \item Let $X, Y, Z$ be three arbitrary distributions \textcolor{red}{(= random variables)}. Show that $X\ind_{t,\epsilon} Y$ does not necessarily imply $(X,Z)\ind_{t,\epsilon} (Y,Z)$.
+    \end{enumerate}
+\end{problem}
+
+\begin{answer}[a]
+    We prove this by contradiction. Suppose to the contrary that $\Acal(X)\not\ind_{(t-T),\epsilon} \Acal(Y)$, which means that there exists a probabilistic distinguisher $D^{\Acal(X),\Acal(Y)}$ running in time $t-T$ such that 
+    \[
+        \abs*{\Pr\left[D^{\Acal(X),\Acal(Y)}(\Acal(X))=1\right]-\Pr\left[D^{\Acal(X),\Acal(Y)}(\Acal(Y))=1\right]} \ge \epsilon.
+    \]
+    From this, we construct a reduction $D^{X,Y}$ (a probabilistic distinguisher) that runs in time $t$ and distinguishes between $X$ and $Y$ with advantage at least $\epsilon$ as follows:
+    \[
+        D^{X,Y}(s) \triangleq D^{\Acal(X),\Acal(Y)}(\Acal(s)).
+    \]
+    That is, given $D^{\Acal(X),\Acal(Y)}$, who distinguishes between $\Acal(X)$ and $\Acal(Y)$ well enough, our $D^{X,Y}$ first applies $\Acal$ to the input $s$ and then asks $D^{\Acal(X),\Acal(Y)}$ from which distribution $\Acal(s)$ was sampled.
+
+    The run time of $D^{X,Y}$ is hence 
+    \[
+        \textrm{run time of } \Acal + \textrm{run time of }D^{\Acal(X),\Acal(Y)} \le T+(t-T)=t, 
+    \] meaning $D^{X,Y}$ runs in time $t$. Moreover, $D^{X,Y}$ indeed distinguishes between $X$ and $Y$ with an advantage at least $\epsilon$ since
+    \[
+        \abs*{\Pr\left[D^{X,Y}(X)=1\right]-\Pr\left[D^{X,Y}(Y)=1\right]} 
+        =\abs*{\Pr\left[D^{\Acal(X),\Acal(Y)}(\Acal(X))=1\right]-\Pr\left[D^{\Acal(X),\Acal(Y)}(\Acal(Y))=1\right]} 
+        \ge \epsilon
+    \]
+    by the construction of our $D^{X,Y}$.
+
+    This implies by definition $X\not\ind_{t,\epsilon} Y$, which contradicts the assumption.
+\end{answer}
+
+
+
+\begin{answer}[b]
+    We show this by presenting a counterexample.
+    Assume that there exists a $(t,\epsilon)$-PRG $G:\bit^n\to \bit^m$ for some $t,\epsilon,n,m$. Let $D$ be a probabilistic distinguisher of minimal (worst-case) run time such that it distinguishes $G(U_n)$ from $U_m$ with advantage at least $\epsilon$, i.e.,
+    \begin{equation}\label{eq:p1-2-2}
+        \abs*{\Pr\left[D(G(U_n))=1\right]-\Pr\left[D(U_m)=1\right]} \ge \epsilon.
+    \end{equation}
+    Let $t_D$ denote the (worst-case) run time of $D$. Since $G$ is a $(t,\epsilon)$-PRG and thus $G(U_n)\ind_{t, \epsilon} U_m$, by the definition of $D$, we must have $t_D\gt t$. 
+
+    To construct $\Acal$, we split all the steps of $D$ into two halves: $D_1$ and $D_2$. $D_1$ behaves identically to $D$ for time $T-\delta$ and then outputs its entire internal state (e.g., variables and data structures used by $D$)  to ``export'' the execution state of $D$, where $\delta$ denotes the time for $D_1$ to output its entire internal state and for $D_2$ to read and restore it; correspondingly, $D_2$ reads as input the internal state exported by $D_1$ to ``restore'' it and then continues the execution of $D$ for time $t_D-(T-\delta)$, outputting what $D$ outputs. Thus by the construction, $D_1$ and $D_2$ run in time $T$ and $t_D-T+2\delta$, respectively, and we also have
+    \begin{equation}\label{eq:p1-2-1}
+        D = D_2 \circ D_1.
+    \end{equation}
+
+    For the counterexample, take $X\triangleq G(U_n)$, $Y\triangleq U_m$, and $\Acal\triangleq D_1$, and suppose that $t_D-T+2\delta\le t$. (Note that $D_1$m runs in time $T$, as required for a counterexample.) Since $G(U_n)\ind_{t, \epsilon} U_m$ is already given by the definition of PRG, it remains to show that $\Acal(G(U_n))\not\ind_{t, \epsilon} \Acal(U_m)$. To see this, observe that $D_2$ runs in time $t_D-T+2\delta\le t$, as we suppose, and distinguishes between $\Acal(G(U_n))$ and $\Acal(U_m)$ with advantage at least $\epsilon$ since
+    \begin{align*}
+        &\abs*{\Pr\left[D_2(\Acal(G(U_n)))=1\right]-\Pr\left[D_2(\Acal(U_m))=1\right]}\\
+        =& \abs*{\Pr\left[D_2(D_1(G(U_n)))=1\right]-\Pr\left[D_2(D_1(U_m))=1\right]}\\
+        =& \abs*{\Pr\left[D(G(U_n))=1\right]-\Pr\left[D(U_m)=1\right]} &&(\textrm{by \eqref{eq:p1-2-1}})\\
+        \ge& \epsilon. &&(\textrm{by \eqref{eq:p1-2-2}})
+    \end{align*}
+    This implies by definition that  $\Acal(G(U_n))$ and $\Acal(U_m)$ is not $(t,\epsilon)$-indistinguishable, as desired.
+\end{answer}
+
+
+
+
+\begin{answer}[c]
+    We show this by presenting a counterexample.
+    Assume that there exists a $(t,\epsilon)$-PRG $G:\bit^n\to \bit^m$ for some $t,\epsilon,n,m$ such that $\epsilon \le 1-\frac{1}{2^m}$ and that $t$ is no less than the run time of the distinguisher $D^{(X,Z),(Y,Z)}$, which is defined later.
+    
+    As a counterexample, take $X\triangleq G(U_n)$ and $Y\triangleq Z\triangleq U_m$. Note that we regard distributions $X,Y,Z$ as random variables over $\bit^m$ in this context. This means that when sampling a 3-tuple $(x,y,z)\sample (X,Y,Z)$, we always have $x=G(u)$ for some $u\Usample \bit^n$ and, most importantly, $y=z\Usample \bit^m$.
+    
+    Showing $X=G(U_n)\ind_{t,\epsilon} U_m=Y$ is straightforward, as it is given directly by the assumption that $G$ is a $(t,\epsilon)$-PRG. On the other hand, to show $(X,Z)\not\ind_{t,\epsilon} (Y,Z)$, we construct a probabilistic distinguisher $D^{(X,Z),(Y,Z)}$  that (1) runs in time $t$ and (2) distinguishes between $(X,Z)$ and $(Y,Z)$ with advantage at least $\epsilon$, as follows:
+    \[
+        D^{(X,Z),(Y,Z)}(s_1,s_2)\triangleq [s_1=s_2]=\begin{cases}
+            0, & \textrm{if } s_1\neq s_2\\
+            1, & \textrm{if } s_1=s_2
+        \end{cases}.
+    \]
+    The first part is given directly by our assumption that $t$ is no less than the run time of $D^{(X,Z),(Y,Z)}$. Just to clarify, it is reasonable to assume that $D^{(X,Z),(Y,Z)}$ runs in time $t$  since the time complexity of $D^{(X,Z),(Y,Z)}$ is only $O(m)$. For the second part, we simply calculate that
+    \begin{align*}
+        &\abs*{\Pr\left[D^{(X,Z),(Y,Z)}(X,Z)=1\right] - \Pr\left[D^{(X,Z),(Y,Z)}(Y,Z)=1\right]}\\
+        =&\abs*{\Pr\left[X=Z\right] - \Pr\left[ Y=Z \right]}
+        &&(\textrm{by the construction of $D^{(X,Z),(Y,Z)}$})\\
+        =&\abs*{\Pr\left[X=Z\right] - 1}
+        &&(\textrm{since we have assumed $Y=Z$})\\
+        =&\abs*{\Pr\left[G(U_n)=U_m\right] - 1}
+        &&(\textrm{by definitions of $X$ and $Z$})\\
+        =&\abs*{\frac{1}{2^m} - 1}
+        &&(\textrm{since $U_m$ is uniformly random})\\
+        =& 1 - \frac{1}{2^m} \\
+        \ge& \epsilon,
+        &&(\textrm{by assumption})
+    \end{align*}
+    as desired. This implies by definition that $(X,Z)$ and $(Y,Z)$ is not $(t,\epsilon)$-indistinguishable.
+\end{answer}

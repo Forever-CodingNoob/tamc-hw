@@ -1,0 +1,299 @@
+\begin{problem}[Fun with PRGs]\label{p3}
+For each of the following functions $G$, prove the statement: ``if $G_1$ is
+a pseudorandom generator, then $G$ is a pseudorandom generator'' or provide a counterexample to demonstrate that it is not (assuming that PRGs exist).
+
+\begin{enumerate}[label=(\roman*)]
+    \item $G(x) = G_1(x) \oplus (x\concat 0^{l(n)-n})$, where $|x| = n$.
+    \item $G(x) = G_1(x)\concat G_1(x)$.
+\end{enumerate}
+\end{problem}
+
+
+\begin{answer}[i]
+We show $G$ is not always a PRG by providing a counterexample, i.e., a PRG $G_1$ such that the corresponding $G$ is not a PRG, assuming that PRGs exist.
+
+Let $H:\bit^\ast \to \bit^{\ast}$ be an arbitrary PRG where $|H(x)|=m(|x|)$ for some polynomial $m$. We define our ${G_1}:\bit^\ast\to \bit^{\ast}$ as
+\[
+    G_1 (x)\triangleq x_{[1]} \concat H(x_{[2:n]}) 
+    \;\; \text{where } n \text{ denotes } |x|,
+\]
+and thus the corresponding $G:\bit^\ast\to \bit^{\ast}$ is
+\begin{align}
+    G(x)&\triangleq G_1(x)\oplus (x\concat 0^{1+m(n-1)-n}) \notag\\
+    &= (x_{[1]} \concat H(x_{[2:n]}))\oplus (x_{[1]}\concat x_{[2:n]} \concat 0^{1+m(n-1)-n}) \notag\\
+    &= 0 \concat (H(x_{[2:n]}) \oplus (x_{[2:n]} \concat 0^{1+m(n-1)-n}))
+    \;\; \text{where } n \text{ denotes } |x|. \label{eq:p3-1-2}
+\end{align}
+
+We claim that $G_1$ is a PRG whereas $G$ is not.
+
+\begin{claim}\label{claim:p3-1-1}
+    $G_1$ is a PRG.
+\end{claim}
+\begin{proof}[Proof of claim]
+    It's trivial that, since $H$ is a PRG, it is efficiently computable and expanding, and so does $G_1$. Hence it remains to show that $\{G_1(U_n)\}_n$ is pseudorandom.
+    
+    Suppose to the contrary that $\{G_1(U_n)\}_n$ is not pseudorandom, that is, that there exists a PPT distinguisher $D$ such that
+    \[
+        \epsilon(n)\triangleq \abs*{\Pr[D(G_1(U_n)) = 1]  -\Pr[D(U_{1+m(n-1)}) = 1]} 
+    \]
+    is non-negligible (as a function of $n$). Equivalently, in the following security game (Game 1), the distinguisher $D$ wins with probability $\frac{1}{2}+\frac{\epsilon(n)}{2}$ for all $n\ge 1$, where $\epsilon$ is non-negligible.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D \\
+            b \leftarrow \bit & & \\
+            s \leftarrow \begin{cases} 
+                G_1(U_n)= U_1 \concat H(U_{n-1}), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases} & & \\
+            & \XR{s} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game 1}
+        \label{fig:p3-game1}
+    }
+
+    Observe that the first bit of $G_1(U_n)=U_1\concat H(U_{n-1})$ and $U_{1+m(n-1)}$ distribute identically. Thus, Game 1 could be rewritten in the following equivalent game, denoted Game $1'$, wherein $D$ still wins with the same probability $\frac{1}{2}+\frac{\epsilon(n)}{2}$ for all $n\ge 1$.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D \\
+            b \leftarrow \bit & & \\
+            c \leftarrow \bit, s \leftarrow \begin{cases} 
+                H(U_{n-1}), &b = 0 \\
+                U_{m(n-1)}, &b = 1 
+            \end{cases} & & \\
+            s'\coloneqq c\concat s & & \\
+            & \XR{s'} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $1'$}
+        \label{fig:p3-game1'}
+    }
+
+    Formally speaking, for all $n\ge 1$,
+    \begin{equation}\label{eq:p3-1-1}
+        \Pr[D\textrm{ wins Game } 1']\equiv 
+        \Pr\left[b\sample\bit, s'\sample U_1\concat \left.\begin{cases} 
+                H(U_{n-1}), &b = 0 \\
+                U_{m(n-1)}, &b = 1 
+            \end{cases}\right\} : D(s')=b \right]
+        =\frac{1}{2}+\frac{\epsilon(n)}{2}.
+    \end{equation}
+    
+    From this, we provide a PPT distinguisher (a reduction) $R$ that efficiently distinguishes between $\{H(U_n)\}_n$ and $\{U_{m(n)}\}_n$ with non-negligible advantage, i.e., wins the distinguishing game of $\{H(U_n)\}_n$ and $\{U_{m(n)}\}_n$ (Game $2$) with non-negligible advantage. This implies $\{H(U_n)\}_n$ is not pseudorandom and thus $H$ is not a PRG, contradicting to the assumption that $H$ is a PRG.
+
+    \end{proof}\begin{proof}[Proof of claim, cont'd]
+
+    We construct $R$ as shown in the following game (Game 2). Namely, on input $s\in\bit^{m(n)}$, $R$ uniformly samples $c\leftarrow \bit$, passes $c\concat s$ to $D$, receives $b$ from $D$, and finally outputs $b$. Our intuition is to have the distribution of what $R$ passes to $D$ ($c\concat s$ in this case) be the same as that of what $D$ takes as input (i.e., $s'=c\concat s$) in Game $1$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \text{Ch} & & R & & D \\
+            b \leftarrow \bit & & & & \\
+            s \leftarrow \begin{cases} 
+                H(U_n), &b = 0 \\
+                U_{m(n)}, &b = 1 
+            \end{cases} & & & & \\
+            & \XR{s} & & & \\
+            & & c\leftarrow \bit & & \\
+            & & & \XR{c\concat s} & \\
+            & & &\XL{b'} & \\
+            & \XL{b'} & & & \\
+            \multicolumn{5}{c}{\text{$R$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game 2}
+        \label{fig:p3-game2}
+    }
+
+    It suffices to show that $R$ runs in PPT and wins Game $2$ with high probability. First, it's clear that $R$ runs in PPT as $D$ also runs in PPT. To see the latter holds, observe that for all $n\in\Nbb$,
+    \begin{align*}
+        \Pr[R \textrm{ wins Game } 2]
+        \equiv& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                H(U_{n}), &b = 0 \\
+                U_{m(n)}, &b = 1 
+            \end{cases}\right\} : R(s)=b \right] \\
+        =& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                H(U_{n}), &b = 0 \\
+                U_{m(n)}, &b = 1 
+            \end{cases}\right\}, c\sample\bit : D(c\concat s)=b \right] \\
+        =& \Pr\left[b\sample\bit, s'\sample U_1\concat \left.\begin{cases} 
+                H(U_{n}), &b = 0 \\
+                U_{m(n)}, &b = 1 
+            \end{cases}\right\} : D(s')=b \right] \quad \textrm{(by $s'\triangleq c\concat s$)}\\
+        =& \frac{1}{2}+\frac{\epsilon(n+1)}{2}, \quad \textrm{(by \eqref{eq:p3-1-1})}
+    \end{align*}
+    where $\epsilon(n+1)$ is non-negligible.
+
+    Therefore, as reasoned above, the existence of the PPT distinguisher $R$ implies by definition that $\{H(U_n)\}_n$ and $\{U_{m(n)}\}_n$ are not computationally indistinguishable, and thus $H$ is not a PRG, contradicting the assumption that $H$ is a PRG.
+\end{proof}
+
+
+\begin{claim}\label{claim:p3-1-2}
+    $G$ is not a PRG given the $G_1$ defined above.
+\end{claim}
+\begin{proof}[Proof of claim]
+    To see this, we provide a PPT distinguisher $D'$ that efficiently distinguishes between $\{G(U_n)\}_n$ and $\{U_{1+m(n-1)}\}_n$ with non-negligible advantage, i.e., wins the distinguishing game of $\{G(U_n)\}_n$ and $\{U_{1+m(n-1)}\}_n$ (Game $3$) with non-negligible advantage. This implies $\{G(U_n)\}_n$ is not pseudorandom and thus $G$ is not a PRG, finishing our proof.
+    
+    We construct $D'$ as shown in the following game (Game $3$). Namely, on input $s\in\bit^n$, $D'$ outputs $0$ if $s_{[1]}=0$ and $1$ otherwise.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D' \\
+            b \leftarrow \bit & & \\
+            s \leftarrow \begin{cases} 
+                G(U_n), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases} & & \\
+            & \XR{s} & \\
+            & & b'\coloneqq s_{[1]} \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D'$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $3$}
+        \label{fig:p3-game3}
+    }
+    
+    It suffices to show that $D'$ runs in PPT and wins Game $3$ with high probability. For the former, it's trivial that $D'$ runs in PPT. To see the latter holds, observe that for all $n\ge 1$,
+    \begin{align*}
+        \Pr[D' \textrm{ wins Game } 3]
+        \equiv& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases}\right\} : D(s)=b \right] \\
+        =& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}=b \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}=b \mid b=0 \right] \\
+        &\quad + \Pr[b\sample\bit: b=1] \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{1+m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}=b \mid b=1 \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[b\sample\bit, x\sample U_{n} : {G(x)}_{[1]}=0 \mid b=0 \right] \\
+        &\quad + \Pr[b\sample\bit: b=1] \Pr\left[b\sample\bit : U_1=1 \mid b=1 \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[b\sample\bit, x\sample U_{n} : 0=0 \mid b=0 \right] \\
+        &\quad + \Pr[b\sample\bit: b=1] \Pr\left[b\sample\bit : U_1=1 \mid b=1 \right] \\ 
+        &\quad \textrm{(since we know from \eqref{eq:p3-1-2} that the first bit of $G(x)$ is $0$)} \\
+        =& \frac{1}{2} \cdot  1 + \frac{1}{2} \cdot \frac{1}{2}
+        = \frac{3}{4} = \frac{1}{2}+\frac{\mu(n)}{2}
+    \end{align*}
+    where $\mu(n)\triangleq \frac{1}{2}$ is non-negligible.
+
+    Therefore, as reasoned above, the existence of the PPT distinguisher $D'$ implies by definition that $\{G(U_n)\}_n$ and $\{U_{1+m(n-1)}\}_n$ are not computationally indistinguishable, and thus $G$ is not a PRG.
+\end{proof}
+
+Now we’ve completed the proof. Yay!
+\end{answer}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{answer}[ii]
+We show $G$ is not always a PRG by providing a counterexample, i.e., a PRG $G_1$ such that the corresponding $G$ is not a PRG, assuming that PRGs exist.
+
+Let $H:\bit^\ast \to \bit^{\ast}$ be an arbitrary PRG where $|H(x)|=m(|x|)$ for some polynomial $m$. We define our ${G_1}:\bit^\ast\to \bit^{\ast}$ as
+\[
+    G_1 (x)\triangleq x_{[1]} \concat H(x_{[2:n]}) 
+    \;\; \text{where } n \text{ denotes } |x|,
+\]
+and thus the corresponding $G:\bit^\ast\to \bit^{\ast}$ is
+\begin{align}
+    G(x)&\triangleq G_1(\bar{x})\concat G_1(x) \notag\\
+    &= \bar{x_{[1]}} \concat H(\bar{x_{[2:n]}}) \concat x_{[1]} \concat H(x_{[2:n]}) 
+    \;\; \text{where } n \text{ denotes } |x|. \label{eq:p3-1-2}
+\end{align}
+
+\begin{observation}\label{obs:p3-2-1}
+    Note that for any $n\ge 1$ and $x\in \bit^n$, by \eqref{eq:p3-1-2}, the $1$st and $(1+m(n-1)+1)$th bit of $G(x)$ are always different, that is,
+    \begin{align*}
+        &G(x)_{[1]} \oplus G(x)_{[1+m(n-1)+1]}\\
+        =& (\bar{x_{[1]}} \concat H(\bar{x_{[2:n]}}) \concat x_{[1]} \concat H(x_{[2:n]}))_{[1]}
+        \oplus (\bar{x_{[1]}} \concat H(\bar{x_{[2:n]}}) \concat x_{[1]} \concat H(x_{[2:n]}))_{[1+m(n-1)1]}\\
+        =& \bar{x_{[1]}} \oplus x_{[1]} = 1.
+    \end{align*}
+\end{observation}
+
+We claim that $G_1$ is a PRG whereas $G$ is not.
+
+\begin{claim}\label{claim:p3-2-1}
+    $G_1$ is a PRG.
+\end{claim}
+\begin{proof}[Proof of claim] 
+    This is exactly \autoref{claim:p3-1-1}, which has already been proven.
+\end{proof}
+
+
+
+\begin{claim}\label{claim:p3-2-2}
+    $G$ is not a PRG given the $G_1$ defined above.
+\end{claim}
+\begin{proof}[Proof of claim]
+    To see this, we provide a PPT distinguisher $D'$ that efficiently distinguishes between $\{G(U_n)\}_n$ and $\{U_{2+2m(n-1)}\}_n$ with non-negligible advantage, i.e., wins the distinguishing game of $\{G(U_n)\}_n$ and $\{U_{2+2m(n-1)}\}_n$ (Game $4$) with non-negligible advantage. This implies $\{G(U_n)\}_n$ is not pseudorandom and thus $G$ is not a PRG, finishing our proof.
+    
+    We construct $D'$ as shown in the following game (Game $4$). Namely, on input $s\in\bit^n$, $D'$ outputs $0$ if the $1$st and $(1+m(n-1)+1)$th bit of $s$ are different (equivalently, $s_{[1]}\oplus s_{[1+m(n-1)+1]}=1$), and $1$ otherwise. Our intuition comes from \autoref{obs:p3-2-1}.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D' \\
+            b \leftarrow \bit & & \\
+            s \leftarrow \begin{cases} 
+                G(U_n), &b = 0 \\
+                U_{2+2m(n-1)}, &b = 1 
+            \end{cases} & & \\
+            & \XR{s} & \\
+            & & b'\coloneqq \bar{s_{[1]}\oplus s_{[1+m(n-1)+1]}} \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D'$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $4$}
+        \label{fig:p3-game4}
+    }
+    
+    It suffices to show that $D'$ runs in PPT and wins Game $4$ with high probability. For the former, it's trivial that $D'$ runs in PPT. To see the latter holds, observe that for all $n\ge 1$,
+    \begin{align*}
+        &\Pr[D' \textrm{ wins Game } 4]\\
+        \equiv& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{2+2m(n-1)}, &b = 1 
+            \end{cases}\right\} : D(s)=b \right] \\
+        =& \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{2+2m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}\oplus s_{[1+m(n-1)+1]}=\bar{b} \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{2+2m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}\oplus s_{[1+m(n-1)+1]}=\bar{b} \mid b=0 \right] \\
+        &\quad + \Pr[b\sample\bit: b=1] \Pr\left[b\sample\bit, s\sample \left.\begin{cases} 
+                G(U_{n}), &b = 0 \\
+                U_{2+2m(n-1)}, &b = 1 
+            \end{cases}\right\} : s_{[1]}\oplus s_{[1+m(n-1)+1]}=\bar{b} \mid b=1 \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[b\sample\bit, x\sample U_{n} : {G(x)}_{[1]}\oplus {G(x)}_{[1+m(n-1)+1]} = 1 \mid b=0 \right] \\
+        &\quad + \Pr[b\sample\bit: b=1] \Pr\left[b\sample\bit, s\sample U_{2+2m(n-1)}: s_{[1]}\oplus s_{[1+m(n-1)+1]} = 0 \mid b=1 \right] \\
+        =& \Pr[b\sample\bit: b=0] \Pr\left[ 1=1  \right] 
+        + \Pr[b\sample\bit: b=1] \Pr\left[ U_1\oplus U_1 = 0 \right] 
+        \quad \textrm{(by \autoref{obs:p3-2-1})} \\
+        =& \frac{1}{2} \cdot  1 + \frac{1}{2} \cdot \frac{1}{2}
+        = \frac{3}{4} = \frac{1}{2}+\frac{\mu(n)}{2}
+    \end{align*}
+    where $\mu(n)\triangleq \frac{1}{2}$ is non-negligible.
+
+    Therefore, the existence of the PPT distinguisher $D'$ implies by definition that $\{G(U_n)\}_n$ and $\{U_{2+2m(n-1)}\}_n$ are not computationally indistinguishable, and thus $G$ is not a PRG.
+\end{proof}
+
+Now we’ve completed the proof. Yay!
+\end{answer}

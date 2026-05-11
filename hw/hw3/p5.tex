@@ -1,0 +1,268 @@
+\begin{problem}[CCA-security]\label{p5}
+    \leavevmode\par
+    \begin{enumerate}[label=(\roman*)]
+        \item Prove that El Gamal PKE is not IND-CCA-secure.
+        \item Prove that Regev's PKE is not IND-CCA-secure.
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    \leavevmode\par
+    \begin{intuition}
+        El Gamal PKE is not IND-CCA-secure since, given a ciphertext, the adversary can forge another ciphertext that decrypts to some plaintext, from which the adversary can then recover the original plaintext.
+    \end{intuition}
+
+    Let $(\Gen, \Enc, \Dec)$ denote the EL Gamal PKE scheme with an ensemble  $\Gcal=\ensemble{(\Gbb_n, q_n, g_n)}{n}$ of group parameters, where $\Gbb_n$ is a cyclic group of prime order $q_n=O(2^n)$ and $g_n$ is a generator of $\Gbb_n$. Denote also the identity of the cyclic group $\Gbb_n$ by $e_n$. Note that $g_n\neq e_n$ for all $n\in\Nbb$.
+    
+    To prove the problem, we construct a PPT adversary $\Adv$ that breaks the IND-CCA security of  $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment $\PKE^{IND-CCA}$.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & \XR{\pk} &\\
+            b\Usample\bit & \XL{(m_0, m_1)} & m_0\coloneqq e_n,\; m_1\coloneqq g_n \\
+            ct=(u,v)\sample \Enc_{\pk}(m_b)  & \XR{ct=(u,v)} &\\
+            & \XL{ct'} &  ct'\coloneqq (u, g_nv) \neq ct\\
+            & \XR{\tilde{m}=\Dec_\sk(ct')} & \\
+            && m\coloneqq g_n^{q_n-1}\tilde{m} \\
+            & &  b'\coloneqq  \begin{cases}
+                0 &\textrm{if } m= m_0\\
+                1 &\textrm{otherwise}
+            \end{cases}  \\
+            \textrm{$\Adv$ wins if $b' = b$} & \XL{b'} \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{IND-CCA}$}
+        \label{fig:p5-game1}
+    }
+    \noindent Note that in the experiment above, it always holds that $m_0\neq m_1$ and $ct\neq ct'$ since otherwise we would have $g_n=e_n$.
+
+    The only potentially time-consuming operation in $\Adv$ is the computation of $g_n^{q_n-1}$, which can be computed by fast exponentiation (aka exponentiation by squaring) in $O(\log q_n)=O(\log (O(2^n)))=O(n)$ time. Therefore, it's clear that $\Adv$ is a PPT algorithm. 
+
+    As for the advantage of $\Adv$, observe that for all $n\in\Nbb$
+    \begin{align}\label{eq:p5-1-1}
+        m=g_n^{q_n-1}\tilde{m}
+        &=g_n^{q_n-1} \Dec_\sk((u, g_n v))\notag\\
+        &= g_n^{q_n-1} \Dec_\sk((g_n^r, g_n (g^\sk)^r m_b))\notag\\
+        &= g_n^{q_n-1} (g_n (g_n^\sk)^r m_b) (g_n^r)^{-\sk}\notag\\
+        &= g_n^{q_n} m_b  && (\because \Gbb_n \textrm{ is cyclic} \implies \Gbb_n \textrm{ is abelian}) \notag\\
+        &= m_b, && (\because g_n^{q_n} = e_n)
+    \end{align}
+    where $r\Usample\Zbb_{q_n}$ is fresh.
+    Besides, since $m_0\neq m_1$, $m_{b_1}=m_{b_2}$ iff $b_1=b_2$ for all $b_1,b_2\in\bit$.
+    Therefore,
+    \[
+        m=m_0 \stackrel{\eqref{eq:p5-1-1}}\iff m_b=m_0\iff b=0,
+    \]
+    so we have
+    \begin{equation}\label{eq:p5-1-2}
+        b' = [\neg(m=m_0)]= [\neg (b=0)] = [b=1] =b.
+    \end{equation}
+    For all $n\in\Nbb$, the win rate of $\Adv$ is hence
+    \[
+        \Pr[\Adv \textrm{wins}]=  \Pr_{b\Usample\bit}[b' =b] \stackrel{\textrm{by \eqref{eq:p5-1-2}}}= \Pr_{b\Usample\bit}[\top]  = 1 = \frac{1}{2}+\frac{1}{2},
+    \]
+    where the advantage $\frac{1}{2}$ of $\Adv$ is a nonnegligible function of $n$.
+
+    By definition, this means that $(\Gen, \Enc, \Dec)$ is not IND-CCA secure.
+\end{answer}
+
+
+
+
+
+
+\begin{answer}[ii]
+    \leavevmode\par
+    \begin{intuition}
+        Regev's PKE is not IND-CCA-secure since, given a ciphertext, the adversary can forge another ciphertext that decrypts to some plaintext, from which the adversary can then recover the original plaintext with high probability.
+    \end{intuition}
+
+    Let $(\Gen, \Enc, \Dec)$ denote Regev's PKE scheme with modulus $q_n$, $m_n= \Omega(n\log n)$, and discrete Gaussian distribution $\chi\triangleq \Psi_\alpha$ over $\Zbb_{q_n}$ with standard deviation $\alpha q_n\gt 2\sqrt{n}$ as the error distribution, for each security parameter $n\in \Nbb$. Also, we further suppose that $m_n=O(\poly(n))$ and $\frac{q_n}{4m_n}\ge 1$. For convenience, denote $q\triangleq q_n$ and $m\triangleq m_n$. 
+    
+    For each $x\in \Zbb_q$, let $[x]_q$ denote the \textit{central representative} (aka \textit{centered mod}) of $x$, that is, $[x]_q\in \left[-\frac{q}{2}, \frac{q}{2}\right)$ is such that $[x]_q \bmod q = x\in \Zbb_q$. Note that in Regev's PKE scheme, $\Dec$ in fact utilizes $[\;\cdot\;]_q$ to check whether the unpadded result mod $q$ is closer to $0$ or $\lfloor\frac{q}{2}\rfloor$:
+    \begin{equation}\label{eq:p5-2-3}
+        \Dec_\sk(u, v) \triangleq \begin{cases}
+            0 & \textrm{if } \abs*{\left[v-u\sk\right]_q }\lt \frac{q}{4}\\
+            1 & \textrm{otherwise}
+        \end{cases}.
+    \end{equation}
+    (Intuitively speaking, $\abs*{[x]_q}$ denotes the minimal absolute value of the integers in its equivalence class.)
+    To guarantee correctness of Regev's PKE scheme, as shown in \href{https://people.csail.mit.edu/vinodv/6876-Fall2015/L13.pdf}{the lecture note by Vinod Vaikuntanathan}, it's required that
+    \begin{equation}\label{eq:p5-2-1}
+        \Pr_{e\sample\chi}\biggl[ \abs*{[e]_q} \lt \frac{q}{4m}\biggr] \ge 1-\epsilon(n)
+    \end{equation}
+    for some negligible $\epsilon$.
+    Taking a step further,
+    \begin{equation}\label{eq:p5-2-2}
+        \Pr_{e\sample\chi^m}\biggl[ \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr]
+        \stackrel{\textrm{union bound}}\ge 1- \sum_{i=1}^m \left(1- \Pr_{e_i\sample\chi}\biggl[ \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr] \right)
+        \stackrel{\eqref{eq:p5-2-1}}\ge 1- \sum_{i=1}^m \epsilon(n) = 1-m\epsilon(n).
+    \end{equation}
+    Since $m=O(\poly(n))$ and $\epsilon(n)$ is negligible, $m\epsilon(n)$ is also negligible. Sloppily speaking, this means that all components of $e\sample\chi^m$ stay within the bound $\frac{q}{4m}$ with $1-\negl(n)$ probability. 
+    
+    To prove the problem itself, we construct a PPT adversary $\Adv$ that breaks the IND-CCA security of  $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment $\PKE^{IND-CCA}$.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & \XR{\pk} &\\
+            b\Usample\bit & \XL{(\mu_0, \mu_1)} &\mu_0\coloneqq 0,\; \mu_1\coloneqq 1 \\
+            r\Usample \bit^{m} &&\\
+            ct=(u,v)\coloneqq \Enc_{\pk}(\mu_b; r)  & \XR{ct=(u,v)} &\\
+            & \XL{ct'} &  ct'\coloneqq (u, v+1) \neq ct\\
+            & \XR{\tilde{\mu}=\Dec_\sk(ct')} & \\
+            & &  b'\coloneqq  \begin{cases}
+                0 &\textrm{if }  \tilde{\mu}= \mu_0\\
+                1 &\textrm{if }   \tilde{\mu}\neq \mu_0\\
+            \end{cases}  \\
+            \textrm{$\Adv$ wins if $b' = b$} & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{IND-CCA}$}
+        \label{fig:p5-game2}
+    }
+    \noindent Note that in the experiment above, it always holds that $\mu_0\neq \mu_1$ and $ct\neq ct'$ since otherwise we would have $0=1\in\Zbb_{q}$.
+
+    Clearly $\Adv$ is a PPT algorithm. Observe that in the experiment, if it happens that  $ct'$ decrypts to the same message $\mu_b$ (i.e. $\tilde{\mu}=\mu_b$), then $b'=b$ (note that $\tilde{\mu}=\mu_1 \implies \tilde{\mu}\neq \mu_0$ as $\mu_0\neq \mu_1$), leading to a win for $\Adv$.
+    To see that $\tilde{\mu}=\mu_b$ happens with high probability, we make the following observation.
+
+    \begin{claim}\label{claim:p5-2-1}
+        $\Pr[\tilde{\mu}=\mu_b]\ge 1-\negl(n)$.
+    \end{claim}
+    \begin{proof}
+        By construction, $\pk=(A, As+e)$ and $\sk = s$, where $A\Usample\Zbb_q^{m\times n}$, $s\Usample \Zbb_q^n$, and $e\sample\chi^{m}$. Also, $(u,v)=\Enc_\pk(\mu_b; r)=(r^T A, r^T (As+e)+\mu_b\lfloor \frac{q}{2}\rfloor)$, where $r\Usample\bit^m$. 
+
+    
+        Compute that
+        \begin{align}\label{eq:p5-2-5}
+            \tilde{\mu}=\Dec_\sk(u, v+1)
+            &=\Dec_s\left(r^T A, r^T (As+e)+\mu_b\left\lfloor \frac{q}{2}\right\rfloor+1\right)\notag\\
+            &\stackrel{\eqref{eq:p5-2-3}}= \begin{cases}
+                0 &\textrm{if } \abs*{\left[\left(r^T (As+e)+\mu_b\left\lfloor \frac{q}{2}\right\rfloor+1 \right) - (r^T A)s\right]_q}\lt \frac{q}{4}\\
+                1 &\textrm{otherwise}
+            \end{cases}\notag\\
+            &=\begin{cases}
+                0 &\textrm{if } \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\lt \frac{q}{4}\\
+                1 &\textrm{otherwise}
+            \end{cases}.
+        \end{align}
+        We analyze the probability that $\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q} \lt \frac{q}{4}$ by considering the two cases $\mu_b=0$ and $\mu_b=1$.
+
+        \begin{observation}\label{obs:p5-2-1}
+            Conditioning on $r\neq 1^m$ and $\abs*{[e_i]_q}\lt \frac{q}{4m}$ for every $i\in [m]$, we have
+            \[
+                \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ r^Te+1 \right]_q}
+                \begin{cases}
+                    \lt \frac{q}{4} &\textrm{if } \mu_b=0\\
+                    \ge  \frac{q}{4} &\textrm{if } \mu_b=1
+                \end{cases}.
+            \]
+        \end{observation}
+
+
+        \end{proof}\begin{proof}[cont'd]
+        \leavevmode\par
+
+        \begin{proof}[Proof of \autoref{obs:p5-2-1}]
+            First and foremost, we treat all numbers in $\Zbb_q$ as integers in $\Zbb$, allowing ourselves to find an interval bound for $\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ r^Te+1\right]_q$ separately in the two cases $\mu_b=0$ and $\mu_b=1$.
+        
+            As $r\neq 1^m$, we have $r_j=0$ for some $j\in [m]$. Thus, 
+            \begin{align}\label{eq:p5-2-6}
+                \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ r^Te+1 \right]_q}
+                &=\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1}^m r_ie_i +1 \right]_q}
+                \notag\\&=\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_ie_i +1 \right]_q}
+                = \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 \right]_q}.
+            \end{align}
+            Then, since $r_i\in\bit$ and $-\frac{q}{4m}\lt [e_i]_q\lt \frac{q}{4m}$ for every $i\in [m]$,
+            \[
+                -\frac{q}{4}
+                \lt -\frac{q}{4} +\frac{q}{4m}+1
+                = \sum_{i=1, i\neq j}^m 1 \cdot \left(- \frac{q}{4m}\right)+1
+                \lt \sum_{i=1, i\neq j}^m r_i[e_i]_q +1
+                \lt \sum_{i=1, i\neq j}^m 1 \cdot \frac{q}{4m}+1
+                = \frac{q}{4} -\frac{q}{4m}+1
+                \stackrel{\because \frac{q}{4m}\ge 1}\le \frac{q}{4},
+            \]
+             which further implies that 
+            \begin{equation}\label{eq:p5-2-4}
+                -\left\lceil\frac{q}{4}-1\right\rceil\le \sum_{i=1, i\neq j}^m r_i[e_i]_q +1 \le \left\lceil\frac{q}{4}-1\right\rceil
+            \end{equation}
+            as $\sum_{i=1, i\neq j}^m r_i[e_i]_q +1$ is an integer.
+
+            We now consider the two cases separately.
+            \begin{itemize}
+                \item If $\mu_b=0$, it's immediate that
+                \begin{align*}
+                    \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 \right]_q}
+                    &= \abs*{\left[\sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 \right]_q}\\
+                    &= \abs*{\sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 }
+                    &&(\because -\frac{q}{2}\le \sum_{i=1, i\neq j}^m r_i[e_i]_q +1 \lt \frac{q}{2} \;\; (\textrm{by \eqref{eq:p5-2-4}}))\\
+                    &\le \left\lceil\frac{q}{4}-1\right\rceil
+                    && (\textrm{by \eqref{eq:p5-2-4} again})
+                    \qquad \lt \frac{q}{4}.
+                \end{align*}
+                \item If $\mu_b=1$, then by \eqref{eq:p5-2-4} we have
+                \[
+                    \left\lfloor \frac{q}{2}\right\rfloor - \left\lceil\frac{q}{4}-1\right\rceil
+                    \le \left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1
+                    \le \left\lfloor \frac{q}{2}\right\rfloor + \left\lceil\frac{q}{4}-1\right\rceil.
+                \]
+                Taking centered mod $[\;\cdot\;]_q$, we get
+                \begin{multline*}
+                    \left[ \left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1\right]_q
+                    \le \left\lfloor \frac{q}{2}\right\rfloor + \left\lceil\frac{q}{4}-1\right\rceil-q \lt \frac{q}{2}+\left(\frac{q}{4}-1+1\right)-q = -\frac{q}{4}
+                    \\\lor \quad 
+                    \left[ \left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1\right]_q
+                    \ge \left\lfloor \frac{q}{2}\right\rfloor - \left\lceil\frac{q}{4}-1\right\rceil
+                    \gt \left(\frac{q}{2}-1\right)-\left(\frac{q}{4}-1\right)=\frac{q}{4}.
+                \end{multline*}
+                Hence, 
+                \[
+                    \abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ r^Te+1 \right]_q}
+                    \stackrel{\eqref{eq:p5-2-6}}=\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 \right]_q}
+                    =\abs*{\left[\left\lfloor \frac{q}{2}\right\rfloor+ \sum_{i=1, i\neq j}^m r_i[e_i]_q + 1 \right]_q}
+                    \ge \frac{q}{4}.
+                \]
+            \end{itemize}
+        \end{proof}
+        \end{proof}\begin{proof}[cont'd]
+        \leavevmode\par
+
+        What about the probability that each condition holds? In fact, 
+        \begin{equation}\label{eq:p5-2-8}
+            \Pr_{r\Usample\bit^m}[r\neq 1^m] = 1-\frac{1}{2^m}=1-\frac{1}{2^{\Omega(n\log n)}}
+            =1-\frac{1}{2^{\omega(1)\log{n}}}=1-\frac{1}{n^{\omega(1)}}=1-\negl(n).
+        \end{equation}
+        Also, \eqref{eq:p5-2-2} already gives us that
+        \begin{equation}\label{eq:p5-2-9}
+            \Pr_{e\sample\chi^m}\biggl[ \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr] = 1-\negl(n).
+        \end{equation}
+        Hence, the probability that $\tilde{\mu}=\mu_b$ is
+        \begin{align*}
+            &\Pr[\tilde{\mu}=\mu_b]\\
+            =& \Pr[\mu_b=0]\Pr[\tilde{\mu}=0] + \Pr[\mu_b=1]\Pr[\tilde{\mu}=1]\\
+            =& \Pr[\mu_b=0]\Pr\left[\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\lt \frac{q}{4} \right] 
+            + \Pr[\mu_b=1]\Pr\left[\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\ge \frac{q}{4}\right]
+            \qquad (\textrm{by \eqref{eq:p5-2-5}})\\
+            \ge& \Pr[\mu_b=0]\Pr\left[\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\lt \frac{q}{4} \land r\neq 1^m \land \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m} \right] \\
+            +& \Pr[\mu_b=1]\Pr\left[\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\ge \frac{q}{4} \land r\neq 1^m \land \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m} \right]\\
+            =& \Pr[\mu_b=0] \Pr_{r\Usample\bit^m}[r\neq 1^m]\Pr_{e\sample\chi^m}\biggl[ \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr] \Pr\left[\underbrace{\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\lt \frac{q}{4} \Biggm\vert r\neq 1^m \land \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}}_{\begin{gathered}\equiv \top\;\;\textrm{(by \autoref{obs:p5-2-1})}\end{gathered}}\right] \\
+            +& \Pr[\mu_b=1] \Pr_{r\Usample\bit^m}[r\neq 1^m]\Pr_{e\sample\chi^m}\biggl[ \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr] \Pr\left[\underbrace{\abs*{\left[\mu_b\left\lfloor \frac{q}{2}\right\rfloor +  r^T e + 1\right]_q}\ge \frac{q}{4} \Biggm\vert r\neq 1^m \land \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}}_{\begin{gathered}\equiv \top\;\;\textrm{(by \autoref{obs:p5-2-1})}\end{gathered}} \right]\\
+            =& \Pr_{r\Usample\bit^m}[r\neq 1^m]\Pr_{e\sample\chi^m}\biggl[ \bigwedge_{i=1}^m \abs*{[e_i]_q} \lt \frac{q}{4m}\biggr]\\
+            =& (1-\negl(n))(1-\negl(n)) 
+            \qquad (\textrm{by \eqref{eq:p5-2-8} and \eqref{eq:p5-2-9}})\\
+            \ge& 1-\negl(n)-\negl(n)\\
+            =& 1- \negl(n),
+        \end{align*}
+        as claimed.
+    \end{proof}
+
+    FINALLY, as observed above, $\tilde{\mu}=\mu_b$ implies $\Adv$ wins in the experiment $\PKE^{IND-CCA}$, so by \autoref{claim:p5-2-1} we deduce that
+    \[
+        \Pr[\Adv \textrm{ wins}] \ge \Pr[\tilde{\mu}=\mu_b] \stackrel{\textrm{by \autoref{claim:p5-2-1}}}\ge 1-\negl(n) = \frac{1}{2}+\left(\frac{1}{2}-\negl(n)\right).
+    \]
+    Since $\frac{1}{2}-\negl(n)$ is clearly nonnegligible, $\Adv$, a PPT algorithm, wins with nonnegligible advantage in the experiment $\PKE^{IND-CCA}$. Hence, by definition, Regev's PKE scheme $(\Gen, \Enc, \Dec)$ is not IND-CCA secure. 
+\end{answer}

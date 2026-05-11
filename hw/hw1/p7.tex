@@ -1,0 +1,246 @@
+\begin{problem}[Complete the Goldreich-Levin]\label{p7}
+    \leavevmode\par
+    Recall from the proof of the Goldreich-Levin Theorem that we can only assume that there exists a PPT adversary $\Adv^H$ such that
+    \[
+        \Pr_{x\sample\bit^\ast}\biggl[  \Adv^H (1^{2n}, g(x,r))=h(x,r)\biggr] \ge \frac{1}{2}+\epsilon,
+    \]
+    and we construct the reduction $\Rcal$ as follows: for input $(y = f (x), r)$,
+    \begin{enumerate}
+        \item let $m=\poly(\frac{1}{\epsilon})=\frac{n}{\epsilon^2}$ and $k=\log m$;
+        \item samples $r_1,\ldots,r_k\sample \bit^n$ and guess $b_j$ (hope for $b_j = \langle x, r_j \rangle$) for each $j\in[k]$;
+        \item for each $I\subseteq [k]$, set $r_I = \bigoplus_{j\in I} r_j,\; b_I = \bigoplus_{j\in I} b_j$ and
+        \item for each $i\in [n]$, set $r_{iI} = r_I \oplus e_i$, where $e_i$ is the $i$-th standard unit vector;
+        \item independently send $(y, r_{iI})$ to $\Adv^H$ and $\Adv^H$ returns $b'_{iI}$;
+        \item let $c_{iI} = b_I \oplus b'_{iI}$ and set $x'_i = \textrm{majority}\{c_{iI}\}_{I\neq \emptyset}$;
+        \item outputs $x' = (x'_1,\ldots,x'_n)$ together with the input $r$.
+    \end{enumerate}
+
+    \begin{enumerate}[label=(\roman*)]
+        \item Show that for each $i \in [n]$, $\{r_{iI}\}_{I\neq \emptyset}$ is pairwise independent.
+        \item Deduce from (i) that, conditioning on $b_j = \langle x, r_j \rangle$ for all $j \in[k]$ (i.e. all guesses are correct), then for each $i \in [n]$, $\{c_{iI}\}_{i\neq\emptyset}$ is pairwise independent.
+        \item Finally prove the following inequality by Chebychev inequality
+        \[
+            \Pr\biggl[x'_i \neq x_i \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr] \le \frac{1}{\epsilon^2 m},
+        \]
+        where
+        \[
+            G_1 \triangleq \biggl\{ x\in\bit^n \biggm\vert 
+            \Pr_{r\sample \bit^n}\bigl[ \Adv^H(1^{2n}, (f(x),r)) = h(x,r)\bigr] \gt \frac{1}{2}+\frac{\epsilon}{2} \biggr\}.
+        \]
+        \vspace{-1cm}
+        \begin{theorem*}[Chebyshev's Inequality]
+            Let $X_1,\ldots,X_m$ be pairwise independent random variables with the same expectation $\mu$ and variance $\sigma^2$. Then for every $\delta\gt 0$,
+            \[
+                \Pr\left[ \abs*{\frac{1}{m}\sum_{i=1}^m X_i - \mu}\ge \delta \right] \le \frac{\sigma^2}{\delta^2 m}.
+            \]
+        \end{theorem*}
+    \end{enumerate}
+\end{problem}
+
+
+\begin{answer}[i]
+    By definition, our goal is to prove that $r_{iI_1}$ and $r_{iI_2}$ are independent for every distinct $I_1,I_2\in \powerset{[k]}\setminus \{\emptyset\}$ and each $i\in [n]$.
+    
+    Let $i\in [n]$ and $I_1,I_2\in \powerset{[k]}\setminus \{\emptyset\}$ be distinct sets. Notice that
+    \[
+        r_{iI_1}  \indep  r_{iI_2}
+        \stackrel{\textrm{def}}{\iff} r_{I_1}\oplus e_i  \indep  r_{I_2} \oplus e_i
+        \impliedby r_{I_1}  \indep  r_{I_2} 
+        \stackrel{\textrm{def}}{\iff} \bigoplus_{j\in I_1} r_j \indep \bigoplus_{j\in I_2} r_j,
+    \]
+    so it suffices to show $\bigoplus_{j\in I_1} r_j$ and $\bigoplus_{j\in I_2} r_j$ are independent.
+
+    \begin{goal}\ \\
+        $
+        \Pr\left[ \bigoplus_{j\in I_1} r_j = x \land \bigoplus_{j\in I_2} r_j=y \right]
+        =\Pr\left[ \bigoplus_{j\in I_1} r_j = x \right]\Pr\left[ \bigoplus_{j\in I_2} r_j=y \right]
+        $ for all $x,y\in \bit^n$.
+    \end{goal}
+
+    To see this, notice that since $I_1\neq I_2$, $I_1\symdiff I_2  \neq \emptyset$, allowing us to pick an arbitrary $i^\ast\in I_1\setminus I_2 \equiv (I_1\setminus I_2) \cup (I_2\setminus I_1)$. WLOG, assume that $I_1\setminus I_2 \neq \emptyset$. Next, observe that for any $x,y\in\bit^n$,
+    \begin{align*}
+        \Pr\left[ \bigoplus_{j\in I_1} r_j = x \land \bigoplus_{j\in I_2} r_j=y \right]
+        &= \Pr\left[ \left(\bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j \right) \oplus r_{i^\ast} = x \land \bigoplus_{j\in I_2} r_j=y \right] \\
+        &= \Pr\left[ \bigvee_{z\in\bit^n}  \left(\bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j = z  \land r_{i^\ast} = z\oplus x \right) \land \bigoplus_{j\in I_2} r_j=y \right] \\
+        &= \Pr\left[ \bigvee_{z\in\bit^n}  \left(\bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j = z  \land r_{i^\ast} = z\oplus x  \land \bigoplus_{j\in I_2} r_j=y \right)\right] \\
+        &= \sum_{z\in\bit^n} \Pr\left[ \bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j = z  \land r_{i^\ast} = z\oplus x  \land \bigoplus_{j\in I_2} r_j=y \right] 
+        \qquad \textrm{(by disjointness)}\\
+        &= \sum_{z\in\bit^n} \Pr\left[r_{i^\ast} = z\oplus x  \right] \Pr\left[ \bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j = z \land \bigoplus_{j\in I_2} r_j=y \right] \\
+        &\qquad \textrm{(Since $i^\ast\notin (I_1\setminus \{i^\ast\})\cup I_2$ and $r_1,\ldots,r_k$ are mutually independent,}\\
+        &\qquad\quad \textrm{$r_{i^\ast}$ is independent of $\textstyle\left(\bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j, \bigoplus_{j\in I_2} r_j\right)$.)}\\
+        &= \frac{1}{2^n} \sum_{z\in\bit^n}  \Pr\left[ \bigoplus_{j\in I_1\setminus \{i^\ast\}} r_j = z \land \bigoplus_{j\in I_2} r_j=y \right] 
+        \qquad \textrm{(since $r_{i^\ast}$ is uniformly distributed)}\\
+        &= \frac{1}{2^n} \Pr\left[ \bigoplus_{j\in I_2} r_j=y \right] 
+        \qquad \textrm{(by marginal probability)}\\
+        &= \Pr\left[ \bigoplus_{j\in I_1} r_j=x \right]  \Pr\left[ \bigoplus_{j\in I_2} r_j=y \right],\\
+        &\qquad \textrm{(since $\textstyle \bigoplus_{j\in I_1} r_j$ is uniformly distributed by \autoref{obs:p7-1-1})}
+    \end{align*}
+    where in the last step we've used the following observation.
+    \begin{observation}\label{obs:p7-1-1}
+        $r_{I_1} = \bigoplus_{j\in I_1} r_j$ is uniformly distributed.
+    \end{observation}
+    \begin{proof}
+        Since $I_1\neq \emptyset$, we may pick $t \in I_1$.
+        If $|I_1|=1$, then $\bigoplus_{j\in I_1} r_j =r_{t}$, which is clearly uniformly distributed, and thus we are done. Therefore we may assume that $|I_1|\gt 1$.
+        
+        Observe that $(\bit^n,\oplus)$ forms a group, as shown in \autoref{p1}(i), and recall the following result proven in \autoref{p1}(ii):
+        \begin{lemma*}[\autoref{p1}(ii)]
+            Let $U$ and $V$ be random variables over a group $(G,\cdot)$. If $U$ is uniformly distributed and $U,V$ are independent, then $U\cdot V$ is also uniformly distributed. 
+        \end{lemma*}
+        Applying this lemma, we see that since $r_{t}$ is uniformly distributed and $r_{t}$ is independent of $\bigoplus_{j\in I_1\setminus\{t\}} r_j$ (which is because $r_1,\ldots,r_k$ are mutually independent), \[\bigoplus_{j\in I_1} r_j = r_{t} \oplus \bigoplus_{j\in I_1\setminus\{t\}} r_j\] is also uniformly distributed.
+    \end{proof}
+
+    By definition, this means  $r_{I_1}=\bigoplus_{j\in I_1} r_j$ and $r_{I_2}=\bigoplus_{j\in I_2} r_j$ are independent, as desired.
+\end{answer}
+
+
+
+
+
+\begin{answer}[ii]
+    By definition, our goal is to prove that $c_{iI_1}$ and $c_{iI_2}$ are independent for every distinct $I_1,I_2\in \powerset{[k]}\setminus \{\emptyset\}$ and each $i\in [n]$.
+    
+    Let $i\in [n]$ and $I_1,I_2\in \powerset{[k]}\setminus \{\emptyset\}$ be distinct sets.
+    \begin{goal}
+        $c_{iI_1} \indep c_{iI_2}$
+    \end{goal}
+    \begin{idea}
+        Recall that we've already shown in subproblem (i) that, given nonempty and distinct sets $I_1$ and $I_2$, we know $r_{I_1}$ and $r_{I_2}$ are independent. Hence, our idea is: if we could express $c_{iI_1}$ and $c_{iI_2}$ as a (deterministic) function of $r_{I_1}$ and $r_{I_2}$ respectively (say, $c_{iI_1}=f(r_{I_1})$ and $c_{iI_2}=f(r_{I_2})$ for some $f$), then the following lemma would guarantee $f$ preserves the independence of its inputs, i.e.,
+        \[
+            r_{I_1}\indep r_{I_2} \implies f(r_{I_1}) \indep f(r_{I_2}) 
+            \iff  c_{iI_1} \indep c_{iI_2}.
+        \]
+        Since LHS holds, the proof would be completed.
+    \end{idea}
+    \begin{lemma}\label{lemma:p7-2-0}
+        Let $X_1,\ldots,X_n$ be random variables. If $X_1,\ldots,X_n$  are jointly independent, then so are $f_1(X_1),\ldots, f_n(X_n)$ for any deterministic functions $f_1,\ldots, f_n$.
+    \end{lemma}
+    \begin{proof}
+        For every $\alpha_1,\ldots, \alpha_n$ in the supports of $f_1(X_1),\ldots,f_n(X_n)$, respectively, it holds that
+        \begin{align*}
+            &\Pr[f_1(X_1)=\alpha_1 \land \cdots \land f_n(X_n)=\alpha_n]\\
+            =& \Pr[X_1\in f_1^{-1}(\alpha_1) \land \cdots \land X_n\in f_n^{-1}(\alpha_n)]\\
+            =& \Pr[X_1\in f_1^{-1}(\alpha_1)] \cdots \Pr[X_n\in f_n^{-1}(\alpha_n)]
+            &&\textrm{(since $X_1,\ldots,X_n$  are jointly indep.)}\\
+            =& \Pr[f_1(X_1)=\alpha_1] \cdots \Pr[ f_n(X_n)=\alpha_n].
+        \end{align*}
+    \end{proof}
+    \begin{corollary}\label{lemma:p7-2-1}
+        Let $X$ and $Y$ be random variables. If $X$ and $Y$ are independent, then so are $f(X)$ and $g(Y)$ for any deterministic functions $f,g$.
+    \end{corollary}
+
+    Wonderful as the strategy sounds,  we couldn't really find such deterministic function $f$ since $\Adv^H$ is probabilistic. However, it turns out that we can find an $f$ such that $c_{iI_1}=f(r_{I_1}, \vv{r_1})$ and $c_{iI_2}=f(r_{I_2}, \vv{r_2})$, where $\vv{r_1},\vv{r_2}$ are random variables ``extracted'' from $\Adv^H$.
+    
+    In order to leverage \autoref{lemma:p7-2-1} to show that the \textbf{probabilistic (randomized)} algorithm $\Adv^H$ preserves independence of inputs, we may ``transform'' $\Adv^H$ into a deterministic algorithm (which may be viewed as a function) $\Adv^H_D$ by explicitly specifying by $\vv{r}$ the internal random vector it samples:
+    \begin{equation}\label{eq:p7-2-1}
+        \Adv^H(\;\cdot\;) \equiv \Adv^H_D(\;\cdot\;; \vv{r})
+        \quad \textrm{where } \vv{r}\sample\bit^{\ell(n)}. 
+    \end{equation}
+
+    Having a deterministic algorithm $\Adv^H_D$, we can finally rewrite  $c_{iI_1}$ (and $c_{iI_2}$ as well) as
+    \begin{align*}
+        c_{iI_1} 
+        &= b_{I_1} \oplus b'_{iI_1} && \textrm{(by def.)}\\
+        &= \left(\bigoplus_{j\in I} b_j \right) \oplus \Adv^H(y, r_{I_1} \oplus e_i) && \textrm{(by def.)}\\
+        &= \left(\bigoplus_{j\in I_1} \langle x, r_j\rangle \right) \oplus \Adv^H(y, r_{I_1} \oplus e_i) && \textrm{(by def.)}\\
+        &= \left(\bigoplus_{j\in I_1} \bigoplus_{t=1}^n x_t(r_j)_t \right) \oplus \Adv^H(y, r_{I_1} \oplus e_i) && \textrm{(by def.)}\\
+        &= \left(\bigoplus_{t=1}^n \bigoplus_{j\in I_1}  x_t (r_j)_t\right) \oplus \Adv^H(y, r_{I_1} \oplus e_i)\\
+        &= \left(\bigoplus_{t=1}^n x_t \left(\bigoplus_{j\in I_1} r_j\right)_t\right) \oplus \Adv^H(y, r_{I_1} \oplus e_i)\\
+        &= \left(\bigoplus_{t=1}^n x_t (r_{I_1})_t\right) \oplus \Adv^H(y, r_{I_1} \oplus e_i) && \textrm{(by def. of $r_{I_1}$)}\\
+        &= \langle x, r_{I_1} \rangle \oplus \Adv^H(y, r_{I_1} \oplus e_i) && \textrm{(by def. of $\langle \;\cdot\;, \;\cdot\;\rangle$)}\\
+        &= \langle x, r_{I_1} \rangle \oplus \Adv^H_D(y, r_{I_1} \oplus e_i; \vv{r_1}) && \textrm{(by the transformation \eqref{eq:p7-2-1})}
+    \end{align*}
+    where $\vv{r_1}$ is a fresh random vector sampled from some distribution. Likewise, we rewrite $c_{iI_2} = \langle x, r_{I_2} \rangle \oplus \Adv^H_D(y, r_{I_2} \oplus e_i; \vv{r_1})$ where $\vv{r_2}$ is a fresh random vector $\vv{r_2}$ independent of $\vv{r_1}$ and sampled from some distribution. For simplicity, let $f:\bit^n \times \bit^{\ell(n)} \to\bit$ be defined by
+    \[
+        f(s, \vv{r}) = \langle x, s \rangle \oplus \Adv^H_D(y, s \oplus e_i; \vv{r}),
+    \]
+    where $\ell(n)=|\vv{r_1}|=|\vv{r_2}|$. Note that $f$ is a deterministic function since $x$, $y$, $e_i$ are constants and $\Adv^H_D$ is a deterministic algorithm. We hence have
+    \begin{equation}\label{eq:p7-2-2}
+        c_{iI_1}=f(r_{I_1}, \vv{r_1}),\quad c_{iI_2}=f(r_{I_2}, \vv{r_2})
+    \end{equation}
+    for some fresh random vectors $\vv{r_1}, \vv{r_2}$.
+
+    \begin{goal}
+        $f(r_{I_1}, \vv{r_1}) \indep f(r_{I_2}, \vv{r_2})$
+    \end{goal}
+    
+    Last but not least, notice that since (1) $r_{I_1} \indep r_{I_2}$ (proven in subproblem (i)), (2) $\vv{r_1} \indep \vv{r_2}$, and (3) $(\vv{r_1},\vv{r_2}) \indep (r_{I_1}, r_{I_2})$, by an additional claim \autoref{lemma:p7-2-2} (whose proof will be given later), we know that $(r_{I_1}, \vv{r_1}) \indep (r_{I_2},\vv{r_2})$, both of which are exactly inputs to $f$. 
+    
+    Putting everything together, as $f$ is a deterministic function, applying \autoref{lemma:p7-2-1} we obtain
+    \[
+        f(r_{I_1}, \vv{r_1}) \indep f(r_{I_2}, \vv{r_2})
+    \]
+    as the inputs $(r_{I_1}, \vv{r_1})$ and $(r_{I_2}, \vv{r_2})$ are independent. Equivalently by \eqref{eq:p7-2-2}, we have
+    \[
+        c_{iI_1} \indep c_{iI_2},
+    \]
+    as desired.
+
+    \begin{lemma}\label{lemma:p7-2-2}
+        Let $X_1,X_2,Y_1,Y_2$ be random variables. If $X_1\indep Y_1$, $X_2\indep Y_2$, and $(X_1,Y_1)\indep (X_2,Y_2)$, then  $(X_1,X_2)\indep (Y_1,Y_2)$.
+    \end{lemma}
+    \begin{proof}[Proof of lemma] 
+        For any $a,b,c,d$,
+        \vspace{-0.5cm}\begin{align*}
+            p_{(X_1,X_2),(Y_1,Y_2)}((a,b),(c,d))
+            &= p_{X_1,X_2,Y_1,Y_2}(a,b,c,d)\\
+            &= p_{(X_1,Y_1),(X_2,Y_2)}((a,c),(b,d))\\
+            &= p_{X_1,Y_1}(a,c) p_{X_2,Y_2}(b,d)
+            && (\because(X_1,Y_1)\indep (X_2,Y_2) )\\
+            &= p_{X_1}(a) p_{Y_1}(c) p_{X_2}(b)p_{Y_2}(d)
+            && (\because X_1\indep Y_1\land X_2\indep Y_2 )\\
+            &= p_{X_1}(a) p_{X_2}(b) p_{Y_1}(c)p_{Y_2}(d)\\
+            &= p_{X_1,X_2}(a,b) p_{Y_1,Y_2}(c,d).
+            && (\because (X_1,Y_1)\indep (X_2,Y_2) \implies X_1\indep X_2\land Y_1\indep Y_2 )
+        \end{align*}
+    \end{proof}
+\end{answer}
+
+
+
+
+
+
+
+
+\begin{answer}[iii]
+    For each $i\in[n]$ and each $I\in \powerset{[k]}\setminus\{\emptyset\}$, define random variables 
+    \[
+        Z_{iI}\triangleq \begin{cases}
+            1, & \text{if } c_{iI} = x_i\\
+            0, & \text{otherwise}
+        \end{cases}.
+    \] 
+    Since $\{Z_{iI}\}_{I\neq \emptyset}$ are functions of $\{c_{iI}\}_{I\neq \emptyset}$, which are proven to be pairwise independent in subproblem (ii), by \autoref{lemma:p7-2-1}, $\{Z_{iI}\}_{I\neq \emptyset}$ are also pairwise independent. Moreover, for any $i\in[n]$ and $I\in \powerset{[k]}\setminus\{\emptyset\}$, the conditional expectation $\mu_{Z_i}$ and conditional variance $\sigma_{Z_i}^2$ of $Z_{iI}$ given $x\in G_1$ (i.e. $x$ is good) and $b_j=\langle x, r_j\rangle \;\;\forall j\in[k]$ (i.e. all guesses are correct) are the same:
+    \begin{align*}
+        \mu_{Z_i} &\triangleq \Exp\bigg[ Z_{iI} \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        &=  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ c_{iI}=x_i \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        &\stackrel{(\twemoji{mushroom})}{\ge}  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ \Adv^H(f(x), r_I\oplus e_i) = h(x, r_I\oplus e_i) \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        &=  \Pr_{r, r_1,\ldots,r_k\sample\bit^n}\bigg[ \Adv^H(f(x), r) = h(x, r) \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        &\qquad (\textrm{since $r_I$ is uniformly distributed by \autoref{obs:p7-1-1} and so is $r_I\oplus e_i$})\\
+        &=  \Pr_{r\sample\bit^n}\bigg[ \Adv^H(f(x), r) = h(x, r) \biggm\vert x\in G_1 \biggr]
+        \qquad (\textrm{by independence})\\
+        &\gt \frac{1}{2}+\frac{\epsilon(n)}{2}
+        \qquad (\textrm{by definition of $G_1$})\\
+        \sigma_{Z_i}^2 &\triangleq \Var\bigg[ Z_{iI} \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        &= \mu_{Z_i} (1-\mu_{Z_i}),
+    \end{align*}
+    where the correctness of the step $(\twemoji{mushroom})$ is proven in class. Note that each $Z_{iI}$ has indeed the same expectation and thus variance since we've eliminated $I$ in the derivation of $\mu_{Z_i}$ before any inequalities. 
+
+    Now we deduce our final result:
+    \begin{align*}
+        &\Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ x_i'\neq x_i \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        =&  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ \textrm{majority}\{c_{iI}\}_{I\neq \emptyset}\neq x_i \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        =&  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ \frac{1}{m}\sum_{I\in \powerset{[k]}\setminus \{\emptyset\}} Z_{iI}\le \frac{1}{2} \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]\\
+        \le&  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ \frac{1}{m}\sum_{I\in \powerset{[k]}\setminus \{\emptyset\}} Z_{iI}\le \mu_{Z_i}-\frac{\epsilon(n)}{2} \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr]
+        \qquad (\textrm{since } \mu_{Z_i}\gt \frac{1}{2}+\frac{\epsilon(n)}{2})\\
+        \le&  \Pr_{r_1,\ldots,r_k\sample\bit^n}\bigg[ \abs*{\frac{1}{m}\sum_{I\in \powerset{[k]}\setminus \{\emptyset\}} Z_{iI} - \mu_{Z_i} }\ge \frac{\epsilon(n)}{2} \biggm\vert x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle \biggr] \\
+        \le&  \frac{\sigma_{Z_i}^2}{\left(\frac{\epsilon(n)}{2}\right)^2 (m)}
+        \qquad (\textrm{by Chebyshev's inequality (conditioned on $\textstyle x\in G_1 \land \bigwedge_{j\in[k]} b_j = \langle x,r_j \rangle$)})\\
+        =& \frac{4 \mu_{Z_i} (1-\mu_{Z_i})}{\epsilon^2(n) m}
+        \qquad (\textrm{since $\sigma_{Z_i}^2=\mu_{Z_i} (1-\mu_{Z_i})$})\\
+        \le& \frac{1}{\epsilon^2(n) m}.
+        \qquad (\textrm{by AM-GM inequality: $\mu_{Z_i} (1-\mu_{Z_i})\le \left(\frac{\mu_{Z_i} +(1-\mu_{Z_i})}{2}\right)^2=\frac{1}{4} $})
+    \end{align*}
+    Hence proved.
+\end{answer}

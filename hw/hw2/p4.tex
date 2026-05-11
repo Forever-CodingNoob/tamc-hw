@@ -1,0 +1,249 @@
+\begin{problem}[Extending GGM: Larger Range and Flexible Inputs]\label{p4}
+    \leavevmode\par
+    Let us first recall the GGM construction. Given a PRG $G:\bit^n\to\bit^{2n}$, where we define $G_0,G_1:\bit^n\to\bit^n$ such that $G(\cdot)=G_0(\cdot)\concat G_1(\cdot)$, we learned that we can construct an PRF $F:\bit^n\times\bit^n\to\bit^n$ where
+    \[
+        F_k(x) = (G_{x_n}\circ G_{x_{n-1}}\circ \cdots\circ G_{x_1})(k).
+    \]
+    In the GGM construction described above, the PRF $F_k$ maps $n$-bit inputs to $n$-bit outputs. However, in general, there is no requirement that a PRF must restrict both its input and output lengths to $n$ bits. It is straightforward to extend the above construction to support inputs of length $t(n)$, for some polynomial $t(\cdot)$, as follows:
+    \begin{equation}\label{eq:p4-1}
+        F_k(x) = (G_{x_{t(n)}}\circ G_{x_{t(n)-1}}\circ \cdots\circ G_{x_1})(k).
+    \end{equation}
+    The security of the above construction is identical to that of the original case. However, even in this extension, $F_k$ only supports inputs of a fixed length $x\in\bit^{t(n)}$, and the output length remains $n$ bits. In the following problem, you are asked to construct PRFs that support multiple input lengths, where each input length may correspond to a different output length. Note that the security definition of a PRF with varying input and output lengths can be naturally extended by considering a random function with appropriately defined input and output domains.
+    \begin{enumerate}[label=(\alph*)]
+        \item The first attempt is to use the same construction to directly support multiple input lengths:
+        \[
+            F_k(x) = (G_{x_{|x|}}\circ G_{x_{|x|-1}}\circ \cdots\circ G_{x_1})(k).
+        \]
+        Show that the above construction is not secure, even when it supports only two input lengths, namely $\bit^n$ and $\bit^{n-1}$.
+        \item We say PRF $F_k$ support $(a, b)$ query if for any $x \in\bit^a$, then $F_k(x) \in\bit^b$. Construct a PRF that can support an arbitrary $\ell(n)$ distinct $(a_i,b_i)$ queries, where $\ell$ is some polynomial and for all $i\in[\ell(n)]$, both $a_i$ and $b_i$ are also bounded by some polynomial in $n$. (You may assume the existence of a pseudorandom generator (PRG) with arbitrary polynomial stretch and construction in Equation \eqref{eq:p4-1} is a secure PRF.)
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[a]
+    First, we have to adjust the definition of PRF for keyed functions of arbitrary-length inputs ($F$ in particular).
+    Let $\func_n^\ast\triangleq (\bit^n)^{\bit^\ast}$, which denotes the set of all functions mapping strings of any length to $n$-bit strings.
+    \begin{definition}[PRF]\label{def:p4-1-1}
+        A keyed function $f:\bit^{\ell(n)}\times \bit^\ast \to \bit^n$ is a PRF if
+        \begin{itemize}\vspace{-0.3cm}
+            \item $f$ can be computed in deterministic polynomial time (i.e. in time $O(\poly(n))$), and
+            \item for all PPT oracle distinguishers $D$, there exists a negligible function $\epsilon$ such that for every $n\in\Nbb$
+            \[
+                \abs*{\Pr_{k\Usample\bit^{\ell(n)}}\left[D^{f_k}(1^n)=1\right] - \Pr_{H\Usample\func_n^\ast}\left[D^{H}(1^n)=1\right]}
+                \le \epsilon(n).
+            \]
+        \end{itemize}
+    \end{definition}
+    
+    We prove $F:\bit^n\times \bit^\ast\to\bit^n$ is not a PRF by giving a PPT oracle distinguisher $D$ that, for all $n\in\Nbb$, distinguishes oracle access to $F_k$ (for uniform $k\Usample\bit^n$) from that to a uniformly chosen function $H\Usample \func_n^\ast$ with nonnegligible advantage, i.e., wins the PRF game $\Game_{\textrm{PRF}}$ of $F$ with nonnegligible advantage. We construct $D$ as follows:
+    \begin{mdframed}[style=simplebox]
+        On input $1^n$, make queries $0^{n-1}, 0^n$ to the challenger, receiving as answers $\Ocal(0^{n-1}), \Ocal(0^n)$. Then, check whether $G_0(\Ocal(0^{n-1})) = \Ocal(0^n)$. Output $0$ if true, and $1$ otherwise.
+    \end{mdframed}
+    \noindent We illustrate $D$ in the PRF game $\Game_{\textrm{PRF}}$ of $F$ as shown below.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & D \\
+            b\Usample\bit & & \\
+            k\Usample\bit^{n},\; H\Usample \func_n^\ast & &\\
+            \Ocal \coloneqq \begin{cases}
+                F_{k}, &b=0\\
+                H, &b=1
+            \end{cases} & \XR{1^n} &\\
+            & \XL{0^{n-1}} & \\
+            & \XR{\Ocal(0^{n-1})} & \\
+            & \XL{0^n} & \\
+            & \XR{\Ocal(0^n)} & \\
+            & & b'\coloneqq \begin{cases}
+                0 &\textrm{if } G_0(\Ocal(0^{n-1})) = \Ocal(0^n)\\
+                1 &\textrm{if } G_0(\Ocal(0^{n-1})) \neq \Ocal(0^n)
+            \end{cases} \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game_{\textrm{PRF}}$}
+        \label{fig:p4-game1}
+    }
+    Clearly $D$ runs in time $O(\poly(n))$ and is thus a PPT algorithm. Observe that in $\Game_{\textrm{PRF}}$, for $n\in\Nbb$:
+    \begin{itemize}
+        \item If $b=0$ and $\Ocal \coloneqq f_{k}$ for uniform $k\Usample\bit^{n}$, then
+        \[
+            D \textrm{ wins}\iff G_0(F_k(0^{n-1})) = F_k(0^n)
+            \iff G_0((\overbrace{G_0 \circ \cdots\circ G_0}^{n-1})(k)) = (\overbrace{G_0 \circ \cdots\circ G_0}^{n})(k)
+            \iff \top,
+        \]
+        implying $\Pr_{k\Usample\bit^{n}}\left[D \textrm{ wins} \right]=1$.
+        \item If $b=1$ and $\Ocal \coloneqq H$ for uniform $H\Usample\func_n^\ast$, then since $H(0^n)\in\bit^n$ is uniformly random and independent of $H(0^{n-1})\in\bit^n$ and therefore $G_0(H(0^{n-1}))\in\bit^n$, we have
+        \[
+            \Pr_{H\Usample\func_n^\ast}\left[D \textrm{ wins} \right]
+            = 1-  \Pr_{H\Usample\func_n^\ast}\left[G_0(\Ocal(0^{n-1})) = \Ocal(0^n) \right]
+            = 1- \frac{1}{2^n}.
+        \]
+    \end{itemize}
+    Combining the two together, for $n\in\Nbb$, the win rate of $D$ in $\Game_{\textrm{PRF}}$ is hence
+    \begin{align*}
+        &\Pr_{b\Usample\bit, k\Usample\bit^{n}, H\Usample\func_n^\ast}\left[D \textrm{ wins } \Game_{\textrm{PRF}} \right]\\
+        =& \Pr_{b\Usample\bit}[b=0]  \Pr_{k\Usample\bit^{n}}\left[D \textrm{ wins } \Game_{\textrm{PRF}} \right]
+        + \Pr_{b\Usample\bit}[b=1] \Pr_{H\Usample\func_n^\ast}\left[D \textrm{ wins } \Game_{\textrm{PRF}} \right]\\
+        =& \frac{1}{2}\cdot 1+\frac{1}{2}\cdot \left( 1- \frac{1}{2^n} \right)
+        = 1-\frac{1}{2^{n+1}},
+    \end{align*}
+    where the advantage $\frac{1}{2}-\frac{1}{2^{n+1}}$ of $D$ is nonnegligible. Equivalently,
+    \[
+        \abs*{\Pr_{k\Usample\bit^n}\left[D^{F_k}(1^n)=1\right] - \Pr_{H\Usample\func_n^\ast}\left[D^{H}(1^n)=1\right]}
+        = 1-\frac{1}{2^n}
+    \]
+    is nonnegligible.
+    This breaks the pseudorandomness of $F$ defined by \autoref{def:p4-1-1}, so $F$ is not a PRF.
+\end{answer}
+
+
+
+
+
+
+
+
+
+\begin{answer}[b]
+    Let $\{(a_i(n), b_i(n))\}_{i\in [\ell(n)]}$ be $\ell(n)$ pairs of polynomially bounded functions for some polynomial $\ell$. Assume that $a_i(n)\ge n$ for every $i\in[\ell(n)]$ and $n\in\Nbb$.
+    
+    Assume that there exists a PRG $G_{m(n)}: \bit^n\to\bit^{m(n)}$ of expansion factor $m(n)$ for every polynomially bounded function $m(n)=O(\poly(n))$, and that, given $G_{n\mapsto 2n}$, the GGM construction $F:\bit^n\times \bit^n \to\bit^n$ is indeed a PRF.
+    For $n\in\Nbb$ and $j\in [\ell(n)]$, define 
+    \begin{gather*}
+        \func_{n,j}^\bigstar\triangleq \{f:\bit^n\to\bit^{b_j(n)}\},\;\;
+        \func_n\triangleq \{f:\bit^n\to\bit^n\}.
+    \end{gather*}
+
+    Note that by definition, we must have $a_i(n)\neq a_j(n)$ for any $i\neq j$, as otherwise we would have $b_i(n)\neq b_j(n)$ for some $a_i(n)= a_j(n)$ with $i\neq j$, which no PRF could support. Hence for every $n\in\Nbb$, $a_{(\cdot)}(n)$ is injective, meaning that there exists a mapping $ a_i(n)\mapsto b_i(n)$ for every $i\in [\ell(n)]$. 
+
+    We now define a keyed function $f:\bit^{\sum_{i\in [\ell(n)]} a_i(n)} \times \bigcup_{i\in[\ell(n)]} \bit^{a_i(n)} \to \bigcup_{i\in[\ell(n)]} \bit^{b_i(n)}$ for each $n\in\Nbb$ by
+    \[
+        f_{k_1\concat\cdots\concat k_{\ell(n)}}(x) \triangleq G_{b_i(n)} \left( F_{k_i}( x)_{[1:n]} \right)
+        \quad \textrm{for every } x,k_i\in\bit^{a_i(n)} \textrm{ and } i\in [\ell(n)].
+    \]
+    Note that for each $n\in\Nbb$, since $a_{(\cdot)}(n)$ is injective, given an input $x\in\bit^{a_i(n)}$ for $i\in [\ell(n)]$ to $f_k$, the value of $i$ is immediately clear from $|x|=a_i(n)$, so $f$ is well-defined.
+
+    We claim that (1) $f$ is a PRF that (2) supports $\{(a_i(n), b_i(n))\}_{i\in [\ell(n)]}$ queries. First, assuming $f$ is indeed a PRF, it's easy to see (2) holds since for every $x\in\bit^{a_i(n)}$ and $k\in \bit^{\sum_{i\in [\ell(n)]} a_i(n)}$, by the definition of $G_{b_i(n)}$, we have $f_k(x)\in\bit^{b_i(n)}$. Thus, it remains to show (1) holds.
+
+    Suppose to the contrary that $f$ is not a PRF. As $f$ is clearly deterministic and polynomial-time computable, it must be that there exists a PPT oracle distinguisher $D$ and $c\gt 0$ such that for infinitely many $n\in \Nbb$
+    \begin{equation}\label{eq:p4-2-1}
+        \abs*{\Pr_{k_1\Usample\bit^{a_1(n)},\ldots, k_{\ell(n)}\Usample\bit^{a_{\ell(n)}(n)}}\left[D^{f_{k_1\concat\cdots\concat k_{\ell(n)}}}(1^n) \right] - \Pr_{H\Usample \func_{n,\ell(n)}^\dagger}\left[D^H(1^n) \right]} 
+        \ge \frac{1}{n^c},
+    \end{equation}
+    where $\func_{n}^\dagger\triangleq \left\{f:\bigcup_{j\in[\ell(n)]} \bit^{a_j(n)} \to \bigcup_{j\in[\ell(n)]} \bit^{b_j(n)}\biggm\vert f(x)\in\bit^{b_j(n)}\;\; \forall x\in\bit^{a_j(n)},j\in [\ell(n)]  \right\}$.
+    Define ``hybrid distributions'' of (deterministic) functions $\Hyb_{i}$ and $\Hyb_{i}'$ for $i=0,1,\ldots,\ell(n)$ by
+    \begin{align*}
+        \Hyb_{i}(x) &\triangleq  \begin{cases}
+            U_{\func_{n,j}^\bigstar}^{(j)}(x_{[1:n]}) &\textrm{for } x\in \bit^{a_j(n)} \textrm{ and } j\in\{1,\ldots, i\}\\
+            G_{b_j(n)}(x_{[1:n]})  &\textrm{for } x\in \bit^{a_j(n)} \textrm{ and } j\in\{i+1,\ldots, \ell(n)\}
+        \end{cases}\\
+        \Hyb_i'(x) &\triangleq \begin{cases}
+            G_{b_j(n)}(U_{\func_{a_j(n)}}^{(j)}(x)_{[1:n]}) &\textrm{for } x\in \bit^{a_j(n)} \textrm{ and } j\in\{1,\ldots, i\}\\
+            G_{b_j(n)}(F_{U_{a_j(n)}^{(j)}}(x)_{[1:n]}) &\textrm{for } x\in \bit^{a_j(n)} \textrm{ and } j\in\{i+1,\ldots, \ell(n)\}
+        \end{cases}\\
+        &\textrm{for every } x\in \bigcup_{i\in[\ell(n)]} \bit^{a_i(n)}.
+    \end{align*}
+    Notice the equivalences of distributions:
+    \[
+        f_{U_{a_1(n)}\concat\cdots\concat U_{a_{\ell(n)}(n)}} \equiv  \Hyb'_0
+        \quad \land \quad 
+        \Hyb'_{\ell(n)}\equiv \Hyb_{0}
+        \quad \land \quad 
+        U_{\func_{n,\ell(n)}^\dagger} \equiv \Hyb_{\ell(n)}.
+    \]
+    Therefore, by hybrid lemma, either of the following cases holds:
+    \begin{enumerate}[label=(\Roman*)]
+        \item For all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds, there exists $i^\ast_n \in [\ell(n)]$ such that 
+        \[
+            \abs*{\Pr\left[D^{\Hyb_{i^\ast_n}}(1^n) \right] - \Pr\left[D^{\Hyb_{i^\ast_n-1}}(1^n) \right]} 
+            \ge \frac{1}{2\ell(n)n^c}.
+        \]
+        \item For all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds, there exists $i^\ast_n \in [\ell(n)]$ such that
+        \[
+            \abs*{\Pr\left[D^{\Hyb'_{i^\ast_n}}(1^n) \right] - \Pr\left[D^{\Hyb'_{i^\ast_n-1}}(1^n) \right]} 
+            \ge \frac{1}{2\ell(n)n^c}.
+        \]
+    \end{enumerate}
+
+    If (I) holds, we can construct a PPT reduction $\Rcal_{i^\ast_n}$ that breaks the pseudorandomness of $(G_{b_{i^\ast_n}(n)}(U_n^{(1)}),\ldots, G_{b_{i^\ast_n}(n)}(U_n^{(t(n))}))$, where $t(n)$ is a polynomial upper bound on the number of queries $D$ makes to its oracle on input $1^n$, as shown in the following game $\Game^{i^\ast_n}_{\textrm{IND}}$. (Note that although we don't know the value of $i^\ast_n$, we can still construct a reduction $\Rcal_i$ for each $i\in [\ell(n)]$ and argue that at least one reduction breaks the pseudorandomness of $(G_{b_{i^\ast_n}(n)}(U_n^{(1)}),\ldots, G_{b_{i^\ast_n}(n)}(U_n^{(t(n))}))$.)
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal_i & & D \\
+            b\Usample\bit & &  & & \\
+            y_1,\ldots,y_{t(n)} \sample \begin{cases}
+                G_{b_{i}(n)}(U_n) &\textrm{if } b=0\\
+                U_{b_{i}(n)} &\textrm{if } b=1
+            \end{cases} & \XR{(y_1,\ldots,y_{t(n)})} & t' \coloneqq 1 & & \\
+            &  & H_0\Usample\func_{n,0}^\bigstar,\ldots,H_{i-1}\Usample\func_{n,i-1}^\bigstar  & \XR{1^n} & \\
+            & & & \vdots & \\
+            & & & \XL{x_q\in\bit^{a_{j_q}(n)}} & \\
+            & & y_q' \coloneqq \begin{cases}
+               H_{j_q}(x_{[1:n]}) &\textrm{if } j_q\lt i\\
+               y_{t'} &\textrm{if } j_q=i\\
+               G_{b_{j_q}(n)}(x_{[1:n]}) &\textrm{if } j_q\gt i
+            \end{cases}& & \\
+            & & t'\coloneqq t'+1 & & \\
+            & & & \XR{y_q'} & \\
+            & & & \vdots & \\
+            & \XL{b'} & & \XL{b'} & \\
+            \multicolumn{5}{c}{\text{$\Rcal_i$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game  $\Game^{i}_{\textrm{IND}}$}
+        \label{fig:p4-game2}
+    }
+    Observe that for all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds,
+    \begin{align*}
+        &\abs*{\Pr\left[\Rcal_i(G_{b_{i}(n)}(U_n^{(1)}),\ldots, G_{b_{i}(n)}(U_n^{(t(n))}))=1  \right] - \Pr\left[\Rcal_i(U_{b_{i}(n)}^{(1)},\ldots, U_{b_{i}(n)}^{(t(n))})=1  \right]}\\
+        =& \abs*{\Pr\left[D^{\Hyb_{i-1}}(1^n) \right] - \Pr\left[D^{\Hyb_{i}}(1^n)=1  \right]}\\
+        \stackrel{\textrm{if } i=i^\ast_n}\ge& \frac{1}{2\ell(n) n^c}
+        \qquad \textrm{(by (I))},
+    \end{align*}
+    which is nonnegligible as $\ell(n)=\poly(n)$. This means that for all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds (of which there are infinitely many), there always exists some $i^\ast_n\in [\ell(n)]$ such that $\Rcal_{i^\ast_n}$ breaks the pseudorandomness of $(G_{b_{i^\ast_n}(n)}(U_n^{(1)}),\ldots, G_{b_{i^\ast_n}(n)}(U_n^{(t(n))}))$. (Note that $b_{i^\ast_n}(n)$ is simply a function of $n$.) Thus, by definition,  $(G_{b_{i^\ast_n}(n)}(U_n^{(1)}),\ldots, G_{b_{i^\ast_n}(n)}(U_n^{(t(n))})) \not\ind_c (U_{b_{i^\ast_n}(n)}^{(1)},\ldots, U_{b_{i^\ast_n}(n)}^{(t(n))})$. However, since $G_{b_{i^\ast_n}(n)}$ is a PRG, $G_{b_{i^\ast_n}(n)}(U_n) \ind_c U_{b_{i^\ast_n}(n)}$, implying that (as proven in class) $(G_{b_{i^\ast_n}(n)}(U_n^{(1)}),\ldots, G_{b_{i^\ast_n}(n)}(U_n^{(t(n))})) \ind_c (U_{b_{i^\ast_n}(n)}^{(1)},\ldots, U_{b_{i^\ast_n}(n)}^{(t(n))})$ as $t(n)=\poly(n)$. This is a contradiction.
+
+    \begin{note}
+        \textcolor{red}{Caveat: Our reasoning is quite sloppy here. Actually, instead of constructing multiple reductions $\Rcal_i$, we have to define a single reduction that uniformly chooses $i\Usample [\ell(n)]$ to begin with. Otherwise, for each $n\in\Nbb$, the reduction $\Rcal_{i^\ast_n}$ that breaks pseudorandomness is not guaranteed not be fixed (since $i^\ast_n$ may be different for different $n\in\Nbb$), which is NOT aligned with the definition of indistinguishability.}
+    \end{note}
+
+    On the other hand, if (II) holds,  we can still construct a PPT reduction $\Rcal'_{i^\ast_n}$ that breaks the pseudorandomness of $F$, as shown in the following PRF game $\Game^{i^\ast_n}_{\textrm{PRF}}$ of $F$. (Note again that although we don't know the value of $i^\ast_n$, we can still construct a reduction $\Rcal'_i$ for each $i\in [\ell(n)]$ and argue that at least one reduction breaks the pseudorandomness of $F$.)
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & \Rcal'_i & & D \\
+            b\Usample\bit & &  & & \\
+            \Ocal \sample \begin{cases}
+                F_{U_{a_i(n)}} &\textrm{if } b=0\\
+                U_{\func_{a_i(n)}} &\textrm{if } b=1
+            \end{cases} & \XR{(\Ocal, 1^{a_i(n)})} &   H_0\Usample\func_{a_1(n)},\ldots,H_{i-1}\Usample\func_{a_{i-1}(n)} & & \\
+            &  & k_{i+1}\Usample\bit^{a_{i+1}(n)},\ldots,k_{\ell(n)}\Usample\bit^{a_{\ell(n)}(n)} & \XR{1^n} & \\
+            & & & \vdots & \\
+            & & & \XL{x_q\in\bit^{a_{j_q}(n)}} & \\
+            & & y_q \coloneqq \begin{cases}
+               G_{b_{j_q}(n)}(H_{j_q}(x)_{[1:n]}) &\textrm{if } j_q\lt i\\
+               G_{b_{j_q}(n)}(\Ocal(x)_{[1:n]}) &\textrm{if } j_q=i\\
+               G_{b_{j_q}(n)}(F_{k_{j_q}}(x)_{[1:n]}) &\textrm{if } j_q\gt i
+            \end{cases} & & \\
+            & & & \XR{y_q} & \\
+            & & & \vdots & \\
+            & \XL{b'} & & \XL{b'} & \\
+            \multicolumn{5}{c}{\text{$\Rcal'_i$ wins if $b' = b$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game  $\Game^{i}_{\textrm{PRF}}$}
+        \label{fig:p4-game3}
+    }
+    Observe that for all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds,
+    \begin{align*}
+        &\abs*{\Pr\left[{\Rcal'_i}^{F_{U_{a_i(n)}}}(1^{a_i(n)})=1  \right] - \Pr\left[{\Rcal'_i}^{U_{\func_{a_i(n)}}}(1^n)=1  \right]}\\
+        =& \abs*{\Pr\left[D^{\Hyb'_{i-1}}(1^n) \right] - \Pr\left[D^{\Hyb'_{i}}(1^n)=1  \right]}\\
+        \stackrel{\textrm{if } i=i^\ast_n}\ge& \frac{1}{2\ell(n) n^c}
+        \qquad \textrm{(by (II))},
+    \end{align*}
+    which is nonnegligible as $\ell(n)=\poly(n)$. This means that for all $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds (of which there are infinitely many), there always exists some $i^\ast_n\in [\ell(n)]$ such that $\Rcal'_{i^\ast_n}$ breaks the pseudorandomness of $F:\bit^{a_{i^\ast_n}(n)}\times \bit^{a_{i^\ast_n}(n)}\to \bit^{a_{i^\ast_n}(n)}$. Assume that there are infinitely many $m\in\Nbb$ such that $m=a_{i^\ast_n}(n)$ for some $n\in\Nbb$ such that \eqref{eq:p4-2-1} holds. Thus, by definition, $F$ is not a PRF, which is a contradiction.
+
+    Therefore, in either case, there would be a contradiction. So $f$ is indeed a PRF.
+\end{answer}

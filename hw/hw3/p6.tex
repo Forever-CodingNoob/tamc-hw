@@ -1,0 +1,209 @@
+\begin{problem}[Complete the proof in the class]\label{p6}
+    \leavevmode\par
+    \begin{enumerate}[label=(\roman*)]
+        \item Recall that in the proof of Regev's PKE scheme being IND-CPA secure we first deduced from DLWE assumption that
+        \begin{equation}\label{eq:6-1}
+            \left(A, b_\pk, M_0, M_1, r^TA, r^Tb_\pk + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            \ind_c
+            \left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right).
+        \end{equation}
+        Formally prove the equation \eqref{eq:6-1} by constructing a reduction.
+
+        \item Then we applied the Leftover Hash Lemma to show that
+        \begin{equation}\label{eq:6-2}
+            \left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            \ind_s
+            \left(A, u, M_0, M_1, u_1, u_2\right).
+        \end{equation}
+        Formally prove the equation \eqref{eq:6-2} by constructing a reduction.
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    Assume $M_0, M_1\in \bit$ are fixed. Recall that $A\Usample\Zbb_q^{m\times n}$, $b_\pk=As+e$, $s\Usample\Zbb_q^n$, $e\sample\chi^m$, $u\Usample\Zbb_q^m$, $r\Usample\bit^m$, and $b\Usample\bit$, where $n\in\Nbb$ is the security parameter, $q\triangleq q_n$ is a modulus, $m\triangleq m_n= \Omega(n\log n)$, and $\chi\triangleq \chi_n$ is an error distribution over $\Zbb_q$. 
+   
+    We prove \eqref{eq:6-1} by contradiction. Suppose to the contrary that these two distributions (they are in fact ensembles) are not \textbf{computationally} indistinguishable. By definition, there exists a PPT distinguisher $\Dcal$ such that
+    \begin{multline*}
+        \epsilon(n)\triangleq
+        \abs*{\Pr\left[\Dcal\left(A, b_\pk, M_0, M_1, r^TA, r^Tb_\pk + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]
+        - 
+        \Pr\left[\Dcal\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]}
+    \end{multline*}
+    is nonnegligible.
+    Expanding $b_\pk = As + e$ to write out all independent random variables, we have
+    \begin{multline}\label{eq:p6-1-1}
+        \epsilon(n)=\\
+        \abs*{\Pr\left[\Dcal\left(A, As+e, M_0, M_1, r^TA, r^T(As+e) + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]
+        - 
+        \Pr\left[\Dcal\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]}.
+    \end{multline}
+
+    We construct a PPT distinguisher (a reduction) $\Rcal$ that breaks the decisional $\LWE_{n,m,q,\chi}$ (DLWE) assumption for parameters $n,m,q,\chi$ (i.e., that distinguishes the ensembles $\ensemble{\LWE_{n,m,q,\chi}}{n}$ and $\ensemble{U_{\Zbb_q^{m\times n}\times \Zbb_q^m}}{n}$ with nonnegligible advantage), as illustrated in the following experiment.
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & \Rcal & & \Dcal \\
+            d\Usample\bit &&&&\\
+            \tilde{A}\Usample\Zbb_q^{m\times n}, \tilde{s}\Usample\Zbb_q^n, \tilde{e}\sample\chi^m &&&&\\
+            \tilde{u}\Usample\Zbb_q^m &&&&\\
+            y\coloneqq \begin{cases}
+                \tilde{A}\tilde{s}+\tilde{e} &\textrm{if } d=0 \\
+                \tilde{u} &\textrm{if } d=1 \\
+            \end{cases} & \XR{(\tilde{A}, y)} & \tilde{r}\Usample\bit^m, \tilde{b}\Usample\bit  & \XR{\left(\tilde{A}, y, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^T y+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)} & \\
+            \textrm{$\Rcal$ wins if $d' = d$} & \XL{d'}  &  & \XL{d'}& \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment for decisional $\LWE_{n,m,q,\chi}$ assumption}
+        \label{fig:pp-game1}
+    }
+
+    Clearly $\Rcal$ is a PPT algorithm since $\Dcal$ is a PPT algorithm. Observe that in this experiment, for all $n\in\Nbb$:
+    \begin{itemize}
+        \item If $d=0$, then the distribution of 
+        \[
+            \left(\tilde{A}, y, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^Ty+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            =\left(\tilde{A}, \tilde{A}\tilde{s}+\tilde{e}, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^T (\tilde{A}\tilde{s}+\tilde{e})+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+        \] 
+        given by $\Rcal$ to $\Dcal$ is identical to that of $\left(A, As+e, M_0, M_1, r^TA, r^T(As+e) +M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)$ in \eqref{eq:p6-1-1}.
+        \item If $d=1$, then the distribution of 
+        \[
+            \left(\tilde{A}, y, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^Ty+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            =\left(\tilde{A}, \tilde{u}, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^T \tilde{u}+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+        \] 
+        given by $\Rcal$ to $\Dcal$ is identical to that of $\left(A, u, M_0, M_1, r^TA, r^Tu +M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)$ in \eqref{eq:p6-1-1}.
+    \end{itemize}
+    Putting both together, we see that for all $n\in\Nbb$, the advantage of $\Rcal$ in distinguishing the ensembles $\ensemble{\LWE_{n,m,q,\chi}}{n}$ and $\ensemble{U_{\Zbb_q^{m\times n}\times \Zbb_q^m}}{n}$ is hence
+    \begin{align*}
+        &\abs*{\Pr\left[\Rcal\left(1^n,\left(\LWE_{n,m,q,\chi}\right)\right)= 1\right] 
+        -
+        \Pr_{\tilde{A}\Usample\Zbb_q^{m\times n},\tilde{u}\Usample\Zbb_q^m}\left[\Rcal\left(1^n,\left(\tilde{A}, \tilde{u}\right)\right)= 1\right]}\\
+        =&\abs*{\Pr_{\substack{\tilde{A}\Usample\Zbb_q^{m\times n},\tilde{s}\Usample\Zbb_q^n, \tilde{e}\sample\chi^m}}\left[\Rcal\left(1^n,\left(\tilde{A}, \tilde{A}\tilde{s}+\tilde{e}\right)\right)= 1\right] 
+        -
+        \Pr_{\tilde{A}\Usample\Zbb_q^{m\times n},\tilde{u}\Usample\Zbb_q^m}\left[\Rcal\left(1^n,\left(\tilde{A}, \tilde{u}\right)\right)= 1\right]}\\
+        =& \left\lvert\Pr_{\substack{\tilde{A}\Usample\Zbb_q^{m\times n},\tilde{s}\Usample\Zbb_q^n, \tilde{e}\sample\chi^m, \tilde{r}\Usample\bit^m, \tilde{b}\Usample\bit}}\left[\Dcal\left(\tilde{A}, \tilde{A}\tilde{s}+\tilde{e}, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^T (\tilde{A}\tilde{s}+\tilde{e})+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)= 1\right] \right.\\
+        &\qquad\qquad\qquad \left.-
+        \Pr_{\tilde{A}\Usample\Zbb_q^{m\times n},\tilde{u}\Usample\Zbb_q^m, \tilde{r}\Usample\bit^m, \tilde{b}\Usample\bit}\left[\Dcal\left(\tilde{A}, \tilde{u}, M_0, M_1, \tilde{r}^T\tilde{A}, \tilde{r}^T \tilde{u}+M_{\tilde{b}} \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)= 1\right]\right\rvert\\
+        =& \abs*{\Pr\left[\Dcal\left(A, As+e, M_0, M_1, r^TA, r^T(As+e) + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]
+        - 
+        \Pr\left[\Dcal\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]}\\
+        =& \epsilon(n), \qquad (\textrm{by \eqref{eq:p6-1-1}})
+    \end{align*}
+    which is nonnegligible. Hence, this contradicts the decisional $\LWE_{n,m,q,\chi}$ assumption, implying \eqref{eq:6-1} must be true. 
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[ii]
+    We prove \eqref{eq:6-2} by contradiction. Suppose to the contrary that these two distributions (they are in fact ensembles) are not \textbf{statistically} indistinguishable. By definition, there exists a bounded distinguisher $\Dcal$ that runs in some time $t(n)$ such that
+    \begin{equation}\label{eq:p6-2-1}
+        \mu(n)\triangleq \abs*{\Pr_{\substack{A\Usample\Zbb_q^{m\times n}\\u\Usample\Zbb_q^m\\r\Usample\bit^m\\b\Usample\bit}}\left[\Dcal\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]
+        -\Pr_{\substack{A\Usample\Zbb_q^{m\times n}\\u\Usample\Zbb_q^m\\u_1\Usample\Zbb_q^n\\u_2\Usample\Zbb_q}}\left[\Dcal\left(A, u, M_0, M_1, u_1, u_2\right)=1\right]}
+    \end{equation}
+    is nonnegligible (as a function of $n$), i.e., $\Dcal$ distinguishes between the two distributions with nonnegligible advantage $\mu(n)$.
+    Additionally, since $\mu$ is nonnegligible, there exists $c\gt 0$ such that $\mu(n)\ge \frac{1}{n^c}$ for infinitely many $n\in\Nbb$, as will be used at the end of our proof.
+
+    
+
+
+    We then construct a bounded distinguisher (a reduction) $\Rcal$ that, for EACH $n\in\Nbb$, distinguishes $(A^\bigstar, r^TA^\bigstar)$ from uniform $(A^\bigstar, u^\bigstar)$, where $A^\bigstar\Usample\Zbb_q^{m\times (n+1)}, r\Usample\bit^m, u^\bigstar\Usample\Zbb_q^{n+1}$, with advantage exactly $\mu(n)$, as illustrated in the following distinguishing game $\Game^{\textrm{IND}}_{n+1}$.
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & \Rcal & & \Dcal \\
+            d\Usample\bit &&&&\\
+            A^\bigstar\Usample\Zbb_q^{m\times (n+1)}, r\Usample\bit^m &&&&\\
+            u^\bigstar\Usample\Zbb_q^{n+1} &&&&\\
+            y\coloneqq \begin{cases}
+                r^T A^\bigstar & \textrm{if } d=0\\
+                u^\bigstar\ & \textrm{if } d=1
+            \end{cases} \in \Zbb_q^{n+1} &&&&\\
+            & \XR{(A^\bigstar, y)} & \biggl(\begin{array}{c|c}
+                \overbrace{A}^{m\times n} & \overbrace{u}^{m\times 1}
+            \end{array}\biggr) \coloneq A^\bigstar \in \Zbb_q^{m\times(n+1)} && \\
+            &&  \biggl(\begin{array}{c|c}
+                \overbrace{y_0}^{1\times n} & \overbrace{y_1}^{1\times 1}
+            \end{array}\biggr) \coloneq y\in \Zbb_q^{n+1} &&\\
+            && b\Usample\bit & \XR{\left(A, u, M_0, M_1, y_0, y_1 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)}&\\
+            \textrm{$\Rcal$ wins if $d' = d$} & \XL{d'}  &  & \XL{d'}& \\
+            \end{array}
+        \]
+        \captionof{figure}{Game $\Game^{\textrm{IND}}_{n+1}$}
+        \label{fig:p6-game2}
+    }
+
+    Clearly $\Rcal$ runs in bounded time since $\Dcal$ runs in bounded time. Observe that for EACH $n\in\Nbb$:
+    \begin{itemize}
+        \item If $d=0$, observe that
+        \[
+            \left(\begin{array}{c|c}
+                 y_0 & y_1
+            \end{array}\right)
+            = y = r^TA^\bigstar = r^T \left(\begin{array}{c|c}
+                 A & u
+            \end{array}\right)
+            = \left(\begin{array}{c|c}
+                 r^TA & r^Tu
+            \end{array}\right),
+        \]
+        which gives $y_0= r^TA \in\Zbb_q^n$ and  $y_1= r^Tu\in\Zbb_q$. 
+        Clearly $A\in \Zbb_q^{m\times n}$ and $u\in \Zbb_q^{m}$ are uniform and independent of all the other independently sampled random variables in the game (except $A^\bigstar$ of course), so we may redefine $A\Usample\Zbb_q^{m\times n}, u\Usample \Zbb_q^{m}$ as fresh random variables and replace $A^\bigstar$ with $\left(\begin{array}{c|c}A & u\end{array}\right)$.
+        Hence, the distribution of 
+        \[
+            \left(A, u, M_0, M_1, y_0, y_1 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            =\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+        \] 
+        given by $\Rcal$ to $\Dcal$ is identical to that on the LHS of \eqref{eq:p6-2-1}.
+        
+        \item If $d=1$, we split $u^\bigstar=\left(\begin{array}{c|c}u_1 & u_3\end{array}\right)$, where $u_1\in\Zbb_q^n, u_3\in\Zbb_q$. 
+        Clearly $u_1$ and $u_3$ are uniform and independent of all the other independently sampled random variables in the game (except $u^\bigstar$ of course), so we may redefine $u_1\Usample\Zbb_q^n, u_3\Usample \Zbb_q$ as fresh random variables and replace $u^\bigstar$ with $\left(\begin{array}{c|c}u_1 & u_3\end{array}\right)$.
+        This gives $y_0=u_1$ and $y_1=u_3$, so the input of $\Dcal$ becomes
+        \[
+            \left(A, u, M_0, M_1, y_0, y_1 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            =\left(A, u, M_0, M_1, u_1, u_3 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right).
+        \]
+        Notice that in the last entry, $u_3\Usample \Zbb_q$ is uniformly random and independent of the trailing term $M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor$. As $\Zbb_q$ forms an additive group (in fact, it forms a ring), by the uniformity property proven in Problem 1-(ii) in HW1, their sum $u_3 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor$ is uniformly random and hence independent of $M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor$ (but it may still be dependent of $u_3$). This allows us to replace the last entry $u_3 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor$ with a fresh and uniform $u_2\Usample\Zbb_q$, without changing the total distribution of input:
+        \[
+            \left(A, u, M_0, M_1, u_1, u_3 + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)
+            \stackrel{d}= \left(A, u, M_0, M_1, u_1, u_2\right),
+        \]
+        which is distributed identically to  the RHS of \eqref{eq:p6-2-1}.
+    \end{itemize}
+    Putting both together, we see that for EACH $n\in\Nbb$, the advantage of $\Rcal$ in $\Game^{\textrm{IND}_{n+1}}$ is exactly
+    \begin{align*}
+        &\abs*{\Pr_{\substack{A^\bigstar\Usample\Zbb_q^{m\times (n+1)}\\r\Usample\bit^m}}\left[\Rcal\left(A^\bigstar, r^TA^\bigstar\right) = 1\right]
+        - \Pr_{\substack{A^\bigstar\Usample\Zbb_q^{m\times (n+1)}\\u^\bigstar\Usample\Zbb_q^{n+1}}}\left[\Rcal\left(A^\bigstar, u^\bigstar\right) = 1\right]}\\
+        =& \abs*{\Pr_{\substack{A\Usample\Zbb_q^{m\times n}\\u\Usample\Zbb_q^m\\r\Usample\bit^m\\b\Usample\bit}}\left[\Dcal\left(A, u, M_0, M_1, r^TA, r^Tu + M_b \cdot \left\lfloor\frac{q}{2}\right\rfloor\right)=1\right]
+        -\Pr_{\substack{A\Usample\Zbb_q^{m\times n}\\u\Usample\Zbb_q^m\\u_1\Usample\Zbb_q^n\\u_2\Usample\Zbb_q}}\left[\Dcal\left(A, u, M_0, M_1, u_1, u_2\right)=1\right]}\\
+        =&\mu(n) \qquad \textrm{(by \eqref{eq:p6-2-1})}.
+    \end{align*}
+
+    Denote by $t'(n)$ the running time of $\Rcal$. For EACH $n\in\Nbb$, the existence of the time $t'(n)$ distinguisher $\Rcal$ with advantage $\mu(n)$ implies \[(A^\bigstar, r^TA^\bigstar) \not\ind_{t'(n), \mu(n)} (A^\bigstar, u^\bigstar),\] where $A^\bigstar\Usample\Zbb_q^{m\times (n+1)}, r\Usample\bit^m, u^\bigstar\Usample\Zbb_q^{n+1}$. By the following lemma (which is proven in Problem 1-(ii)\&(iii)), it follows that
+    \begin{equation}\label{eq:p6-2-2}
+        \Delta\left((A^\bigstar, r^TA^\bigstar),(A^\bigstar, u^\bigstar)\right) \gt \mu(n).
+    \end{equation}
+
+    \begin{lemma*}[HW3 Problem 1-(ii)\&(iii)]
+        Let $\Xcal, \Ycal$ be distributions over a finite set and $\epsilon\in (0,1)$. Then
+        \[
+            \Delta(\Xcal, \Ycal)\le \epsilon \iff \forall t\in\Nbb. \; \Xcal\ind_{t, \epsilon} \Ycal.
+        \]
+    \end{lemma*}
+
+    On the other hand, recall that Regev's PKE scheme (and $\LWE_{n,m,q,\chi}$ as well) requires that $m=\Omega(n\log n)$. ($m\triangleq m_n$ is in fact a function of $n$.) Now we set $\epsilon(n)\triangleq \frac{1}{2^n}$ and suppose that $m=\omega\left((n+1)\log q+2n+1\right)$. Then since $\mu(n)\ge \frac{1}{n^c}=\omega(\frac{1}{2^n})$ for infinitely many $n\in\Nbb$, there must exist $n^\ast\in\Nbb$ such that
+    (1) $m\ge (n^\ast+1)\log q+2n^\ast+1= (n^\ast+1)\log q+2\log(\frac{1}{\epsilon(n^\ast)})+1$ and (2) $\mu(n^\ast)\gt \frac{1}{2^{n^\ast}}$ simultaneously. Finally, by Leftover Hash Lemma (\autoref{lemma:leftover-hash-lemma}), we have
+    \begin{equation}\label{eq:p6-2-3}
+        \Delta\left((A^\bigstar, r^TA^\bigstar),(A^\bigstar, u^\bigstar)\right) \le \epsilon(n^\ast)=\frac{1}{2^{n^\ast}} \lt \mu(n^\ast).
+    \end{equation}
+
+    Clearly \eqref{eq:p6-2-2} and \eqref{eq:p6-2-3} are contradictory, so we are done.
+\end{answer}

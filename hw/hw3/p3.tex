@@ -1,0 +1,466 @@
+\begin{problem}[Fun with the Equivalent CPA definitions]\label{p3}
+    \leavevmode\par
+    Show that the following security definitions for PKE (defined by the following security games) are equivalent to CPA-security or not. Prove your answer or construct a counter-example.
+    \begin{enumerate}[label=(\roman*)]
+        \item $\PKE^{ZeroEnc}$
+        \item $\PKE^{VectorEnc}$
+        \item $\PKE^{Same-or-not}$
+        \item $\PKE^{Rand-Same-or-not}$
+    \end{enumerate}
+\end{problem}
+
+
+\begin{answer}[i]
+    We show that ZeroEnc security is equivalent to IND-CPA security for all PKE schemes.
+    \begin{note}
+        ZeroEnc security looks harder to break than IND-CPA security. However, it turns out that they are equivalently hard to break.
+    \end{note}
+    \proofcase{IND-CPA security $\implies$ ZeroEnc security}
+    We prove this by contraposition. Let $(\Gen, \Enc, \Dec)$ be a non-ZeroEnc-secure PKE scheme. Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\PKE^{ZeroEnc}$ we have
+    \begin{equation}\label{eq:p3-1-1}
+        \Pr[\Adv \textrm{ wins}] =\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    We then construct a PPT reduction $R$ that breaks the IND-CPA security of $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & R & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & &  & & \\
+            b\Usample\bit & \XR{\pk} & & \XR{\pk} &\\
+            & \XL{(m_0, m_1)} & m_0\coloneqq m, \; m_1\coloneqq  0^{|m|} & \XL{m} & \\
+            ct\sample \Enc_{\pk}(m_b)  & \XR{ct}& & \XR{ct} &\\
+            \text{$R$ wins if $b' = b$} & \XL{b'} & & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{IND-CPA}$}
+        \label{fig:p3-game1}
+    }
+    Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm. Also, it's straightforward that in this experiment, the ciphertext $ct$ given by $R$ to $\Adv$ is distributed exactly as in the experiment $\PKE^{ZeroEnc}$. Hence $R$ wins here iff $\Adv$ wins in $\PKE^{ZeroEnc}$. This implies that for all $n\in\Nbb$
+    \[
+        \Pr[R \textrm{ wins in } \PKE^{IND-CPA}] =  \Pr[\Adv \textrm{ wins in } \PKE^{ZeroEnc}] 
+        \stackrel{\eqref{eq:p3-1-1}}= \frac{1}{2}+\epsilon(n),
+    \]
+    meaning that $R$ wins in $\PKE^{IND-CPA}$ with nonnegligible advantage. Therefore, by definition, $(\Gen, \Enc, \Dec)$ not IND-CPA-secure. 
+
+
+
+
+    \proofcase{IND-CPA security $\impliedby$ ZeroEnc security}
+    Likewise, we prove this by contraposition.  Let $(\Gen, \Enc, \Dec)$ be a non-IND-CPA-secure PKE scheme. Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\PKE^{IND-CPA}$ we have
+    \begin{equation}\label{eq:p3-1-2}
+        \Pr[\Adv \textrm{ wins}] =\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    We then construct a PPT reduction $R$ that breaks the ZeroEnc security of $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & R & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & &  & & \\
+            b_1\Usample\bit & \XR{\pk} &  b_2\Usample\bit & \XR{\pk} &\\
+            & \XL{m} & m\coloneqq m_{b_2} & \XL{(m_0, m_1)} & \\
+            ct\sample \begin{cases}
+                \Enc_{\pk}(m) & \textrm{if } b_1=0\\
+                \Enc_{\pk}(0^{|m|}) & \textrm{if } b_1=1\\
+            \end{cases}  & & &  &\\
+            & \XR{ct}& & \XR{ct} &\\
+            \text{$R$ wins if $b_1' = b_1$} & \XL{b_1'} & b_1'\coloneqq \begin{cases}
+                0 & \textrm{if } b_2' = b_2\\
+                1 & \textrm{if } b_2' \neq b_2
+            \end{cases} & \XL{b_2'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{ZeroEnc}$}
+        \label{fig:p3-game2}
+    }
+    Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm.
+    To analyze the win rate of $R$, observe that for all $n\in\Nbb$:
+    \begin{itemize}
+        \item If $b_1=0$, then $ct\sample \Enc_\pk(m_{b_2})$, meaning that the ciphertext $ct$ given by $R$ to $\Adv$ is distributed identically to $ct$ in the experiment $\PKE^{IND-CPA}$.        
+        Consequently, $R$ wins here iff $\Adv$ correctly guesses $b_2$, whose probability is equal to the probability that $\Adv$ wins in $\PKE^{IND-CPA}$, that is,
+        \[
+            \Pr_{b_1\Usample\bit}[ R \textrm{ wins}\mid b_1=0]
+            =\Pr_{b_1,b_2\Usample\bit}[ b_2'=b_2 \mid b_1=0]
+            =\Pr_{b_1,b_2\Usample\bit}[ \Adv \textrm{ wins in } \PKE^{IND-CPA}]
+            \stackrel{\eqref{eq:p3-1-2}}= \frac{1}{2}+\epsilon(n).
+        \]
+
+        \item If $d=1$, then $ct\sample \Enc_\pk(0^{|m|})$, then we see that the ciphertext $ct$ given by $R$ to $\Adv$ is independent of $b_2$, and so does the output $b_2'$ of $\Adv$. Since $b_2\Usample\bit$ is uniformly random, this implies that $\Pr[b_2'=\bar{b_2}\mid b_1=1]=\frac{1}{2}$. Intuitively speaking, $ct$ leaks to $\Adv$ zero information of the bit $b_2$, so $\Adv$ correctly guesses the value of $b_2$ with probability only $\frac{1}{2}$. In other words,
+        \[
+            \Pr_{b_1\Usample\bit}[ R \textrm{ wins}\mid b_1=1]
+            =\Pr_{b_1,b_2\Usample\bit}[ b_2'=\bar{b_2} \mid b_1=1]
+            =\Pr_{\substack{b_2\Usample\bit\\(\pk, \sk)\sample \Gen(1^n)}}[ \Adv(\pk, \Enc_\pk(0^{|m|}))=\bar{b_2}]
+            =\frac{1}{2}
+        \]
+        since $b_2\in\bit$ is independent of LHS and is uniformly random. 
+    \end{itemize}
+    Putting both together, we see that for all $n\in\Nbb$
+    \[
+        \Pr_{b_1\Usample\bit}[ R \textrm{ wins}]
+        =\frac{1}{2}\Pr_{b_1\Usample\bit}[ R \textrm{ wins}\mid b_1=0]+\frac{1}{2}\Pr_{b_1\Usample\bit}[ R \textrm{ wins}\mid b_1=1]
+        = \frac{1}{2}\left(\frac{1}{2}+\epsilon(n)\right)+\frac{1}{2}\cdot \frac{1}{2}
+        = \frac{1}{2}+\frac{\epsilon(n)}{2},
+    \]
+    where the advantage $\frac{\epsilon(n)}{2}$ of $R$ in $\PKE^{ZeroEnc}$ is nonnegligible.
+    Therefore, by definition, $(\Gen, \Enc, \Dec)$ not ZeroEnc-secure. 
+\end{answer}
+
+
+
+
+
+
+
+
+
+\begin{answer}[ii]
+    We show that VectorEnc security is equivalent to IND-CPA security for all PKE schemes.
+    \begin{note}
+        VectorEnc security looks easier to break than IND-CPA security. However, it turns out that they are equivalently hard to break.
+    \end{note}
+    
+    \proofcase{VectorEnc security $\implies$ IND-CPA security}
+    We prove this by contraposition. Let $(\Gen, \Enc, \Dec)$ be a non-IND-CPA-secure PKE scheme. Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\PKE^{IND-CPA}$ we have
+    \begin{equation}\label{eq:p3-2-1}
+        \Pr[\Adv \textrm{ wins}] =\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    We then construct a PPT reduction $R$ that breaks the VectorEnc security of $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment, where we suppose $0^n\in \Mcal_n$.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & R & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & &  & & \\
+            b\Usample\bit & \XR{\pk} & & \XR{\pk} &\\
+            &  & (m_{1,0}, m_{1,1})\coloneqq (m_0, m_1) & \XL{(m_0, m_1)} & \\
+            & \XL{(m_{j,0}, m_{j,1})_{j=1}^n} & (m_{j,0}, m_{j,1})_{j=2}^n \coloneqq (0^n,0^n)_{j=2}^n &&\\
+            (ct_{j,b})_{j=1}^n\sample (\Enc_{\pk}(m_{j,b}))_{j=1}^n  & \XR{(ct_{j,b})_{j=1}^n}& ct\coloneqq ct_{1,b} & \XR{ct} &\\
+            \text{$R$ wins if $b' = b$} & \XL{b'} & & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{VectorEnc}$}
+        \label{fig:p3-game3}
+    }
+    Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm. Also, it's straightforward that in this experiment, the ciphertext $ct=ct_{1,b}\sample \Enc_{\pk}(m_{1,b})$ given by $R$ to $\Adv$ is distributed identically to  $ct$ in the experiment $\PKE^{IND-CPA}$. Hence $R$ wins here iff $\Adv$ wins in $\PKE^{IND-CPA}$. This implies that for all $n\in\Nbb$
+    \[
+        \Pr[R \textrm{ wins in } \PKE^{VectorEnc}] =  \Pr[\Adv \textrm{ wins in } \PKE^{IND-CPA}] 
+        \stackrel{\eqref{eq:p3-2-1}}= \frac{1}{2}+\epsilon(n),
+    \]
+    meaning that $R$ wins in $\PKE^{VectorEnc}$ with nonnegligible advantage. Therefore, by definition, $(\Gen, \Enc, \Dec)$ not VectorEnc-secure. 
+
+
+    \proofcase{IND-CPA security $\implies$ VectorEnc security}
+    We prove this by contraposition, with the use of hybrid argument.   Let $(\Gen, \Enc, \Dec)$ be a non-VectorEnc-secure PKE scheme. Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\PKE^{VectorEnc}$ we have
+    \begin{equation}\label{eq:p3-2-2}
+        \Pr[\Adv \textrm{ wins}] =\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    % For convenience, let's denote by $\pi_b$ the projection mapping a vector of pairs to a vector formed by the $b$-th member of each pair, i.e.,
+    % \[
+    %     \pi_b((x_{j,0},x_{j,1})_{j=1}^m) \triangleq (x_{j,b})_{j=1}^m,
+    % \]
+    % for each $b\in \bit$.
+    
+    Expanding $\Pr[\Adv \textrm{ wins}]$, we see that
+    \begin{align*}
+        \frac{1}{2}+\epsilon(n)&= \Pr[\Adv \textrm{ wins}] \\
+        &= \frac{1}{2}\Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,0}))_{j=1}^n)=0 \right]\\
+        &+ \frac{1}{2}\Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,1}))_{j=1}^n)=1 \right]\\
+        &= \frac{1}{2}\left(1-\Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,0}))_{j=1}^n)=1 \right]\right)\\
+        &+ \frac{1}{2}\Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,1}))_{j=1}^n)=1 \right]\\
+        &= \frac{1}{2}+ \frac{1}{2}\left(
+        \Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,1}))_{j=1}^n)=1 \right] \right.\\
+        &\left. \qquad\qquad\;  -\Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,0}))_{j=1}^n)=1 \right]
+        \right),
+    \end{align*}
+    so we have 
+    \begin{multline}\label{eq:p3-2-3}
+        \Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,1}))_{j=1}^n)=1 \right]\\
+        - \Pr\left[\begin{gathered}
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv(\pk,  (\Enc_\pk(m_{j,0}))_{j=1}^n)=1 \right]
+        = 2\epsilon(n).
+    \end{multline}
+
+    
+    We then construct a PPT reduction $R$ that breaks the IND-CPA security of $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment.
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \Ch & & R & & \Adv \\
+            (\pk, \sk)\sample \Gen(1^n) & &  & & \\
+            b\Usample\bit & \XR{\pk} & i\Usample [n]  & \XR{\pk} &\\
+            & \XL{(m_0, m_1)} & m_0, m_1\coloneqq m_{i, 0}, m_{i,1}   & \XL{(m_{j,0},m_{j,1})_{j=1}^n} & \\
+            ct\sample \Enc_\pk(m_{b}) & \XR{ct}&  (ct_{j})_{j=1}^{i-1}\sample (\Enc_\pk (m_{j, 0}))_{j=1}^{i-1}  &  &\\
+            && ct_{i}\coloneq ct &&\\
+            && (ct_{j})_{j=i+1}^n\sample (\Enc_\pk (m_{j, 1}))_{j=i+1}^n  &\XR{(ct_{j})_{j=1}^n} &\\
+            \text{$R$ wins if $b' = b$} & \XL{b'} & & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{IND-CPA}$}
+        \label{fig:p3-game4}
+    }
+    Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm. To analyze the advantage of $R$ in this experiment, for every $n\in\Nbb$ and $i\in \{0,1,\ldots, n\}$, for random variables $(\pk, \sk)\sample \Gen(1^n)$ and $(m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)$, we introduce the following hybrid distributions over $\Ccal_n^n$:
+    \[
+        \Hyb_i\triangleq \biggl( \underbrace{\Enc_\pk (m_{0, 0}), \ldots, \Enc_\pk (m_{i, 0})}_{\textrm{ciphertext of } (m_{j, 0})_{j=1}^{i} }, \underbrace{\Enc_\pk (m_{i+1, 1}), \Enc_\pk (m_{n, 1})}_{\textrm{ciphertext of } (m_{j, 1})_{j=i+1}^{n} }  \biggr).
+    \]
+    With the notion of hybrid distributions, we rewrite \eqref{eq:p3-2-3}  as
+    \begin{equation}\label{eq:p3-2-4}
+        \Pr_{(\pk, \sk)\sample \Gen(1^n)}\left[\Adv(\pk, \Hyb_0)\right]
+        -\Pr_{(\pk, \sk)\sample \Gen(1^n)}\left[\Adv(\pk, \Hyb_n)\right]
+        =2\epsilon(n).
+    \end{equation}
+    Back to $R$ participating in $\PKE^{IND-CPA}$. It's now easy to see that for every $n\in\Nbb$, the win rate of $R$ is actually
+    \begin{align*}
+        \Pr[R\textrm{ wins}]
+        &= \Pr\left[\begin{gathered}
+            i\Usample [n]\\
+            (\pk, \sk)\sample\Gen(1^n)\\
+            b\Usample\bit\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv\left(\pk, \left(\begin{gathered}\Enc_\pk(m_{1,0}),\ldots, \Enc_\pk(m_{i-1,0}), \Enc_\pk(m_{i,b}), \\\Enc_\pk(m_{i+1,1}),\ldots, \Enc_\pk(m_{n,1})\end{gathered}\right)\right)=1 \right]\\
+        &= \frac{1}{2}\Pr\left[\begin{gathered}
+            i\Usample [n]\\
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv\left(\pk, \left(\begin{gathered}\Enc_\pk(m_{1,0}),\ldots, \Enc_\pk(m_{i,0}), \\\Enc_\pk(m_{i+1,1}),\ldots, \Enc_\pk(m_{n,1})\end{gathered}\right)\right)=0 \right]\\
+        &+ \frac{1}{2}\Pr\left[\begin{gathered}
+            i\Usample [n]\\
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv\left(\pk, \left(\begin{gathered}\Enc_\pk(m_{1,0}),\ldots, \Enc_\pk(m_{i-1,0}), \\\Enc_\pk(m_{i,1}),\ldots, \Enc_\pk(m_{n,1})\end{gathered}\right)\right)=1 \right]\\
+        &= \frac{1}{2}+\frac{1}{2}\left(
+        \Pr\left[\begin{gathered}
+            i\Usample [n]\\
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv\left(\pk, \left(\begin{gathered}\Enc_\pk(m_{1,0}),\ldots, \Enc_\pk(m_{i-1,0}), \\\Enc_\pk(m_{i,1}),\ldots, \Enc_\pk(m_{n,1})\end{gathered}\right)\right)=1 \right]\right. \\
+        &\qquad\qquad\; \left.- \Pr\left[\begin{gathered}
+            i\Usample [n]\\
+            (\pk, \sk)\sample\Gen(1^n)\\
+            (m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)
+        \end{gathered}: \Adv\left(\pk, \left(\begin{gathered}\Enc_\pk(m_{1,0}),\ldots, \Enc_\pk(m_{i,0}), \\\Enc_\pk(m_{i+1,1}),\ldots, \Enc_\pk(m_{n,1})\end{gathered}\right)\right)=0 \right]
+        \right)\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\Pr_{ \substack{i\Usample [n]\\(\pk, \sk)\sample\Gen(1^n)}}\left[  \Adv(\pk, \Hyb_{i-1})=1\right] - \Pr_{ \substack{i\Usample [n]\\(\pk, \sk)\sample\Gen(1^n)}}\left[  \Adv(\pk, \Hyb_{i})=1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\sum_{i\in [n]}\frac{1}{n}\Pr_{(\pk, \sk)\sample\Gen(1^n)}\left[  \Adv(\pk, \Hyb_{i-1})=1\right] - \sum_{i\in [n]}\frac{1}{n}\Pr_{(\pk, \sk)\sample\Gen(1^n)}\left[  \Adv(\pk, \Hyb_{i})=1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2n}\left(\Pr_{(\pk, \sk)\sample\Gen(1^n)}\left[  \Adv(\pk, \Hyb_{0})=1\right]-\Pr_{(\pk, \sk)\sample\Gen(1^n)}\left[  \Adv(\pk, \Hyb_{n})=1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2n} (2\epsilon(n)) \qquad (\textrm{by \eqref{eq:p3-2-4}})\\
+        &= \frac{1}{2}+\frac{\epsilon(n)}{n}.
+    \end{align*}
+    Therefore, for all $n\in\Nbb$, the advantage $\frac{\epsilon(n)}{n}$ of $R$ is nonnegligible since $\epsilon$ is nonnegligible. 
+    
+    By definition,  $(\Gen, \Enc, \Dec)$ is hence not IND-CPA secure.
+\end{answer}
+
+
+
+\begin{answer}[iii]
+    idk
+\end{answer}
+
+
+
+\begin{answer}[iv]
+    Assuming the existence of Rand-Same-or-not-secure PKE schemes (otherwise the implication is trivial), we show that Rand-Same-or-not security does not imply IND-CPA security by providing a counterexample.
+    \begin{note}
+        Rand-Same-or-not security is \textbf{strictly} harder to break than IND-CPA security. That is,
+        \[
+            \textrm{IND-CPA-secure}\implies \textrm{Rand-Same-or-not-secure} \quad\textrm{but}\quad
+            \textrm{IND-CPA-secure}\centernot\impliedby \textrm{Rand-Same-or-not-secure}.
+        \]
+    \end{note}
+
+    Let $(\Gen, \Enc, \Dec)$ be a  Rand-Same-or-not-secure PKE scheme with message space $\Mcal_n$ and ciphertext space $\Ccal_n$, where $|\Mcal_n|=2^n$. For every $n\in\Nbb$, fix a message $m^\ast_n\in\Mcal_n$ and a special ciphertext ${ct}^\ast_n\notin\Ccal_n$ that is not in the ciphertext space. Define the new ciphertext space  $\Ccal'_n\triangleq \Ccal_n \cup \{{ct}^\ast_n\}$, along with the new PPT encryption and decryption algorithms $\Enc', \Dec'$ by
+    \begin{align*}
+        \Enc'_\pk (m; r) &\triangleq \begin{cases}
+            {ct}^\ast_n & \textrm{if } m = m^\ast_n\\
+            \Enc_\pk (m; r) & \textrm{otherwise}\
+        \end{cases}
+        \quad \textrm{for } m\in\Mcal_n\\
+        \Dec'_\sk(ct) &\triangleq \begin{cases}
+            m^\ast_n & \textrm{if } ct = {ct}^\ast_n\\
+            \Dec_\sk (ct) & \textrm{otherwise}\
+        \end{cases}
+        \quad \textrm{for } ct\in\Ccal_n'=\Ccal_n\cup \{{ct}^\ast_n\},
+    \end{align*}
+    where $\pk,\sk$ denote any public and private key generated by $\Gen$ and $r$ denotes the internal randomness of $\Enc$. (Clearly $\Enc'$ and $\Dec'$ run in PPT by constructions.)
+    We claim that  $(\Gen, \Enc', \Dec')$ is a PKE scheme with message space $\Mcal_n$ and ciphertext space $\Ccal'_n$ that is Rand-Same-or-not-secure but not IND-CPA-secure.
+    \begin{claim}
+         $(\Gen, \Enc', \Dec')$ is a PKE scheme with message space $\Mcal_n$ and ciphertext space $\Ccal'_n$.
+    \end{claim}
+    \begin{proof}
+        Clearly $\Enc'$ and $\Dec'$ are PPT algorithms by construction, so $(\Gen, \Enc', \Dec')$ are all PPT algorithms.
+        To show correctness, notice that by the correctness of $(\Gen, \Enc, \Dec)$, there exists $\mu(n)=\negl(n)$ such that for every $n\in\Nbb$ and $m\in\Mcal_n\setminus\{m^\ast_n\}$,
+        \[
+            \Pr_{(\pk, \sk)\sample \Gen(1^n)}[\Dec'_\sk(\Enc'_\pk(m))=m]
+            = \Pr_{(\pk, \sk)\sample \Gen(1^n)}[\Dec_\sk(\Enc_\pk(m))=m] \ge 1-\mu(n).
+        \]
+        As for the correctness on $m=m^\ast_n$ for each $n\in\Nbb$, this is given directly by the constructions of $\Enc'$ and $\Dec'$:
+        \[
+             \Pr_{(\pk, \sk)\sample \Gen(1^n)}[\Dec'_\sk(\Enc'_\pk(m^\ast_n))=m^\ast_n]
+             = \Pr_{(\pk, \sk)\sample \Gen(1^n)}[m^\ast_n=m^\ast_n]
+             =1\ge 1-\mu(n).
+        \]
+        Hence, $(\Gen, \Enc', \Dec')$ is indeed a correct PKE scheme.
+    \end{proof}
+    It remains to show that $(\Gen, \Enc', \Dec')$ is Rand-Same-or-not-secure but not IND-CPA-secure.
+    \begin{claim}
+        $(\Gen, \Enc', \Dec')$ is Rand-Same-or-not-secure.
+    \end{claim}
+    \begin{proof}
+        Suppose to the contrary that $(\Gen, \Enc', \Dec')$ is not Rand-Same-or-not-secure.  Then by definition, there exist a PPT adversary $\Adv$ and a nonnegligible function $\epsilon$ such that for every $n\in\Nbb$, in the experiment $\PKE^{Rand-Same-or-not}$ for $(\Gen, \Enc', \Dec')$ we have
+        \begin{equation}\label{eq:p3-4-1}
+            \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}]
+            =\Pr_{\substack{(\pk,\sk)\sample\Gen(1^n)\\b\Usample\bit\\m,m'\Usample\Mcal_n}}\left[\Adv\left(\pk,\left.\begin{cases}
+                \{\Enc_\pk(m), \Enc_\pk(m)\} &\textrm{if } b=0\\
+                \{\Enc_\pk(m), \Enc_\pk(m')\}, &\textrm{if } b=1\\
+            \end{cases}\right\} \right) =b\right]
+            =\frac{1}{2}+\epsilon(n).
+        \end{equation}
+        \end{proof}\begin{proof}[cont'd]
+         We show that this $\Adv$ also breaks the Rand-Same-or-not security of $(\Gen, \Enc, \Dec)$ with nonnegligible advantage, as illustrated in the following experiment. To avoid ambiguity, we denote by $R$ the $\Adv$ participating in the experiment for $(\Gen, \Enc, \Dec)$.
+        {
+            \[
+                \begin{array}{@{} c c c c c@{}}
+                \Ch & &  R=\Adv \\
+                (\pk, \sk)\sample \Gen(1^n) & &  \\
+                b\Usample\bit  & &   \\
+                m, m'\Usample\Mcal_n  & &   \\
+                ct\sample \begin{cases}
+                    \{\Enc_\pk(m), \Enc_\pk(m)\} & \textrm{if } b=0\\
+                    \{\Enc_\pk(m), \Enc_\pk(m')\} & \textrm{if } b=1\\
+                \end{cases}  & & \\
+                & \XR{ct\in \Ccal_n\subseteq \Ccal'_n} & \\
+                \text{$R$ wins if $b' = b$} & \XL{b'} & \\
+                \end{array}
+            \]
+            \captionof{figure}{Experiment $\PKE^{Rand-Same-or-not}$}
+            \label{fig:p3-game7}
+        }
+        \noindent Note that $R\triangleq \Adv$ is compatible in this experiment because $ct\in \Ccal_n\subseteq \Ccal'_n$.
+
+        Since $\epsilon$ is nonnegligible, there is $c\gt 0$ such that $\epsilon(n) \ge \frac{1}{n^c}$ for infinitely many $n\in\Nbb$.
+        Now notice that for each $n\in\Nbb$ and public key $\pk$, distributions  $\Enc_\pk(\cdot)$ and $\Enc'_\pk(\cdot)$ agree on every $m\in \Mcal_n$ but $m^\ast_n$. 
+        Thus, in the experiment $\PKE^{Rand-Same-or-not}$ for $(\Gen, \Enc, \Dec)$, conditioning $m\neq m^\ast_n\land m'\neq m^\ast_n$, the distribution of $ct$, which $\Adv$ takes as input, is identical to that of $ct$ in the same experiment for $(\Gen, \Enc', \Dec')$ conditioned on $m\neq m^\ast_n\land m'\neq m^\ast_n$. So we know
+        \begin{equation}\label{eq:p3-4-2}
+            \Pr_{m,m'\Usample\Mcal_n}[R \textrm{ wins} \mid m\neq m^\ast_n\land m'\neq m^\ast_n]
+            =\Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins} \mid  m\neq m^\ast_n\land m'\neq m^\ast_n].
+        \end{equation}
+        This gives rise to another question: what is the win rate of $\Adv$ conditioned on  $m\neq m^\ast_n\land m'\neq m^\ast_n$? In fact, since we have \eqref{eq:p3-4-1} (which is the ``average-case'' win rate), we may argue that, conditioning $m\neq m^\ast_n\land m'\neq m^\ast_n$, the win rate of $\Adv$ admits a $\frac{1}{2}+\mathsf{nonnegl}(n)$ lower bound, as proven below.
+        \begin{observation}[a tight lower bound]\label{obs:p3-4-1}
+            For all $n\in\Nbb$,
+            \[
+                \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}\mid m\neq m^\ast_n\land m'\neq m^\ast_n] \ge \left(\frac{1}{2}+\epsilon(n)-\frac{1}{2^{n-1}}+\frac{1}{2^{2n}}\right)\left(1+\frac{1}{2^n -1}\right) ^2.
+            \]
+        \end{observation}
+        \begin{proof}
+            Suppose to the contrary that
+            \[
+                \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}\mid m\neq m^\ast_n\land m'\neq m^\ast_n] \lt \left(\frac{1}{2}+\epsilon(n)-\frac{1}{2^{n-1}}+\frac{1}{2^{2n}}\right)\left(1+\frac{1}{2^n -1}\right)^2.
+            \]
+            Thus, by \eqref{eq:p3-4-1}, we deduce that
+            \begin{align*}
+                \frac{1}{2}+\epsilon(n)
+                &\le  \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}]\\
+                &= \Pr_{m,m'\Usample\Mcal_n}[m=m^\ast_n\lor m'=m^\ast_n]\Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}\mid m=m^\ast_n\lor m'=m^\ast_n]\\
+                &+ \Pr_{m,m'\Usample\Mcal_n}[m\neq m^\ast_n\land m'\neq m^\ast_n]\Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}\mid m\neq m^\ast_n\land m'\neq m^\ast_n]\\
+                &\lt \left(1-\left(1-\frac{1}{2^n}\right)^2\right)\cdot 1+\left(1-\frac{1}{2^n}\right)^2 \cdot \left(\frac{1}{2}+\epsilon(n)-\frac{1}{2^{n-1}}+\frac{1}{2^{2n}}\right)\left(1+\frac{1}{2^n -1}\right)^2\\
+                &= \frac{1}{2}+\epsilon(n),
+            \end{align*}
+            which is absurd.
+        \end{proof}
+        \end{proof}\begin{proof}[cont'd]
+
+        Following \autoref{obs:p3-4-1}, we may find a prettier lower bound for the win rate of $\Adv$ conditioning $m\neq m^\ast_n\land m'\neq m^\ast_n$. For infinitely many $n\in\Nbb$, we have
+        \begin{align}\label{eq:p3-4-3}
+            \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins}\mid m\neq m^\ast_n\land m'\neq m^\ast_n]
+            &\ge \left(\frac{1}{2}+\epsilon(n)-\frac{1}{2^{n-1}}+\frac{1}{2^{2n}}\right)\left(1+\frac{1}{2^n -1}\right) ^2 \notag\\
+            &\gt \frac{1}{2}+\frac{1}{n^c} -\frac{1}{2^{n-1}}\notag\\
+            &= \frac{1}{2}+\frac{1}{2n^c}+\left(\frac{1}{2n^c} -\frac{1}{2^{n-1}}\right)\notag\\
+            &\gt \frac{1}{2}+\frac{1}{2n^c}. \qquad (\because \frac{1}{2n^c} \gt \frac{1}{2^{n-1}} \textrm{ for sufficiently large } n\in\Nbb)
+        \end{align}
+        
+            
+        Putting all together, we see that for infinitely many $n\in\Nbb$, the win rate of $R$ is hence bounded below by
+        \begin{align*}
+            &\Pr_{m,m'\Usample\Mcal_n}[R \textrm{ wins}]\\
+            \ge& \Pr_{m,m'\Usample\Mcal_n}[R \textrm{ wins } \land m\neq m^\ast_n\land m'\neq m^\ast_n]\\
+            =&\Pr_{m,m'\Usample\Mcal_n}[ m\neq m^\ast_n\land m'\neq m^\ast_n] \Pr_{m,m'\Usample\Mcal_n}[R \textrm{ wins} \mid m\neq m^\ast_n\land m'\neq m^\ast_n]\\
+            =&\Pr_{m,m'\Usample\Mcal_n}[ m\neq m^\ast_n\land m'\neq m^\ast_n] \Pr_{m,m'\Usample\Mcal_n}[\Adv \textrm{ wins} \mid m\neq m^\ast_n\land m'\neq m^\ast_n]
+            \qquad (\textrm{by \eqref{eq:p3-4-2}})\\
+            \ge& \left(1-\frac{1}{2^n}\right)^2 \left(\frac{1}{2}+\frac{1}{2n^c}\right)
+            \qquad (\textrm{by the assumption } |\Mcal_n|=2^n \textrm{ and \eqref{eq:p3-4-3}})\\
+            \gt& \left(1-\frac{1}{2^{n-1}}\right) \left(\frac{1}{2}+\frac{1}{2n^c}\right)\\
+            =& \frac{1}{2}+\frac{1}{2n^c}-\frac{1}{2^n}-\frac{1}{n^c2^n}\\
+            \ge& \frac{1}{2}+\frac{1}{2n^c}-\frac{1}{2^n}-\frac{1}{2^n} \qquad (\because n\ge 1)\\
+            =& \frac{1}{2}+\frac{1}{4n^c}+\left(\frac{1}{4n^c}-\frac{1}{2^{n-1}}\right)\\
+            \gt& \frac{1}{2}+\frac{1}{4n^c}\qquad (\because \frac{1}{4n^c} \gt \frac{1}{2^{n-1}} \textrm{ for sufficiently large } n\in\Nbb)\\
+            =& \frac{1}{2}+\Omega(n^{-c}),
+        \end{align*}
+        which means that $R$ has nonnegligible advantage in $\PKE^{Rand-Same-or-not}$.
+
+        By definition, this means that $(\Gen, \Enc, \Dec)$ is not Rand-Same-or-not-secure, which contradicts our assumption.
+    \end{proof}
+
+
+
+
+
+    \begin{claim}
+        $(\Gen, \Enc', \Dec')$ is not IND-CPA-secure.
+    \end{claim}
+    \begin{proof}
+        We then construct a PPT adversary $\Adv$ that breaks the IND-CPA security of $(\Gen, \Enc', \Dec')$ with nonnegligible advantage, as illustrated in the following experiment.
+        \end{proof}\begin{proof}[cont'd]
+        {
+            \[
+                \begin{array}{@{} c c c@{}}
+                \Ch & &  \Adv \\
+                (\pk, \sk)\sample \Gen(1^n) & &   \\
+                b\Usample\bit & \XR{\pk} & \\
+                && m_0\coloneqq m^\ast_n,\; m_1\Usample\Mcal_n \\
+                & \XL{(m_0, m_1)} & \\
+                ct\sample \Enc'_{\pk}(m_b)  & \XR{ct}& \\
+                && b'\coloneqq \begin{cases}
+                    0 &\textrm{if } ct={ct}^\ast_n\\
+                    1 &\textrm{if } ct\neq {ct}^\ast_n\\
+                \end{cases}\\
+                \text{$\Adv$ wins if $b' = b$} & \XL{b'} &  \\
+                \end{array}
+            \]
+            \captionof{figure}{Experiment $\PKE^{IND-CPA}$}
+            \label{fig:p3-game1}
+        }
+        Clearly  $\Adv$ is a PPT algorithm. Also, it's straightforward that in this experiment, for all $n\in\Nbb$,
+        \begin{align*}
+            &\Pr_{\substack{m_1\Usample \Mcal_n\\b\Usample\bit}}[\Adv \textrm{ wins}]\\
+            \ge& \Pr_{\substack{m_1\Usample \Mcal_n\\b\Usample\bit}}[\Adv \textrm{ wins } \land m_1\neq m^\ast_n]\\
+            =& \Pr_{m_1\Usample \Mcal_n}[m_1\neq m^\ast_n] \Pr_{\substack{m_1\Usample \Mcal_n\\b\Usample\bit}}[\Adv \textrm{ wins } \mid m_1\neq m^\ast_n]\\
+            =& \left(1-\frac{1}{2^n}\right)\left(\frac{1}{2}\Pr_{\substack{m_1\Usample \Mcal_n\\b\Usample\bit}}[\Adv \textrm{ wins } \mid m_1\neq m^\ast_n\land b=0] + \frac{1}{2} \Pr_{\substack{m_1\Usample \Mcal_n\\b\Usample\bit}}[\Adv \textrm{ wins } \mid m_1\neq m^\ast_n\land b=1]\right)\\
+            =& \left(1-\frac{1}{2^n}\right)\left(\frac{1}{2}\Pr_{(\pk,\sk)\sample\Gen(1^n)}[\underbrace{\Enc'_\pk(m^\ast_n)={ct}^\ast_n}_{\begin{gathered}\equiv\top \;\; (\textrm{by def. of } \Enc')\end{gathered}}] + \frac{1}{2} \Pr_{\substack{m_1\Usample \Mcal_n\\(\pk,\sk)\sample\Gen(1^n)}}[\underbrace{\Enc'_\pk(m_1)\neq {ct}^\ast_n \mid m_1\neq m^\ast_n}_{\begin{gathered}\equiv\top \;\; (\textrm{by def. of } \Enc')\end{gathered}}]\right)\\
+            =& \frac{1}{2}+\left(\frac{1}{2}-\frac{1}{2^n}\right),
+        \end{align*}
+        where $\frac{1}{2}-\frac{1}{2^n}$ is clearly nonnegligible. This means that $\Adv$ wins in $\PKE^{IND-CPA}$ with nonnegligible advantage. Therefore, by definition, $(\Gen, \Enc', \Dec')$ not IND-CPA-secure. 
+    \end{proof}
+
+    Hence we are done.
+\end{answer}

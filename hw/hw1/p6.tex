@@ -1,0 +1,148 @@
+\begin{problem}[Expansion of a PRG]\label{p6}
+    \leavevmode\par
+    Let $G:\bit^n\to \bit^{n+1}$ be a PRG. For any polynomial $l(\cdot)$, define $G':\bit^n\to\bit^{l(n)}$ as follows: 
+    \begin{align*}
+        G'(s) &\triangleq b_1\ldots b_{l(n)},\textrm{ where}\\
+        x_0 &\coloneqq s\\
+        x_{i+1}\concat b_{i+1} &\coloneqq G(x_i),\; i=0,1,\ldots,l(n)-1.
+    \end{align*}
+    Then $G'$ is a PRG.
+\end{problem}
+
+\begin{answer}
+    It's trivial that $G'$ is efficiently computable (in deterministic polynomial time) and expanding (since we may assume that $|G'(s)|=l(|s|)\gt |s|$). Thus, it remains to show that $\{G'(U_n)\}_n$ is pseudorandom, which we prove by contradiction.
+
+    Suppose to the contrary that  $\{G'(U_n)\}_n$ is not pseudorandom, which means $\{G'(U_n)\}_n$ and $\{U_{l(n)}\}_n$ are not computationally indistinguishable. That is, that there exists a PPT distinguisher $D$ such that
+    \begin{equation}\label{eq:p6-2}
+        \epsilon(n)\triangleq \abs*{\Pr[D(G'(U_n)) = 1]  -\Pr[D(U_{l(n)}) = 1]} 
+    \end{equation}
+    is non-negligible. Equivalently, in the following security game $\Game'$, the distinguisher $D$ wins with probability $\frac{1}{2}+\frac{\epsilon(n)}{2}$ for all $n\in\Nbb$, where $\epsilon$ is non-negligible.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D \\
+            b \leftarrow \bit & & \\
+            y \leftarrow \begin{cases} 
+                G'(U_n), &b = 0 \\
+                U_{l(n)}, &b = 1 
+            \end{cases} & & \\
+            & \XR{y} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $\Game'$}
+        \label{fig:p6-game1}
+    }
+
+    Our goal is to construct a PPT reduction $R$ that efficiently distinguishes  between $\{G(U_n)\}_n$ and $\{U_{n+1}\}_n$ with non-negligible advantage, i.e., wins the game $\Game$ (which is shown later along with the construction of $R$) with non-negligible advantage.
+
+    First, we define ``hybrid functions'' $G^\bigstar_i:\bit^{n+1}\to\bit^{l(n)}$ for every $i\in 0,1,\ldots, l(n)$ by
+    \begin{align*}
+        G^\bigstar_i(s) &\triangleq b_1\ldots b_{l(n)},\textrm{ where}\\
+        b_1,\ldots, b_{i-1}&\sample \bit\\
+        \underbrace{x_j}_{n \textrm{ bits}}\concat \underbrace{b_j}_{1 \textrm{ bit}} &\coloneqq \begin{cases}
+            s, & j=i\\
+            G(x_{j-1}), & j=i+1,\ldots,l(n)
+        \end{cases}.
+    \end{align*}
+    and the ``hybrid distributions'' $\Hyb_i$ (all of which are $l(n)$ bits long) for every $i\in 0,1,\ldots, l(n)$ by
+    \[
+        \Hyb_i \triangleq G^\bigstar_i(U_{n+1}),
+    \]
+    among which there are
+    \begin{equation}\label{eq:p6-1}
+        \Hyb_0 = G'(U_n) \;\;\textrm{and}\;\; \Hyb_{l(n)} = U_{l(n)}.
+    \end{equation}
+
+    By the \textbf{hybrid lemma}, since 
+    \[
+        \abs*{\Pr[D(G'(U_n)) = 1]  -\Pr[D(U_{l(n)}) = 1]}
+        = \abs*{\Pr[D(\Hyb_0) = 1]  -\Pr[D(\Hyb_{l(n)}) = 1]}
+        =\epsilon(n),
+    \]
+    where $D$ is a PPT distinguisher, then there exists some $i^\ast\in \{0,1,\ldots,l(n)-1\}$ such that
+    \[
+        \abs*{\Pr[D(\Hyb_{i^\ast}) = 1]  -\Pr[D(\Hyb_{i^\ast +1}) = 1]}\ge \frac{\epsilon(n)}{l(n)},
+    \]
+    that is, $D$ efficiently distinguishes $\{\Hyb_{i^\ast}\}_n$ and $\{\Hyb_{i^\ast+1}\}_n$ with advantage at least $\frac{\epsilon(n)}{l(n)}$.  
+    This means that out of all ``hybrid games'' $\Game^\bigstar_i$ defined as follows, there is some game $\Game^\bigstar_{i^\ast}$ which $D$ wins with probability at least $\frac{1}{2}+\frac{\epsilon(n)}{2l(n)}$. 
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & D \\
+            b \leftarrow \bit & & \\
+            y \leftarrow \begin{cases} 
+                \Hyb_{i^\ast}, &b = 0 \\
+                \Hyb_{i^\ast+1}, &b = 1 
+            \end{cases} & & \\
+            & \XR{y} & \\
+            & \XL{b'} & \\
+            \multicolumn{3}{c}{\text{$D$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \captionof{figure}{Game $\Game^\bigstar_i,\; \textrm{for each }i\in \{0,1,\ldots,l(n)-1\}$}
+        \label{fig:p6-game2}
+    }
+
+    Knowing this, we therefore construct the reduction $R$ as described in the following game $\Game$:
+    {
+        \[
+            \begin{array}{@{} c c c c c@{}}
+            \text{Ch} & & R & & D \\
+            b \leftarrow \bit & & & &\\
+            s \leftarrow \begin{cases} 
+                G(U_n), &b = 0 \\
+                U_{n+1}, &b = 1 
+            \end{cases} & & & &\\
+            & \XR{s} & & &\\
+            & & i\stackrel{\$}{\sample} \{0,1,\ldots,l(n)-1\} & & \\
+            & & & \XR{G^\bigstar_{i +1}(s)} & \\
+            & & & \XL{b'} &\\
+            & \XL{b'} & & &\\
+            \multicolumn{5}{c}{\text{$R$ wins if $b' = b$}}
+        \end{array}
+        \]
+        \vspace{-0.5cm}
+        \captionof{figure}{Game $\Game$}\label{fig:p6-game3}
+    }
+    \noindent wherein by sending $G^\bigstar_{i +1}(s)$ we mean that $R$ samples a string $y\in\bit^{l(n)}$ from the distribution $G^\bigstar_{i +1}(s)$ by computing
+    \begin{align*}
+        y &\coloneqq b_1\ldots b_{l(n)},\textrm{ where}\\
+        b_1,\ldots, b_{i-1}&\sample \bit\\
+        \underbrace{x_j}_{n \textrm{ bits}}\concat \underbrace{b_j}_{1 \textrm{ bit}} &\coloneqq \begin{cases}
+            s, & j=i\\
+            G(x_{j-1}), & j=i+1,\ldots,l(n)
+        \end{cases},
+    \end{align*}
+    and then sends $y$ to $D$.
+    
+    The advantage of $R$ in distinguishing between $\{G(U_n)\}_n$ and $\{U_{n+1}\}_n$ is
+    \begin{align*}
+        &\biggl\vert \Pr[R(G(U_n)) = 1]  -\Pr[R(U_{n+1}) = 1] \biggr\vert \\
+        =&  \abs*{\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(G^\bigstar_{i +1}(G(U_n))) = 1\right]  -\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(G^\bigstar_{i +1}(U_{n+1})) = 1\right]} 
+        \qquad \textrm{(by def. of $R$)}\\
+        \stackrel{(\twemoji{mushroom})}{=}&  \abs*{\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(G^\bigstar_{i}(U_{n+1})) = 1\right]  -\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(G^\bigstar_{i +1}(U_{n+1})) = 1\right]} \\
+        =&  \abs*{\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(\Hyb_i) = 1\right]  -\Pr_{i\sample\{0,\ldots,l(n)-1\}}\left[D(\Hyb_{i+1})= 1\right]}
+        \qquad \textrm{(by def. of $\Hyb_i$)}\\
+        =&  \abs*{\sum_{i'=0}^{l(n)-1} \Pr_{i\sample\{0,\ldots,l(n)-1\}}[i=i'] \Pr\left[D(\Hyb_{i'}) = 1\right]  - \sum_{i'=0}^{l(n)-1} \Pr_{i\sample\{0,\ldots,l(n)-1\}}[i=i'] \Pr\left[D(\Hyb_{i'+1})= 1\right]} 
+        \quad \textrm{(by cond. prob.)}\\
+        =&  \abs*{\sum_{i=0}^{l(n)-1} \frac{1}{l(n)}\cdot \Pr\left[D(\Hyb_i) = 1\right]  - \sum_{i=0}^{l(n)-1} \frac{1}{l(n)}\cdot \Pr\left[D(\Hyb_{i+1})= 1\right]} \\
+        =&  \frac{1}{l(n)}\abs*{\sum_{i=0}^{l(n)-1} \biggl( \Pr\left[D(\Hyb_i) = 1\right]  -  \Pr\left[D(\Hyb_{i+1})= 1\right]\biggr)} \\
+        =&  \frac{1}{l(n)}\abs*{  \Pr\left[D(\Hyb_0) = 1\right]  -  \Pr\left[D(\Hyb_{l(n)})= 1\right]}
+         \qquad \textrm{(by telescoping sum)}\\
+        =&  \frac{1}{l(n)}\abs*{  \Pr\left[D(G'(U_n)) = 1\right]  -  \Pr\left[D(U_{l(n)})= 1\right]}
+        \qquad \textrm{(by \eqref{eq:p6-1})} \\
+        =& \frac{1}{l(n)} \cdot \epsilon(n),
+        \qquad \textrm{(by \eqref{eq:p6-2})}
+    \end{align*}
+    which is non-negligible because $\epsilon(n)$ is non-negligible and $l(n)=\poly(n)$. Notice that the step $(\twemoji{mushroom})$ above follows from a simple observation:
+    \[
+        G^\bigstar_{i+1}(G(U_n)) =  G^\bigstar_{i}(U_{n+1})\quad \textrm{for all } i\in \{0,1,\ldots,l(n)-1\},
+    \]
+    which is given directly by the definition of $G^\bigstar_i$. 
+
+    On the other hand, the $R$ clearly runs in PPT by construction because $D$ also runs in PPT. 
+
+    Hence, the existence of the PPT $R$, which distinguishes between $\{G(U_n)\}_n$ and $\{U_{n+1}\}_n$ with non-negligible advantage, by definition breaks the pseudorandomness of $\{G(U_n)\}_n$. This implies $G$ is not a PRG, contradicting to the assumption that $G$ is. This completes our proof, yay.
+\end{answer}

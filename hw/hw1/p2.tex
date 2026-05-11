@@ -1,0 +1,32 @@
+\begin{problem}[Markov]\label{p2}
+    \leavevmode\par
+    Let $\Acal$ be a probabilistic algorithm with $n$ bit input such that
+    \[
+        \Pr_{x\sample\bit^n}\left[\Acal(x)=1\right] \ge p.
+    \]
+    Prove that for any $0\lt \epsilon\lt p$, we have the size of the \textit{good set} $\abs*{G_\epsilon} \ge \epsilon 2^n$, where
+    \[
+        G_{\epsilon} \triangleq \biggl\{  x\in\bit^n \biggm\vert \Pr\bigl[\Acal(x)=1\bigr]\ge p-\epsilon \biggr\}.
+    \]
+    You should be able to prove this claim via simple probabilistic operations.
+\end{problem}
+
+\begin{answer}
+    Suppose to the contrary that $\abs*{G_\epsilon} \lt \epsilon 2^n$, equivalently,
+    \[
+        \Pr_{x\sample\bit^n}\left[ x\in G_\epsilon \right] = \frac{|G_\epsilon|}{2^n}\lt \epsilon.
+    \]
+    Then, we deduce
+    \begin{align*}
+        p&\le \Pr_{x\sample\bit^n}\left[\Acal(x)=1\right]\\
+        &= \Pr_{x\sample\bit^n}\left[\Acal(x)=1 \land x\in G_\epsilon\right] + \Pr_{x\sample\bit^n}\left[\Acal(x)=1 \land x\notin G_\epsilon\right]
+        \qquad \textrm{(since both events are disjoint)}\\
+        &= \Pr_{x\sample\bit^n}\left[ x\in G_\epsilon \right] \Pr_{x\sample\bit^n}\left[\Acal(x)=1 \mid x\in G_\epsilon\right] 
+        + \left(1-\Pr_{x\sample\bit^n}\left[ x\in G_\epsilon \right]\right)\Pr_{x\sample\bit^n}\left[\Acal(x)=1 \mid x\notin G_\epsilon\right]\\
+        &\lt \epsilon \cdot 1 + 1 \cdot (p-\epsilon) \qquad \textrm{(by our assumption and the definition of $G_\epsilon$)}\\
+        &= p,
+    \end{align*}
+    which is a contradiction. Hence, it must be that $\abs*{G_\epsilon} \ge \epsilon 2^n$.
+
+    (The moral is: if the proportion of $x\in  \bit^n$ such that $\Acal(x)$ wins with sufficiently high probability (at least $p-\epsilon$) were too small (less than an $\epsilon$ fraction of $\bit^n$), then the average success probability $\Pr_{x\sample\bit^n}\left[\Acal(x)=1\right]$ could never reach $p$.)
+\end{answer}

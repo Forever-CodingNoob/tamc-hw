@@ -1,0 +1,141 @@
+\usepackage{mathtools}
+\usepackage{fbox}
+%\usepackage{etoolbox}
+\usepackage{twemojis} % for emojis
+\usepackage{esvect} % cooler vectors \vv
+
+% =========================
+% elementry operations
+\newcommand{\gt}{\mathrel{>}}
+\newcommand{\lt}{\mathrel{<}}
+\newcommand{\equals}{\mathrel{=}}
+\DeclareMathOperator{\sgn}{sgn}
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\apptocmd{\lim}{\limits}{}{}
+%\let\implies\Rightarrow
+%\let\impliedby\Leftarrow
+%\let\iff\Leftrightarrow
+\let\epsilon\varepsilon
+\newcommand{\minus}{\scalebox{0.75}[1.0]{$-$}}
+\renewcommand{\bar}[1]{\overline{#1}}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\newcommand{\concat}{\mathbin{\Vert}}
+\newcommand{\bit}{\{0,1\}}
+\newcommand{\powerset}[1]{\mathcal{P}(#1)}
+\newcommand{\symdiff}{\mathop{\triangle}}
+\newcommand{\func}{\mathsf{Func}}
+\newcommand{\fst}{\mathop{\textrm{fst}}}
+\newcommand{\snd}{\mathop{\textrm{snd}}}
+
+% =========================
+% logical operations
+\newcommand{\entails}[1]{\vdash_{\mathsf{#1}}}
+
+% =========================
+% probabilistic operations
+\DeclareMathOperator*{\Var}{Var}
+\DeclareMathOperator*{\Exp}{\mathbb{E}}
+\newcommand{\ensemble}[2]{\{#1\}_{#2\in\Nbb}}
+\newcommand{\sample}{\mathrel{\leftarrow}}
+\newcommand{\Usample}{\mathrel{\xleftarrow{\$}}}
+\newcommand{\prdist}[2]{\pr\limits_{#1}\left[\ #2\ \right]}
+\newcommand{\iid}{\overset{\mathrm{iid}}{\sim}}
+\newcommand{\indep}{\mathrel{\perp\!\!\!\perp}}
+
+% =========================
+% cryotographic notations
+% 0. basic defs
+\newcommand{\ind}{\approx} % indistinguishable
+\newcommand{\aympind}{\approx_c} % asymptotically indistinguishable
+% 1. Primitive / scheme names
+\newcommand{\PKE}{\mathsf{PKE}}
+\newcommand{\SKE}{\mathsf{SKE}}
+\newcommand{\KEM}{\mathsf{KEM}}
+\newcommand{\OWPKE}{\mathsf{PKE}_{\mathsf{OW}}}
+\newcommand{\CCAPKE}{\mathsf{PKE}_{\mathsf{CCA}}}
+\newcommand{\LWE}{\mathsf{LWE}}
+\newcommand{\DLWE}{\mathsf{DLWE}}
+\newcommand{\SLWE}{\mathsf{SLWE}}
+% 2. Schemes
+\newcommand{\Gen}{\mathsf{KeyGen}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Encaps}{\mathsf{Encaps}}
+\newcommand{\Decaps}{\mathsf{Decaps}}
+\newcommand{\Sign}{\mathsf{Sign}}
+\newcommand{\Vrfy}{\mathsf{Vrfy}}
+\newcommand{\Com}{\mathsf{Com}}
+\newcommand{\Open}{\mathsf{Open}}
+\newcommand{\view}{\mathsf{view}}
+\newcommand{\out}{\mathsf{out}}
+\newcommand{\Ext}{\mathsf{Ext}}
+\newcommand{\Sim}{\mathsf{Sim}}
+\newcommand{\Trans}{\mathsf{Trans}}
+% 3. Keys / ciphertexts / common objects
+\newcommand{\pk}{\mathsf{pk}}
+\newcommand{\sk}{\mathsf{sk}}
+\newcommand{\ct}{\mathsf{ct}}
+\newcommand{\crs}{\mathsf{crs}}
+\newcommand{\st}{\mathsf{st}}
+\newcommand{\com}{\mathsf{com}}
+% 4. Functions
+\newcommand{\negl}{\mathsf{negl}}
+\newcommand{\poly}{\mathsf{poly}}
+% 5. Entities in games / proofs
+\newcommand{\Adv}{\mathbf{Adv}}
+\newcommand{\Ch}{\mathsf{Ch}}
+\newcommand{\Hyb}{\mathsf{Hyb}}
+\renewcommand{\Game}{\mathbf{\mathsf{G}}}
+% 6. Protocol-specific notation
+\newcommand{\commit}{\mathsf{commit}}
+\newcommand{\chan}{\mathsf{ch}}
+\newcommand{\resp}{\mathsf{resp}}
+\newcommand{\interact}[1]{\left<#1\right>}
+
+% =========================
+% shorthands for convenience
+\newcommand{\Ccal}{\mathcal{C}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Mcal}{\mathcal{M}}
+\newcommand{\Kcal}{\mathcal{K}}
+\newcommand{\Ical}{\mathcal{I}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Gcal}{\mathcal{G}}
+\newcommand{\Ocal}{\mathcal{O}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Xcal}{\mathcal{X}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Zcal}{\mathcal{Z}}
+\newcommand{\Nbb}{\mathbb{N}}
+\newcommand{\Zbb}{\mathbb{Z}}
+\newcommand{\Rbb}{\mathbb{R}}
+\newcommand{\Gbb}{\mathbb{G}}
+
+% =========================
+% arrows for sequence diagram
+\def\XLR#1{\xleftrightarrow[\rule{2cm}{0pt}]{#1}}% \rule defines the width
+\def\XR#1{\xrightarrow[\rule{2cm}{0pt}]{#1}}
+\def\XL#1{\xleftarrow[\rule{2cm}{0pt}]{#1}}
+
+\newcommand{\xdownarrow}[2][0.5cm]{%
+  \mathrel{\underset{#2}{\left\downarrow\vbox to #1{}\right.\kern-\nulldelimiterspace}}%
+}
+\newcommand{\XD}[1]{\xdownarrow[0.5cm]{#1}} % \rule defines the height
+
+% =========================
+% misc
+\newcommand{\highlight}[2]{\colorbox{#1}{$\displaystyle #2$}}
+\newcommand{\proofcase}[1]{%
+  \par\medskip
+  \noindent\textbf{\large #1.}\enspace
+  \par\smallskip
+}
+%\newcommand{\too}{\mathbin{\Rightarrow}}
+%\newcommand\tildee{\raise.17ex\hbox{$\scriptstyle\sim$}}
+% \newcommand{\sus}{
+%     \textrm{\fontspec{Noto Sans Sinhala}ඞ}
+% }

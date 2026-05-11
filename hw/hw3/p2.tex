@@ -1,0 +1,199 @@
+\begin{problem}[Leftover Hash Lemma]\label{p2}
+    \leavevmode\par
+    In this problem, you are asked to prove the leftover hash lemma you saw in the class. Recall the statement of the lemma as follows.
+    \begin{theorem}[Leftover Hash Lemma]\label{lemma:leftover-hash-lemma}
+        Let $n,m,q\in \Nbb$ where $q$ is a prime, and $\epsilon \in (0,1)$ be parameters satisfying $m\ge n\log{q} + 2\log (\frac{1}\epsilon) +1$. Let $A\Usample \Zbb_q^{m\times n}$ be a uniformly random matrix over  $\Zbb_q^{m\times n}$ and $r\Usample\bit^m$. Then the distribution $(A, r^T A)$ is $\epsilon$-close to uniform. Namely, let  $A', u$ denote the uniform distribution over $\Zbb_q^{m\times n}, \Zbb_q^n$, respectively, we have
+        \[
+            \Delta((A, r^T A), (A', u)) \le \epsilon.
+        \]
+    \end{theorem}
+    Before proving the lemma, we discuss the interpretation of the lemma. Intuitively, $r\Usample\bit^m$ has $m$ bits of ``entropy'', and $u\Usample\Zbb_q^n$ has $n\log q$ bits of ``entropy''. The lemma says that the uniformly random matrix $A\Usample \Zbb_q^{m\times n}$ can be viewed as a \textit{randomness extractor} that extracts the randomness of $r$ and turn it into a close-to-uniform random variable $r^TA$, provided that $r$ has sufficient entropy (i.e., $m$ is sufficiently large). Now, you are asked to prove this lemma in the following four steps.
+    \begin{enumerate}[label=(\roman*)]
+        \item Show that for any $x,y\in \Zbb_q^m$ such that $x\ne y$,
+        \[
+            \Pr_{A\Usample \Zbb_q^{m\times n}}\left[x^T A = y^TA\right] \le \frac{1}{q^n}.
+        \]
+        \item For a discrete random variable $X$, define the \textit{collision probability} of $X$ to be the probability that two independent samples of $X$ taking the same value (i.e., they collide). Namely, define 
+        \[
+            \mathop{\textrm{cp}}(X) \triangleq \Pr[X=X'] = \sum_x \Pr[X=x]^2,
+        \]
+        where $X'$ denotes an independent copy of $X$. Use (i) to prove the following upper bound on the collision probability of $(A, r^TA)$:
+        \[
+            \mathop{\textrm{cp}}(A, r^TA) \le \frac{1}{q^{mn}}\left(\frac{1}{2^m}+\frac{1}{q^n}\right).
+        \]
+        \item Let $X$ be a random variable with support size $N$. It is known that if $X$ has collision probability $\mathop{\textrm{cp}}(X)\le \frac{1+\epsilon^2}{N}$, then $X$ is $\epsilon$-close to the uniform distribution over its support. Use this fact and (ii) to prove the lemma.
+        \item Prove the above stated fact: if X has collision probability $\mathop{\textrm{cp}}(X)\le \frac{1+\epsilon^2}{N}$, then $X$ is $\epsilon$-close to uniform.
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    Let $x,y\in \Zbb_q^m$ be such that $x\ne y$.
+    First, we simplify the goal:
+    \begin{align*}
+         \Pr_{A\Usample \Zbb_q^{m\times n}}\left[x^T A = y^TA\right]
+         &=  \Pr_{A\Usample \Zbb_q^{m\times n}}\left[A^T(x-y)= \mathbf{0}\right]\\
+         &=  \Pr_{A'\Usample \Zbb_q^{n\times m}}\left[A'(x-y)= \mathbf{0}\right] && (A'\triangleq A^T)\\
+         &= \Pr_{A'\Usample \Zbb_q^{n\times m}}\left[\sum_{j=1}^m A'_{1, j}(x-y)_j =0 \land\cdots\land \sum_{j=1}^m A'_{n, j}(x-y)_j=0\right]\\
+         &\stackrel{\twemoji{hot face}}=  \prod_{i=1}^n \Pr_{A'\Usample \Zbb_q^{n\times m}}\left[\sum_{j=1}^m A'_{i, j}(x-y)_j=0\right]
+         && (\textrm{by independence})\\
+         &=  \prod_{i=1}^n \Pr_{\alpha_1,\ldots,\alpha_m \Usample \Zbb_q}\left[\sum_{j=1}^m \alpha_j(x-y)_j=0\right]
+         && (\alpha_j \triangleq A'_{i,j} \; \forall j\in [m])\\
+         &= \left( \Pr_{\alpha_1,\ldots,\alpha_m \Usample \Zbb_q}\left[\sum_{j=1}^m \alpha_j(x-y)_j=0\right]\right)^n,
+    \end{align*}
+    where (\twemoji{hot face}) holds because all entries of $A'$, i.e. $\{A'_{i,j}\}_{i\in [n], j\in [m]}$, are mutually independent, and so are $\{\sum_{j=1}^m A'_{i,j} (x-y)_j\}_{i\in [n], j\in [m]}$.
+    If we can show that
+    \begin{equation}\label{eq:p2-1-1}
+        \Pr_{\alpha_1,\ldots,\alpha_m \Usample \Zbb_q}\left[\sum_{j=1}^m \alpha_j(x-y)_j=0\right] \le \frac{1}{q},
+    \end{equation}
+    then we are done. Thus, it suffices to show \eqref{eq:p2-1-1} holds.
+
+    \begin{goal}
+        $
+            \Pr_{\alpha_1,\ldots,\alpha_m \Usample \Zbb_q}\left[\sum_{j=1}^m \alpha_j(x-y)_j=0\right] \le \frac{1}{q}
+        $
+    \end{goal}
+
+    
+
+    To show this, first notice that since $x\neq y$ and thus $x-y\neq \mathbf{0}$, there exists $t\in [m]$ such that $(x-y)_t\neq 0$.
+    \begin{idea}
+        $
+            \alpha_t\textrm{ uniform and independent}
+            \implies \alpha_t(x-y)_t \textrm{ uniform and indep. of other } \alpha_j(x-y)_j
+            \implies \sum_{j=1}^m \alpha_j(x-y)_j \textrm{ uniform}
+        $
+    \end{idea}
+
+    For every $\beta\in \Zbb_q$, since $(x-y)_t\neq 0$ and thus $(x-y)_t^{-1}$ exists, we have
+    \[
+        \Pr_{\alpha_t\Usample \Zbb_q}[\alpha_t(x-y)_t = \beta]
+        = \Pr_{\alpha_t\Usample \Zbb_q}[\alpha_t= \beta (x-y)_t ^{-1}]
+        = \frac{1}{q} 
+    \]
+    as $\alpha_t$ is uniformly random. This means that the random variable $\alpha_t(x-y)_t\in \Zbb_q$ is also uniformly random. 
+    
+    Moreover, since $\alpha_1,\ldots, \alpha_m$ are mutually independent and $(x-y)_1,\ldots, (x-y)_m$ are just constants, we know $\alpha_t(x-y)_t\in \Zbb_q$ is independent of $\sum_{j\in [m]\setminus \{t\}} \alpha_j(x-y)_j\in \Zbb_q$ (the rest of sum). Therefore, as $\Zbb_q$ forms an additive group (of order $q$), by Problem 1-(ii) in HW1, their sum
+    \[
+        \alpha_t(x-y)_t + \sum_{j\in [m]\setminus \{t\}} \alpha_j(x-y)_j = \sum_{j=1}^m \alpha_j(x-y)_j
+    \]
+    is uniformly random over $\Zbb_q$. Hence, there is only $\frac{1}{q}$ probability that it is exactly $0$, that is, \\ $\Pr_{\alpha_1,\ldots,\alpha_m \Usample \Zbb_q}\left[\sum_{j=1}^m \alpha_j(x-y)_j=0\right] = \frac{1}{q}$, as claimed.
+\end{answer}
+
+
+
+
+\begin{answer}[ii]
+    Note that from (i), for all distinct $x,y\in \Zbb_q^m$ we have
+    \begin{equation}\label{eq:p2-2-1}
+        \frac{1}{q^n} \ge 
+        \Pr_{A\Usample \Zbb_q^{m\times n}}\left[x^T A = y^TA\right]
+        = \frac{\abs*{ \{ A\in \Zbb_q^{m\times n}\mid x^T A = y^TA\}}}{q^{mn}}
+        = \sum_{A\in \Zbb_q^{m\times n}}\frac{1}{q^{mn}}\left[x^T A = y^TA\right].
+    \end{equation}
+    Hence,
+    \begin{align*}
+        \mathop{\textrm{cp}}(A, r^TA)
+        &= \Pr_{\substack{A^{(1)},A^{(2)}\Usample \Zbb_q^{m\times n}\\r^{(1)},r^{(2)}\Usample\bit^{m}}}\left[(A^{(1)},{r^{(1)}}^TA^{(1)})=(A^{(2)},{{r^{(2)}}}^TA^{(2)})\right]\\
+        &= \Pr_{\substack{A^{(1)},A^{(2)}\Usample \Zbb_q^{m\times n}\\r^{(1)},r^{(2)}\Usample\bit^{m}}}\left[A^{(1)} =A^{(2)} \land {r^{(1)}}^TA^{(1)} = {r^{(2)}}^TA^{(2)}\right]\\
+        &= \sum_{\substack{A'\in  \Zbb_q^{m\times n}\\r'\in \bit^m}} \Pr_{A^{(2)}\Usample \Zbb_q^{m\times n}}[A^{(2)}=A']\Pr_{r^{(2)}\Usample\bit^{m}}[r^{(2)}=r']  \Pr_{\substack{A\Usample \Zbb_q^{m\times n}\\ r\Usample\bit^{m}}}\left[A^{(1)} =A' \land {r^{(1)}}^TA^{(1)} = {r'}^TA'\right]\\
+        &= \sum_{\substack{A'\in  \Zbb_q^{m\times n}\\r'\in \bit^m}} \frac{1}{q^{mn}} \frac{1}{2^m}  \Pr_{A\Usample \Zbb_q^{m\times n}, r\Usample\bit^{m}}\left[A =A' \land r^T A = {r'}^TA'\right]\\
+        &= \frac{1}{q^{mn}} \frac{1}{2^m} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}   \Pr_{A\Usample \Zbb_q^{m\times n}, r\Usample\bit^{m}}\left[A =A' \land r^T A' = {r'}^TA'\right]\\
+        &= \frac{1}{q^{mn}} \frac{1}{2^m} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}   \Pr_{A\Usample \Zbb_q^{m\times n}}\left[A =A'\right] \Pr_{r\Usample\bit^{m}}\left[ r^T A' = {r'}^TA'\right]
+        \qquad (\because r^TA' \indep A)\\
+        &= \frac{1}{q^{2mn}} \frac{1}{2^m} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}   \underbrace{\Pr_{r\Usample\bit^{m}}\left[ r^T A' = {r'}^TA'\right]}_{\begin{aligned}= \frac{\abs*{\{r\in\bit^m\mid r^T A' = {r'}^TA'\}}}{2^m}=\end{aligned}}\\
+        &= \frac{1}{q^{2mn}} \frac{1}{2^m} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}    \overbrace{\sum_{r\in\bit^{m}}\frac{1}{2^m}\left[ r^T A' = {r'}^TA'\right]}^{}\\
+        &= \frac{1}{q^{2mn}} \frac{1}{2^{2m}} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}    \sum_{r\in\bit^{m}}\left[ r^T A' = {r'}^TA'\right]\\
+        &= \frac{1}{q^{2mn}} \frac{1}{2^{2m}} \sum_{A'\in  \Zbb_q^{m\times n}}\sum_{r'\in \bit^m}  \left(1 + \sum_{r\in\bit^{m}, r\neq r'}\left[ r^T A' = {r'}^TA'\right]\right)
+        \qquad (\because r^T A' = {r'}^TA' \textrm{ when } r=r')\\
+        &= \frac{1}{q^{mn}} \frac{1}{2^{m}}+ \frac{1}{q^{2mn}} \frac{1}{2^{2m}} \sum_{r'\in \bit^m}  \sum_{r\in\bit^{m}, r\neq r'} \sum_{A'\in  \Zbb_q^{m\times n}} \left[ r^T A' = {r'}^TA'\right]\\
+        &= \frac{1}{q^{mn}} \frac{1}{2^{m}}+ \frac{1}{q^{mn}} \frac{1}{2^{2m}} \sum_{r'\in \bit^m}  \sum_{r\in\bit^{m}, r\neq r'} \underbrace{\sum_{A'\in  \Zbb_q^{m\times n}}\frac{1}{q^{mn}} \left[ r^T A' = {r'}^TA'\right]}_{\begin{aligned}=\Pr_{A\Usample \Zbb_q^{m\times n}}\left[r^T A = {r'}^TA\right]\le\frac{1}{q^n} \\ \textrm{(by \eqref{eq:p2-2-1})}\end{aligned}}\\
+        &\le \frac{1}{q^{mn}} \left( \frac{1}{2^m}+\frac{2^m(2^m-1)}{2^{2m}} \cdot \frac{1}{q^n} \right)
+        \le \frac{1}{q^{mn}} \left( \frac{1}{2^m}+1 \cdot \frac{1}{q^n} \right)
+        = \frac{1}{q^{mn}} \left( \frac{1}{2^m}+\frac{1}{q^n} \right),
+    \end{align*}
+    as desired.
+
+    % Define the \textit{good set} $G$ of $m\times n$ matrices by
+    % \[
+    %     G\triangleq \biggl\{A\in\Zbb_q^{m\times n}\biggm\vert  rr   \biggr\}
+    % \]
+\end{answer}
+
+\begin{answer}[iii]
+    Since we have the fact
+    \begin{lemma}[Fact]\label{fact}
+        Let $X$ be a random variable. Then
+        \[ 
+            \mathop{\textrm{cp}}(X) \le \frac{1+\epsilon^2}{\mathop{\textrm{Supp}}(X)}
+            \implies \Delta(X, U_{\mathop{\textrm{Supp}}(X)}) \le \epsilon.
+        \]
+    \end{lemma}
+    \noindent to prove
+    \[
+        \Delta((A,r^TA), (A,U_{\Zbb_q^n})) \le \epsilon,
+    \]
+    it suffices to show that
+    \[
+        \mathop{\textrm{cp}}(A, r^TA) \le \frac{1+\epsilon^2}{\abs*{\Zbb_q^{m\times n}\times \Zbb_q^n}} = \frac{1+\epsilon^2}{q^{mn+n}}.
+    \]
+
+    To show this, we simply use the result of (ii) and the assumption that $m\ge n\log q+2\log(\frac{1}{\epsilon})+1$:
+    \[
+        \mathop{\textrm{cp}}(A, r^TA)
+        \stackrel{\textrm{by (ii)}}\le \frac{1}{q^{mn}} \left( \frac{1}{2^m}+\frac{1}{q^n} \right)
+        \le \frac{1}{q^{mn}} \left( \frac{1}{q^n\cdot \frac{1}{\epsilon^2}\cdot 2}+\frac{1}{q^n} \right)
+        \lt  \frac{1}{q^{mn}} \left( \frac{\epsilon^2}{q^n}+\frac{1}{q^n} \right)
+        =  \frac{1+\epsilon^2}{q^{mn+n}}.
+    \]
+\end{answer}
+
+
+
+\begin{answer}[iv]
+    To prove \autoref{fact}, let $X$ be a random variable over $\Omega$, where $|\Omega|=N$, and assume that $\mathop{\textrm{cp}}(X)\le  \frac{1+\epsilon^2}{N}$. Our goal is to show that $\Delta(X, U_\Omega)\stackrel{\textrm{def}}= \frac{1}{2} \sum_{\omega\in\Omega}\abs*{\Pr[X=\omega]-\frac{1}{N}}\le  \epsilon$, where $U_\Omega$ denotes the uniform distribution over $\Omega$. (Recall from Problem 1 the definition of $\Delta(\;\cdot\;, \;\cdot\;)$.)
+
+    \begin{idea}
+        As $\Delta(X, U_\Omega)\triangleq \frac{1}{2} \sum_{\omega\in\Omega}\abs*{\Pr[X=\omega]-\frac{1}{N}}$ is basically the sum of $\abs*{\Pr[X=\omega]-\frac{1}{N}}$, we try to express $\mathop{\textrm{cp}}(X)=\sum_{\omega\in\Omega}\Pr[X=\omega]^2$ in terms of $\abs*{\Pr[X=\omega]-\frac{1}{N}}$.
+    \end{idea}
+
+    Let $A\subseteq \Omega$ denote the event $\{\omega\in\Omega\mid \Pr[X=\omega]\ge \frac{1}{N}\}$. Using $A$, we rewrite $\mathop{\textrm{cp}}(X)$ as follows:
+    \begin{align*}
+         \frac{1+\epsilon^2}{N} \ge \mathop{\textrm{cp}}(X)
+         &\triangleq \Pr[X=X'] = \sum_{\omega\in\Omega} \Pr[X=X'=\omega]\\
+         &= \sum_{\omega\in\Omega} \Pr[X=\omega]\Pr[X'=\omega] && (\because X\indep X')\\
+         &= \sum_{\omega\in\Omega} \Pr[X=\omega]^2\\
+         &= \sum_{\omega\in A} \left(\abs*{\Pr[X=\omega]-\frac{1}{N}}+\frac{1}{N} \right)^2 +\sum_{\omega\in \bar{A}} \left(\abs*{\Pr[X=\omega]-\frac{1}{N}}-\frac{1}{N} \right)^2\\
+         &= \sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}}^2 
+         + \frac{2}{N} \underbrace{\sum_{\omega\in A}\abs*{\Pr[X=\omega]-\frac{1}{N}}}_{
+         \begin{gathered}
+            =\Pr[X\in A] - \frac{|A|}{N}
+         \end{gathered}
+         } - \frac{2}{N}\underbrace{\sum_{\omega\in \bar{A}}\abs*{\Pr[X=\omega]-\frac{1}{N}}}_{
+        \begin{gathered}
+            = \frac{|\bar{A}|}{N} -\Pr[X\in \bar{A}]\\
+            = \Pr[X\in A]-\frac{|\bar{A}|}{N}
+        \end{gathered}
+        }+\frac{1}{N}\\
+        &= \sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}}^2 + \frac{1}{N},
+    \end{align*}
+    which implies 
+    \begin{equation}\label{eq:p2-4-1}
+        \sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}}^2 \le \frac{\epsilon^2}{N}.
+    \end{equation}
+
+    Finally, by Cauchy–Schwarz inequality, we have
+    \[
+        \left(\sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}} \right)^2
+        = \left(\sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}} \cdot 1 \right)^2
+        \le \left(\sum_{\omega\in \Omega} \abs*{\Pr[X=\omega]-\frac{1}{N}}^2\right) \left(\sum_{\omega\in \Omega} 1^2\right)
+        \stackrel{\eqref{eq:p2-4-1}}\le  \left(\frac{\epsilon^2}{N}\right)\cdot  N  = \epsilon^2,
+    \]
+    and therefore
+    \[
+        \Delta(X, U_\Omega)\stackrel{\textrm{def}}= \frac{1}{2} \sum_{\omega\in\Omega}\abs*{\Pr[X=\omega]-\frac{1}{N}}
+        \le \frac{1}{2} \epsilon \lt \epsilon.
+    \]
+    (Note that $\sum_{\omega\in\Omega}\abs*{\Pr[X=\omega]-\frac{1}{N}}$ is nonnegative.)
+\end{answer}

@@ -1,0 +1,70 @@
+\begin{problem}[Complete the proof in the class]\label{p5}
+    \leavevmode\par
+    Let $G:\bit^n\to\bit^{2n}$ be a PRG. Recall that in order to show that
+    \[
+        (G(U_n^{(1)}),\ldots, G(U_n^{(t)})) \ind_c (U_{2n}^{(1)},\ldots, U_{2n}^{(t)} )
+    \]
+    for $t = \poly(n)$, where $\{U_n^{(1)},\ldots, U_n^{(t)}\}$ (resp. $\{U_{2n}^{(1)},\ldots, U_{2n}^{(t)}\}$) is an independent collection of copies of $U_n$ (resp. $U_{2n}$). We first constructed the distribution
+    \[
+        \Hyb_i\triangleq (U_{2n}^{(1)},\ldots, U_{2n}^{(i)}, G(U_n^{(i+1)}), G(U_n^{(t)}))
+    \]
+    for each $i\in [t]$ as hybrids. Suppose to the contrary that there exists a PPT distinguisher $\Dcal$ such that for infinitely many $n\in\Nbb$
+    \[
+        \abs*{\Pr\left[   \Dcal(G(U_n^{(1)}),\ldots,G(U_n^{(t)}))  =1\right] - \Pr\left[ \Dcal(U_{2n}^{(1)},\ldots,U_{2n}^{(t)})  =1\right] }
+        \gt \frac{1}{n^c}
+    \]
+    for some $c\gt 0$.
+    By Hybrid Lemma there exists an $i\in [t]$ such that for infinitely many $n\in \Nbb$
+    \[
+        \abs*{\Pr\left[   \Dcal(\Hyb_{i-1})  =1\right] - \Pr\left[ \Dcal(\Hyb_i)  =1\right] }
+        \gt \frac{1}{tn^c}.
+    \]
+    In the class we then constructed a reduction $R$, supposing that $R$ knows such an $i$, to break the pseudo-randomness of $G$.
+    In fact, there is no reason to assume that $R$ knows $i$. However one can modify the reduction $R'$ as follows:
+    \begin{itemize}[label=(\roman*)]
+        \item When receiving a challenge $x$ from the challenger $\Ch$ in the PRG game, sample $i\Usample [t]$.
+        \item Sample $k_1,\ldots,k_{i-1}\sample U_{2n}$, $k_{i+1},\ldots, k_t\sample U_n$.
+        \item Send $(k_1,\ldots,k_{i-1},x,G(k_{i+1}),\ldots,  G(k_{t}))$ to the distinguisher $\Dcal$.
+        \item When receiving the answer $b'$ from $\Dcal$, output $b'$ back to $\Ch$.
+    \end{itemize}
+    Show that such a reduction $R'$ can also break the pseudo-randomness of $G$ with the same advantage as $R$, i.e.,
+    \[
+        \Pr[R' \textrm{ wins}] \gt \frac{1}{2}+\frac{1}{2tn^c}.
+    \]
+\end{problem}
+
+\begin{answer}
+    WLOG, suppose $\Dcal$ is such that for infinitely many $n\in\Nbb$,
+    \begin{equation}\label{eq:p5-1}
+        \Pr\left[\Dcal(G(U_n^{(1)}),\ldots,G(U_n^{(t)}))=1\right]-\Pr\left[\Dcal(U_{2n}^{(1)},\ldots,U_{2n}^{(t)})=1\right] \le 0.
+    \end{equation}
+    Otherwise,  we can replace $\Dcal$ with $\bar{\Dcal}$, where $\bar{\Dcal}$ outputs the exact opposite bit as $\Dcal$  (i.e., $\bar{\Dcal}(x)\triangleq \bar{\Dcal(x)}$ for all $x\in \bit^{2n\times t}$) for those $n\in\Nbb$ such that \eqref{eq:p5-1} does not hold, and thus the new $\Dcal$ would satisfy \eqref{eq:p5-1}.
+    
+    It's now easy to see that for infinitely many $n\in\Nbb$, the advantage of $R'$ in winning the PRG game of $G$ is bounded below by
+    \begin{align*}
+        \Pr\left[R' \textrm{ wins}\right]
+        &= \Pr\left[b\Usample\bit, x\sample\left.\begin{cases}
+            G(U_n), &b=0\\
+            U_{2n}, & b=1
+        \end{cases}\right\} : R'(x)=b \right]\\
+        &=\Pr_{b\Usample\bit}[b=0]\Pr_{x\sample G(U_n)}\left[R'(x)=0\right] +\Pr_{b\Usample\bit}[b=1]\Pr_{x\sample U_{2n}}\left[R'(x)=1\right]\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\Pr_{x\sample U_{2n}}\left[R'(x)=1\right]-  \Pr_{x\sample G(U_n)}\left[R'(x)=1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\Pr_{\substack{x\sample U_{2n}\\i\Usample [t] \\ k_1,\ldots,k_{i-1}\sample U_{2n}\\ k_{i+1},\ldots,k_t\sample U_{n}}}\left[ \Dcal(k_1,\ldots, k_{i-1}, x, G(k_{i+1}), \ldots, G(k_t))  =1\right]\right.\\
+        &\qquad\qquad\qquad \left. - \Pr_{\substack{x\sample G(U_n)\\i\Usample [t] \\ k_1,\ldots,k_{i-1}\sample U_{2n}\\ k_{i+1},\ldots,k_t\sample U_{n}}}\left[   \Dcal(k_1,\ldots, k_{i-1}, x, G(k_{i+1}), \ldots, G(k_t))  =1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\Pr_{i\Usample [t]}\left[ \Dcal(\Hyb_{i})  =1\right]
+        -  \Pr_{i\Usample [t]}\left[   \Dcal(\Hyb_{i-1})  =1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2}\left(\sum_{i\in [t]} \frac{1}{t} \Pr\left[ \Dcal(\Hyb_{i})  =1\right]
+        -  \sum_{i\in [t]} \frac{1}{t} \Pr\left[   \Dcal(\Hyb_{i-1})  =1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2t}\left( \Pr\left[ \Dcal(\Hyb_{t})  =1\right]
+        -   \Pr\left[   \Dcal(\Hyb_{0})  =1\right]\right)
+        \qquad \textrm{(by telescoping sum (kind of))}\\
+        &= \frac{1}{2}+\frac{1}{2t}\left( \Pr\left[ \Dcal(U_{2n}^{(1)},\ldots,U_{2n}^{(t)})  =1\right]
+        -   \Pr\left[   \Dcal(G(U_n^{(1)}),\ldots,G(U_n^{(t)}))  =1\right]\right)\\
+        &= \frac{1}{2}+\frac{1}{2t}\abs*{\Pr\left[   \Dcal(G(U_n^{(1)}),\ldots,G(U_n^{(t)}))  =1\right] - \Pr\left[ \Dcal(U_{2n}^{(1)},\ldots,U_{2n}^{(t)})  =1\right] }
+        \qquad \textrm{(by \eqref{eq:p5-1})}\\
+        &\gt  \frac{1}{2}+\frac{1}{2t} \cdot \frac{1}{n^c} 
+        \qquad \textrm{(by assumption)}\\
+        &= \frac{1}{2}+\frac{1}{2tn^c},
+    \end{align*}
+    as desired.
+\end{answer}

@@ -1,0 +1,186 @@
+\begin{problem}[Fun with hardcore bits]\label{p4}
+\leavevmode\par
+\begin{enumerate}[label=(\roman*)]
+    \item Show that if a one-to-one function $f$ has a hardcore predicate, then $f$ is one-way.
+    \item Show that the assumption that $f$ is one-to-one above is necessary. I.e., show that
+there exists a function $f$ that is not one-to-one, has a hardcore predicate, but is not one-way.
+\end{enumerate}
+\end{problem}
+
+\begin{answer}[i]
+Assume that the injection $f:\bit^\ast\to \bit^\ast$ has a hardcore predicate $h:\bit^\ast\to \bit$.
+To prove $f$ is OW, first note that $f$ is efficiently computable (i.e., can be computed in polynomial time). Then it remains to show that it's impossible for $f$ to be efficiently invertible with non-negligible probability. To see this, suppose to the contrary that $f$ is efficiently invertible with non-negligible probability, i.e., that there exists a PPT adversary $\Adv$ such that
+\begin{equation}\label{eq:p4-1-1}
+    \epsilon(n) \triangleq \Pr_{x\sample \bit^n}\left[ f(\Adv(1^n, f(x)))= f(x) \right]
+\end{equation}
+is non-negligible (as a function of $n$). Equivalently, in the following game (Game $1$), the adversary $\Adv$ wins with probability $\epsilon(n)$ for all $n\in\Nbb$ where $\epsilon$ is non-negligible.
+{
+    \[
+        \begin{array}{@{} c c c @{}}
+        \text{Ch} & & \Adv \\
+        x\sample \bit^n & & \\
+        y\coloneqq f(x) & & \\
+        & \XR{(1^n, y)} & \\
+        & \XL{x'} & \\
+        \multicolumn{3}{c}{\text{$\Adv$ wins if $f(x') = y$}}
+        \end{array}
+    \]
+    \captionof{figure}{Game 1}
+    \label{fig:p4-game1}
+}
+
+From this, we provide a PPT predictor (a reduction) $R$ that, for all $n\in\Nbb$a and $x\sample \bit^n$, efficiently predicts $h(x)$ given $f(x)$, i.e., wins the prediction game of $h(x)$ (Game $2$), with high (non-negligible) probability. This implies $h$ is not a hardcore predicate for $f$, contradicting to our assumption that $h$ is.
+
+We construct $R$ as shown in the following game (Game $2$). Namely, on input $(1^n, y\coloneqq f(x))$, where $x\sample \bit^n$, $R$ passes $(1^n, y)$ to $\Adv$, receives $x'$ from $\Adv$, checks if $f(x')=y$. If true, by the injectivity of $f$ this means $x'=x$, so $R$ outputs $h(x')$; otherwise, $x'\neq x$, so $R$ simply outputs a uniformly random bit (i.e., makes a random guess). Our intuition is straightforward: since $\Adv$ efficiently finds a string in the preimage of $f(x)$ with non-negligible probability and $f$ is injective, we have $R$ exploit $\Adv$ to invert $f(x)$ back to $x$ and then compute $h(x)$ itself. However, doing just this does not guarantee us  a winning probability of at least $\frac{1}{2}$ that is required to break the hardcoreness of $h$. This is because even though $\Adv$ succeeds in inverting $f(x)$ with non-negligible probability $\epsilon(n)$, it still fails with probability $1-\epsilon(n)$, and thus fails most of the time if $\epsilon(n)$ is small; moreover, an incorrect $x'$ output by $\Adv$ may lead to an incorrect $h(x')$. Knowing that $R$ can check, by the injectivity of $f$, whether $\Adv$ has successfully inverted $f(x)$ back to $x$, we \textbf{let $R$ randomly guess the bit $h(x)$ whenever it detects that $\Adv$ has failed to do so}.
+{
+    \[
+        \begin{array}{@{} c c c c c@{}}
+        \text{Ch} & & R & & \Adv \\
+        x \sample \bit^n & & & & \\
+        y\coloneqq f(x) & & & & \\
+        & \XR{(1^n, y)} & & & \\
+        & & & \XR{(1^n, y)} & \\
+        & & & \XL{x'} & \\
+        & & c\sample \bit  & & \\
+        & & b\coloneqq \begin{cases}
+            h(x'), &f(x')=y\\
+            c,     &\textrm{otherwise}
+            \end{cases}& & \\
+        & \XL{b} & & & \\
+        \multicolumn{5}{c}{\text{$R$ wins if $b = h(x)$}}
+    \end{array}
+    \]
+    \captionof{figure}{Game $2$}
+    \label{fig:p4-game2}
+}
+
+It suffices to show that (1) $R$ runs in PPT and (2) wins Game $2$ with non-negligible probability. First, it's clear that $R$ runs in PPT as $\Adv$ runs in PPT and $h(x')$ can be efficiently computed (which is because $h$ is a hardcore predicate for $f$). To see the latter holds, observe that for all $n\in\Nbb$,
+\begin{align}
+    &\Pr[R \textrm{ wins Game } 2] \notag\\
+    \equiv& \Pr_{x\sample\bit^n}\left[R(1^n, f(x))=h(x) \right] \notag\\
+    =&  \Pr_{x\sample\bit^n, c\sample\bit}\left[ \left.\begin{cases}
+        h(x'), &f(x')=f(x)\\
+        c,     &f(x')\neq f(x)
+        \end{cases} \right\} = h(x) \right] \notag\\
+    =&  \Pr_{x\sample\bit^n,c\sample\bit}\left[f(x')=f(x)\right]
+        \Pr_{x\sample\bit^n,c\sample\bit}\left[ \left.\begin{cases}
+        h(x'), &f(x')=f(x)\\
+        c,     &f(x')\neq f(x)
+        \end{cases} \right\} = h(x) \mid f(x')=f(x)\right] \notag\\
+        &\quad + \Pr_{x\sample\bit^n,c\sample\bit}\left[f(x')\neq f(x)\right]
+        \Pr_{x\sample\bit^n,c\sample\bit}\left[ \left.\begin{cases}
+        h(x'), &f(x')=f(x)\\
+        c,     &f(x')\neq f(x)
+        \end{cases} \right\} = h(x) \mid f(x')\neq f(x)\right] \notag\\
+    =&  \Pr_{x\sample\bit^n}\left[f(x')=f(x)\right]
+        \Pr_{x\sample\bit^n}\left[ h(x') = h(x) \mid f(x')=f(x)\right] \notag\\
+        &\quad + \Pr_{x\sample\bit^n}\left[f(x')\neq f(x)\right]
+        \Pr_{x\sample\bit^n,c\sample\bit}\left[ c = h(x) \mid f(x')\neq f(x)\right] \notag\\
+    =&  \Pr_{x\sample\bit^n}\left[f(x')=f(x)\right]
+        \Pr_{x\sample\bit^n}\left[ h(x') = h(x) \mid f(x')=f(x)\right] \notag\\
+        &\quad + \left( 1- \Pr_{x\sample\bit^n}\left[f(x')=f(x)\right] \right)
+        \Pr_{x\sample\bit^n}\left[ U_1 = h(x) \mid f(x')\neq f(x)\right] \notag\\
+    =&  \epsilon(n)\cdot \Pr_{x\sample\bit^n}\left[ h(x') = h(x) \mid f(x')=f(x)\right] 
+        + \left( 1- \epsilon(n) \right)\cdot \frac{1}{2} 
+        & \textrm{(by \eqref{eq:p4-1-1})} \notag\\
+    \ge& \epsilon(n)\cdot \Pr_{x\sample\bit^n}\left[ f(x') = f(x) \mid f(x')=f(x)\right] 
+        + \left( 1- \epsilon(n) \right)\cdot \frac{1}{2} \label{eq:p4-1-2}\\
+    =& \epsilon(n)\cdot 1 + \left( 1- \epsilon(n) \right)\cdot \frac{1}{2}
+    = \frac{1}{2}+\frac{\epsilon(n)}{2} \notag
+\end{align}
+where we denote $x'\triangleq \Adv(1^n, f(x))$. Note that the inequality \eqref{eq:p4-1-2} is simply a consequence of the injectivity of $f$:
+\[
+    h(x') = h(x) \impliedby x' = x \stackrel{\textrm{injectivity of } f}{\iff} f(x') = f(x).
+\]
+Since $\frac{\epsilon(n)}{2}$ is non-negligible, $R$ wins Game $2$ with non-negligible probability.
+
+Therefore, as reasoned above, the existence of the PPT predictor $R$ implies by definition that $h$ is not a hardcore predicate for $f$, contradicting the assumption that $h$ is.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[ii]
+
+Let $f:\bit^\ast\to \bit^\ast$ and $h:\bit^\ast\to \bit$ be defined by
+\[
+    f(x)\triangleq 0^n,\;\; h(x)\triangleq x_{[1]},
+\]
+where $n$ denotes $|x|$.
+
+It's immediate that $f$ is not injective, so it suffices to show that (1) $h$ is a hardcore predicate for $f$ and that (2) $f$ is not OW.
+
+\begin{claim}
+    $h$ is a hardcore predicate for $f$ given the $h$ and $f$ defined above.
+\end{claim}
+\begin{proof}[Proof of claim]
+    To prove $h$ is a hardcore predicate for $f$, first note that both $h$ and $f$ are efficiently computable (i.e., can be computed in polynomial time). Then it remains to show that, given $f(x)$, it's impossible for $h(x)$ to be efficiently predictable with non-negligible probability. 
+    
+    To see this, observe that for any PPT predictor $\Adv$ and all $n\in\Nbb$,
+    \begin{equation}\label{eq:p4-2-1}
+        h(U_n) = (U_n)_{[1]} = U_1
+    \end{equation}
+    and therefore we have
+    \begin{align*}
+        &\Pr_{x\sample \bit^n}\left[ \Adv(1^n, f(x))= h(x) \right] \\
+        =& \Pr_{x\sample \bit^n}\left[ \Adv(1^n, 0^n)= h(x) \right] \\
+        &\qquad\qquad\qquad \textrm{(by the definition of $f$)}\\
+        =& \Pr\left[ \Adv(1^n, 0^n)= h(U_n) \right] \\
+        =& \Pr\left[ \Adv(1^n, 0^n)= U_1 \right] \\
+        &\qquad\qquad\qquad \textrm{(by \eqref{eq:p4-2-1})}\\
+        =& \Pr[\Adv(1^n, 0^n)=1]\Pr[U_1=1 \mid \Adv(1^n, 0^n)=1] + \Pr[\Adv(1^n, 0^n)=0]\Pr[U_1=0 \mid \Adv(1^n, 0^n)=0]\\
+        =& \Pr[\Adv(1^n, 0^n)=1]\Pr[U_1=1] + \Pr[\Adv(1^n, 0^n)=0]\Pr[U_1=0] \\
+        &\qquad\qquad\qquad \textrm{(since the random variables $U_1$ and $\Adv(1^n, 0^n)$ are independent)} \\
+        =& \Pr[\Adv(1^n, 0^n)=1]\cdot \frac{1}{2}+\Pr[\Adv(1^n, 0^n)=0]\cdot \frac{1}{2}\\
+        =& \frac{1}{2} + 0,
+    \end{align*}
+    where $0$ is a negligible function of $n$. This means given $f(x)$, $h(x)$ is merely efficiently predictable with negligible probability. 
+    
+    Therefore, by definition, $h$ is indeed a hardcore predicate for $f$.
+\end{proof}
+
+\begin{claim}
+    $f$ is not OW given the $f$ defined above.
+\end{claim}
+\begin{proof}[Proof of claim]
+    To see this, we provide a PPT adversary $\Adv$ that efficiently inverts $f$, i.e., wins the inverting game of $f$ (Game $3$), with non-negligible probability, which, by definition, implies $f$ is not OW.
+    
+    We construct $\Adv$ as shown in the following game (Game $3$). Namely, on input $(1^n, y\coloneqq f(x)$, where $x\sample\bit$, $\Adv$ always outputs $0^n$. Our intuition is that since $f(x)=0^n$ for all $x\in\bit^n$ and $n\in\Nbb$, all strings of length $n$ lie in the same preimage $f^{-1}(0^n)$, so any such string will do.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \text{Ch} & & \Adv \\
+            x\sample \bit^n & & \\
+            y\coloneqq f(x)=0^n & & \\
+            & \XR{(1^n, y=0^n)} & \\
+            & & x'\coloneqq 0^n \\
+            & \XL{x'} & \\
+            \multicolumn{3}{c}{\text{$\Adv$ wins if $f(x') = y$}}
+            \end{array}
+        \]
+        \captionof{figure}{Game $3$}
+        \label{fig:p4-game3}
+    }
+    
+    It suffices to verify that $\Adv$ (1) runs in PPT and (2) wins Game $3$ with non-negligible probability. Firstly, it’s trivial that $\Adv$ runs in PPT. To see the latter holds, observe that for any $n\in\Nbb$,
+    \begin{align*}
+        \Pr[\Adv \textrm{ wins Game } 3]
+        \equiv& \Pr_{x\sample\bit^n}\left[ f(\Adv(1^n, f(x))) = f(x) \right] \\
+        =& \Pr_{x\sample\bit^n}\left[ 0^n = 0^n \right] & \textrm{(by the definition of $f$)}\\
+        =& 1\,
+    \end{align*}
+    which is clear non-negligible (as a function of $n$).
+
+    Hence, by definition, $f$ is not OW, as desired.
+\end{proof}
+
+Now we’ve completed the proof. Yay!
+\end{answer}

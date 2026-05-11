@@ -1,32 +1,6 @@
-\vspace{1ex}
-\begin{CJK*}{UTF8}{bsmi} %if you want to use Chinese, use this 
-\noindent Name: 林致中 \\
-Student ID: b11902015\\
-Collaborator: (None)\\% Name & Student ID
-Reference: 
-\begin{enumerate}
-    \item[P1] (None)
-    \item[P2] 
-        \begin{itemize}
-            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_2.pdf}, \texttt{topic\_3.pdf})
-        \end{itemize}
-    \item[P3]
-        \begin{itemize}
-            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_1.pdf})
-        \end{itemize}
-    \item[P4] 
-        \begin{itemize}
-            \item \href{https://www.noahsd.com/crypto_lecture_notes/CS4830_Supplementary_Notes___Examples_of_reductions.pdf}{Examples of reductions for one-way functions by Noah Stephens-Davidowitz}
-        \end{itemize}
-\end{enumerate}
-\end{CJK*}
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{wrap}
-\section{P1}
-\end{wrap}
+
+\invisiblesection{P1}
 
 \begin{problem}[Working with negligible functions]\label{p1}
 A non-negative function $\nu \colon \mathbb{N} \to \mathbb{R}$  is negligible 
@@ -172,9 +146,9 @@ and $\poly(n)$ denotes some arbitrary polynomial in $n$. State whether each of t
 %$\overset{\eqref{eq:1}}{=}$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{wrap}
-\section{P2}
-\end{wrap}
+
+\clearpage
+\invisiblesection{P2}
 
 \begin{problem}[Large deviation bounds]\label{p2}
 Assume that $X_1, \dots , X_n$ are independent identically distributed (i.i.d.)
@@ -264,9 +238,9 @@ the bound, the above being the most convenient for our applications.
 %$\overset{\eqref{eq:1}}{=}$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{wrap}
-\section{P3}
-\end{wrap}
+
+\clearpage
+\invisiblesection{P3}
 
 \begin{problem}[Union bounds]\label{p3}
 Let $A$, $B_1,\dots, B_k$ be some arbitrary probabilistic events.
@@ -362,11 +336,11 @@ Specifically, we use $f \leftarrow F$ to denote that $f$ is chosen uniformly at 
 %$\overset{\eqref{eq:1}}{=}$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{wrap}
-\section{P4}
-\end{wrap}
 
-\begin{problem}[One-Way Functions]
+\clearpage
+\invisiblesection{P4}
+
+\begin{problem}[One-Way Functions]\label{p_4}
 We first review the concept of one-way functions which we've introduced in the lecture. A function $f\colon \{0,1\}^*\to\{0,1\}^*$ is one-way if it can be efficiently computed, but no efficient algorithm can invert it. More precisely, for any probabilistic polynomial time (PPT) algorithm $\Adv$, 
 \begin{equation*}
     \Pr_{x\xleftarrow{\$}\{0,1\}^n}\left[f(\Adv(1^n, f(x)) = f(x)\right]=\negl(n)
@@ -828,8 +802,21 @@ In the following, assume $|x| = n$,
 \end{proof}
 
 
-
-
-
-%$\overset{\eqref{eq:1}}{=}$
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section*{Reference}
+\begin{enumerate}
+    \item[P1] (None)
+    \item[P2]
+        \begin{itemize}
+            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_2.pdf}, \texttt{topic\_3.pdf})
+        \end{itemize}
+    \item[P3]
+        \begin{itemize}
+            \item Mathematical statistics (MATH4013) lecture notes (\texttt{topic\_1.pdf})
+        \end{itemize}
+    \item[P4]
+        \begin{itemize}
+            \item \href{https://www.noahsd.com/crypto_lecture_notes/CS4830_Supplementary_Notes___Examples_of_reductions.pdf}{Examples of reductions for one-way functions by Noah Stephens-Davidowitz}
+        \end{itemize}
+\end{enumerate}

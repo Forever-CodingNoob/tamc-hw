@@ -1,0 +1,202 @@
+\begin{problem}[Bit commitment in the RO model]\label{p3}
+    \leavevmode\par
+    In this problem, we will present a concrete definition of non-interactive commitment schemes in the RO model and a simple construction, and you are asked to prove its security.
+
+    Let $n\in\Nbb$ be the security parameter and $\RO:\bit^{n+1}\to \bit^{3n}$ be a random oracle. 
+    Consider the following simple construction $\Com^{\RO}(b;r)\triangleq \RO(b\concat r)$. Show that this simple construction satisfies the following binding and hiding properties.
+    \begin{enumerate}[label=(\roman*)]
+        \item \textit{Hiding}: Consider the following hiding security game:
+        \begin{itemize}
+            \item The challenger samples $b\Usample\bit$ and $r\Usample\bit^n$ uniformly at random, computes and sends $\com = \Com^{\RO}(b;r)$ to the adversary.
+            \item Upon receiving $\com$, the adversary outputs a guess $b' \sample \Adv^{\RO}(\com)$.
+            \item The adversary wins if $b'=b$.
+        \end{itemize}
+        Show that for any oracle adversary $\Adv^{\RO}$ that makes at most $q$ queries,
+        \[
+            \Pr[\Adv^{\RO} \textrm{ wins}] \le \frac{1}{2}+\frac{2q}{2^n}.
+        \]
+        \item \textit{Binding}: Show that for any oracle adversary $\Adv^{\RO}$ that makes at most $q$ queries,
+        \[
+            \Pr\left[\com=\Com^\RO(0; r_0)=\Com^\RO(1, r_1) : (\com, r_0, r_1)\sample \Adv^\RO() \right] \le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}.
+        \]
+        \item In HW2, we also see a construction of a bit commitment scheme from PRG. They are the same primitive, but defined in different models (one in the plain model and the other in the random oracle model). This is common in theoretical cryptography. In this problem, you are asked to compare two of them.
+        \begin{enumerate}[label=(\alph*)]
+            \item Compare the syntax, security, and hiding definitions.
+            \item Compare how both constructions achieve the hiding and binding properties.
+            \item Discuss why, in the random oracle model, it is possible to obtain a non-interactive
+commitment scheme.
+        \end{enumerate}
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    Let $\Adv^{\RO}$ be an adversary that makes at most $q$ queries.
+    
+    WLOG, assume that $\Adv^{\RO}$ always makes exactly $q$ RO queries. This assumption does not lead to any loss of generality because we can otherwise construct another adversary $\Adv^{\RO}_\textrm{q-query}$ functioning the same as $\Adv^{\RO}$, except that whenever $\Adv^{\RO}$ outputs an answer after making $q'\lt q$ RP queries, it makes $q-q'$ more ``dummy'' RO queries to meet our requirement, which allows $\Adv^{\RO}_\textrm{q-query}$ to achieve an equal win rate as $\Adv^{\RO}$ in the hiding security game, and then we may replace $\Adv^{\RO}$ with $\Adv^{\RO}_\textrm{q-query}$.
+
+    Moreover, we assume WLOG that all RO queries made by $\Adv^{\RO}$ are distinct. This is also WLOG because we can otherwise construct another adversary $\Adv^{\RO}_\textrm{distinct}$ functioning the same as $\Adv^{\RO}$, except that $\Adv^{\RO}_\textrm{distinct}$ records by itself all the past queries, along with the corresponding answers, and answer to itself on every query that has been answered previously, which still gives  $\Adv^{\RO}_2$ an equal win rate as $\Adv^{\RO}$ in the hiding security game, and then we may replace $\Adv^{\RO}$ with $\Adv^{\RO}_\textrm{distinct}$.
+
+    Define $x_1, x_2,\ldots, x_q \in\bit^{n+1}$ as the distinct RO queries (which are random variables of course) made by $\Adv^{\RO}$ in order. Consider the event on which $x_i\neq b\concat r $, where $b\Usample \bit$ and $r\Usample \bit^n$ are sampled by the challenger and $\com = \RO(b\concat r)$ is sent as input to $\Adv^{\RO}$ at the start of the game. 
+    
+    Recall that for any $x\in\bit^{n+1}$, the value of $\RO(x)$ is fresh and uniform to $\Adv^\RO$ if $\Adv^\RO$ has never obtained $\RO(x)$ in any way, either by querying $x$ to $\RO(\cdot)$ or by receiving $\RO(x)$ as input. Therefore, for each query $x_i$, as long as $x_1,\ldots, x_{i}$ (current and all past queries) are distinct (which is known) and neither of them is $b\concat r$, then the query answer $\RO(x_i)$ is fresh (to $\Adv^\RO$), so $\RO(x_i)$ must be independent of $b\concat r$. Likewise, before $\Adv^\RO$ ever queries $b\concat r$ to $\RO(\cdot)$, $\com=\RO(b\concat r)$ always looks fresh to $\Adv^\RO$, so the input $\com$ must be independent of $b\concat r$. 
+    Combing the two observations, it's not hard to see that before the $i+1$th query by $\Adv^\RO$, given $x_j\neq b\concat r\;\; \forall j\in [i]$, the input $\com$ and all previous query answers $\RO(x_1), \ldots, \RO(x_{i})$ are independent of $b\concat r$. That is to say, for all $i\in\{0,1,\ldots, q\}$,
+    \begin{equation}\label{eq:p3-1-1}
+        x_1\neq b\concat r\land \cdots \land x_{i}\neq b\concat r
+        \implies \left(\com, \RO(x_1),\ldots, \RO(x_{i})\right) \indep b\concat r.
+    \end{equation}
+
+    \begin{lemma}\label{lemma:p3-1-1}
+        Let $X_1,\ldots,X_n$ be random variables. If $X_1,\ldots,X_n$  are jointly independent, then so are $f_1(X_1),\ldots, f_n(X_n)$ for any randomized functions $f_1,\ldots, f_n$, where the internal randomness of each $f_i$ is independent of all other random variables.
+    \end{lemma}
+    
+    Here is the interesting part: for each $i\in [q]$, by \autoref{lemma:p3-1-1}, if the input $\com$ and the first $i$ query answers $\RO(x_1), \ldots, \RO(x_{i-1})$ are independent of $b\concat r$, then the $i$th query $x_i$ must be independent of $b\concat r$ as well. This is because $x_{i}$ can be written as a function of input and previous answers:
+    \[
+        x_{i} = \Adv^\RO_{i}\left(\com, \RO(x_1), \ldots, \RO(x_{i-1}); r\right),
+    \]
+    where $r$ is the internal randomness of $\Adv^\RO$. 
+    Similarly, if the input $\com$ and all query answers $\RO(x_1), \ldots, \RO(x_{q})$ are independent of $b\concat r$, then the final output $b'$ of $\Adv^\RO$ must be independent of $b\concat r$ as well.
+    Formally speaking, for $i\in [q]$,
+    \begin{align}
+        (\com, \RO(x_1), \ldots, \RO(x_{i-1})) \indep b\concat r 
+        &\implies x_{i}\indep b\concat r \label{eq:p3-1-2}\\
+        (\com, \RO(x_1), \ldots, \RO(x_{q})) \indep b\concat r 
+        &\implies b' \indep b\concat r. \label{eq:p3-1-4}
+    \end{align}
+    
+
+    Combining \eqref{eq:p3-1-1} and \eqref{eq:p3-1-2} (resp. \eqref{eq:p3-1-4}), we deduce that for all $i\in [q]$,
+    \begin{align}
+        x_1\neq b\concat r\land \cdots \land x_{i-1}\neq b\concat r
+        &\implies  x_{i}\indep b\concat r \label{eq:p3-1-3}\\
+        x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r
+        &\implies  b'\indep b\concat r. \label{eq:p3-1-5}
+    \end{align}
+    We can thus bound below the probability that $\Adv^\RO$ has never queried $b\concat r$ to $\RO(\cdot)$:
+    \begin{align}\label{eq:p3-1-6}
+        &\Pr\left[x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r \right]\notag\\
+        =& \Pr\left[x_1\neq b\concat r \right] \Pr\left[x_2\neq b\concat r \mid x_1\neq b\concat r \right]\cdots \Pr\left[x_q\neq b\concat r \mid x_1\neq b\concat r\land \cdots \land x_{q-1}\neq b\concat r \right]\notag\\
+        =& \prod_{i=1}^q \Pr_{b\Usample\bit, r\Usample\bit^n}\left[x_i\neq b\concat r \mid x_1\neq b\concat r\land \cdots \land x_{i-1}\neq b\concat r \right]\notag\\
+        =& \prod_{i=1}^q \left(1-\frac{1}{2^{n+1}}\right)
+        \qquad (\because x_1\neq b\concat r\land \cdots \land x_{i-1}\neq b\concat r \textrm{ implies }  x_i\indep  b\concat r \textrm{ by \eqref{eq:p3-1-3}, while } b\concat r\in\bit^{n+1} \textrm{ is uniform})\notag\\
+        =& \left(1-\frac{1}{2^{n+1}}\right)^q
+        \ge 1-\frac{q}{2^{n+1}}.
+        \qquad (\textrm{by \textbf{Bernoulli's inequality}: } (1-x)^r\ge 1-rx \;\;\forall r\ge 1 ,\; x\in[0,1].)
+    \end{align}
+
+    Lastly, we reason
+    \begin{align*}
+        \Pr[\Adv^{\RO} \textrm{ wins}] 
+        &= \Pr[b'=b]\\
+        &= \Pr\left[x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r \right] \underbrace{\Pr\left[b'=b\mid x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r \right]}_{\begin{aligned}=\frac{1}{2}\;\; (\textrm{since $b'\indep b\concat r$ by \eqref{eq:p3-1-4} and $b$ is uniform})\end{aligned}}\\
+        &\qquad +\left(1-\Pr\left[x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r \right]\right) \underbrace{\Pr\left[b'=b\mid \neg( x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r) \right]}_{\begin{aligned}\le 1\end{aligned}}\\
+        &\le 1 - \frac{1}{2}\Pr\left[x_1\neq b\concat r\land \cdots \land x_{q}\neq b\concat r \right]\\
+        &\le 1- \frac{1}{2}\left(1-\frac{q}{2^{n+1}}\right)
+        \qquad (\textrm{by \eqref{eq:p3-1-6}})\\
+        &= \frac{1}{2}+\frac{q}{2^{n+2}}\\
+        &\le \frac{1}{2}+\frac{2q}{2^n}.
+    \end{align*}
+    
+\end{answer}
+
+
+
+
+
+\begin{answer}[ii]
+    Let $\Adv^{\RO}$ be an adversary that makes at most $q$ queries.
+    Following the same reasoning as in (i), we assume WLOG that (1) $\Adv^{\RO}$ always makes exactly $q$ RO queries and that (2) all RO queries made by $\Adv^{\RO}$ are distinct. 
+    Define $x_1, x_2,\ldots, x_q \in\bit^{n+1}$ as the distinct RO queries (which are random variables of course) made by $\Adv^{\RO}$ in order. 
+
+    In fact, to win the binding game, $\Adv^\RO$ only has to find $r_0, r_1\in\bit^n$ such that $\RO(0\concat r_0)=\RO(1\concat r_1)$, as $\Adv^\RO$ can set $\com\coloneqq \RO(0\concat r_0)$ to satisfy the first equation ($\com=\Com^\RO(0; r_0)$). Simply put,
+    \begin{align*}
+        &\Pr\left[\com=\Com^\RO(0; r_0)=\Com^\RO(1, r_1) : (\com, r_0, r_1)\sample \Adv^\RO() \right]\\
+        &= \Pr\left[\com=\RO(0\concat r_0)=\RO(1\concat r_1) : (\com, r_0, r_1)\sample \Adv^\RO() \right]\\
+        &\le \Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1) : (\cdot, r_0, r_1)\sample \Adv^\RO() \right],
+    \end{align*}
+    so it suffices to show that
+    \begin{equation}\label{eq:p3-2-1}
+        \Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1) : (\cdot, r_0, r_1)\sample \Adv^\RO() \right]\le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}.
+    \end{equation}
+
+    There are 2 cases:
+    \begin{itemize}
+        \item \textbf{Case 1}: $\Adv^\RO$ has not queried both $0\concat r_0$ and $1\concat r_1$ to $\RO(\cdot)$, i.e., $\{0\concat r_0, 1\concat r_1\}\not\subseteq \{x_1,\ldots, x_q\}$.\\
+        WLOG, assume that $0\concat r_0$ has not been queried by $\Adv^\RO$ throughout its execution. This means that, in the sense of lazy sampling, $y\triangleq \RO(0\concat r_0)\Usample \bit^{3n}$ is fresh and uniform when $\RO(0\concat r_0)\stackrel{?}= \RO(1\concat r_1)$ is checked. (\textit{fresh} means being independent of all the other random variables.) Therefore, the probability that $\RO(1\concat r_1)$ happens to be $y \Usample \bit^{3n}$ is only $\frac{1}{2^{3n}}$, i.e.,
+        \[
+            \Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1) \mid 0\concat r_0 \textrm{ is not queried by } \Adv^\RO \right]
+            =\Pr_{y\Usample\bit^{3n}}\left[y=\RO(1\concat r_1) \right]
+            =\frac{1}{2^{3n}}
+            \le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}.
+        \]
+
+        \item \textbf{Case 2}: $\Adv^\RO$ has queried both $0\concat r_0$ and $1\concat r_1$ to $\RO(\cdot)$, i.e., $\{0\concat r_0, 1\concat r_1\}\subseteq \{x_1,\ldots, x_q\}$.\\
+        In the sense of lazy sampling, since every RO query $x_i$ is distinct, every query answer $\RO(x_i)$ is fresh and uniformly sampled from $\bit^{3n}$, meaning that $\RO(x_1),\ldots, \RO(x_q)\iid U_{3n}$.
+        Also, fixing the values of $0\concat r_0$ and $1\concat r_1$, since $0\concat r_0 \neq 1\concat r_1$, they must be different queries among $x_1,\ldots, x_q$.
+        (This means that $0\concat r_0= x_{i_0}$ and $0\concat r_0= x_{i_1}$ for random variables $i_0, i_1$ over $[q]$ where $\Pr[i_0\neq i_1]=1$.)
+        We reason that if $\RO(0\concat r_0)=\RO(1\concat r_1)$, then, as $0\concat r_0$ and $1\concat r_1$ are equal to different queries among $x_1,\ldots, x_q$, there must be 2 distinct queries $x_i,x_j$ (where $i\neq j$) that give the same $\RO$ answer, i.e.,
+        \[
+            \exists i\neq j\in [q].\; \RO(x_i) = \RO(x_j).
+        \]
+        This is because otherwise, fixing the values of $0\concat r_0$ and $1\concat r_1$, we would have $\RO(0\concat r_0) \neq \RO(1\concat r_1)$ as $0\concat r_0$ and $1\concat r_1$ are distinct and are both queried by $\Adv^\RO$.
+        Left to be done are some dirty calculations:
+        \begin{align*}
+            &\Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1) \biggm\vert 0\concat r_0 \textrm{ and } 1\concat r_1 \textrm{ are both queried by } \Adv^\RO \right]\\
+            \le& \Pr\left[\RO(x_{i_0})=\RO(x_{i_1})  \textrm{ for some r.v. } i_0, i_1 \in [q] \textrm{ s.t. } i_0\neq i_1  \right]\\
+            \le&  \Pr\left[\exists i\neq j\in [q]. \RO(x_i)=\RO(x_j) \right]\\
+            =& \Pr\left[\bigvee_{i\lt j} \RO(x_i)=\RO(x_j)\right]\\
+            \le& \sum_{i\lt j} \Pr\left[\RO(x_i)=\RO(x_j)\right]\\
+            =& \sum_{i\lt j} \frac{1}{2^{3n}} \qquad\qquad\qquad (\because i\neq j \land \RO(x_1),\ldots, \RO(x_q)\iid U_{3n} )\\
+            =& \frac{q(q-1)}{2} \cdot \frac{1}{2^{3n}}\\
+            \le&  \frac{q^2}{2^{3n+1}}  \le  \frac{q^2}{2^{3n}}  \le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}.
+        \end{align*}
+    \end{itemize}
+    In either case, we have $\Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1)\mid \;\cdot\;\right]\le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}$. Combining the two cases we can clearly see that \eqref{eq:p3-2-1} holds.
+
+    \begin{remark}
+        Since the domain of $\RO$ has size $2^{n+1}$ and we've assumed all queries to be distinct, it's natural to have $q\le 2^{n+1}$. That is, there's nothing left to query after $\Adv^\RO$ has queried all $2^{n+1}$ inputs to $\RO$ in $\bit^{n+1}$.
+        In this sense, we have an upper bound in absence of $q$:
+        \[
+            \Pr\left[\RO(0\concat r_0)=\RO(1\concat r_1) : (\cdot, r_0, r_1)\sample \Adv^\RO() \right]\le \frac{1}{2^{3n}}+ \frac{q^2}{2^{3n}}
+            \le \frac{1}{2^{3n}}+ \frac{1}{2^{n-2}}.
+        \]
+    \end{remark}
+\end{answer}
+
+
+
+
+
+
+\begin{answer}[iii]
+    \leavevmode\par
+    For convenience, denote as scheme A Naor's bit commitment scheme introduced in HW2, which uses PRG to achieve hiding and binding properties, and as scheme B the bit commitment scheme using RO introduced in this problem. 
+    \begin{enumerate}
+        \item[(a)]
+        \begin{itemize}
+            \item Syntax: Scheme A is interactive, whereas scheme B is non-interactive. The reason scheme A has to be interactive is that the scheme relies on the receiver-selected $r\in\bit^{3n}$ that is out of the control of the committer so that it is extremely hard for any adversarial committer to find a commitment (along with two decommitments) that can be opened to both bits in the reveal phase; in other words, the commitment (output of PRG padded by $r$) is almost always bound to a unique committed bit. By contrast, scheme B does not need padding because the essential property of RO--values being deterministic on queried values yet uniformly random on unqueried values--already achieves (computational) hiding and binding properties as we ``hide'' the committed bit in the input to RO. Note that solely having PRG, we cannot ``hide'' the committed bit in PRG's input because PRG is not guaranteed to hide its input (e.g., it may expose partial input in its output).
+            \item Security: Scheme A and scheme B are both computational hiding and statistically binding.
+            \item Hiding property of interactive commitment schemes (e.g. scheme A) is defined by the absence of a (unbounded/PPT) distinguisher that distinguishes between views of the receiver when the committer committing different bits (i.e. when $b=0$ and $b=1$) with nonnegligible advantage.  On the other hand, hiding property of non-interactive  commitment schemes  (e.g. scheme B) is simply defined by hardness of the corresponding hiding game, i.e., by the absence of a (unbounded/PPT) adversarial receiver that infers the committed bit by just looking at the commitment with nonnegligible advantage.
+        \end{itemize}
+
+        \item[(b)] 
+        \begin{itemize}
+            \item Hiding: 
+            \begin{itemize}
+                \item Scheme A achieves hiding property by exploiting the security given by PRG--as long as the input is uniformly random, the output, which is used to pad $0^{3n}$ when committing $b=0$ and $r$ (selected by the receiver) when committing $b=1$, must be pseudorandom, i.e., computationally indistinguishable to a uniformly random padding. Since the receiver does not know the input to PRG that derives the pseudorandom padding, it never knows whether it was $0^{3n}$ (meaning $b=0$)  or $r$  (meaning $b=1$) that got padded by just looking at the padded result.
+                \item Scheme B achieves hiding property simply by hiding the committed bit, with some randomness appended, in the input of RO. Since it is highly unlikely for any PPT adversarial receiver to query to RO the same bit with the exact randomness, any PPT adversarial receiver can guess the committed bit with only negligible advantage. 
+            \end{itemize}
+            
+            \item Binding: 
+            \begin{itemize}
+                \item Scheme A achieves binding property by using a PRG whose codomain is exponentially larger than the square of the size of its domain. We've already shown why this requirement results in statistical binding in HW2. Simply put, this is because the fact that the receiver-selected $r\in\bit^{3n}$ renders it nearly impossible (i.e., happening with negligible probability) that a commitment opening to both bits exists. 
+                \item Scheme B achieves binding property by exploiting the property of random oracle: every output is uniformly random if it has not been  queried before. This nearly exterminates any commitment that, when provided with a pair of randomness, opens to both bits., i.e., such ``bad'' commitment exists with merely negligible probability.
+            \end{itemize}
+        \end{itemize}
+
+        \item[(c)] The use of RO enables the construction of a non-interactive commitment scheme because it allows us to replace the receiver-selected parameters (which are out of the control of the committer and thus used to achieve binding property) with the internal randomness of RO, whose outputs are selected purely out of randomness (or rather, by God) and are thus out of the control of any (potentially-malicious) committer. Still, once queried, outputs of RO are then fixed, allowing the
+            input to RO to be served as the opening information (aka decommitment).
+        \vspace{-1cm}
+    \end{enumerate}
+\end{answer}

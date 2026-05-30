@@ -1,0 +1,248 @@
+\begin{problem}[OR-Sigma protocol is secure]\label{p5}
+    \leavevmode\par
+    Suppose that we have two Sigma protocols $(P_0, V_0)$ for $\Rcal_0\subseteq \Xcal_0\times \Ycal_0$ and $(P_1, V_1)$ for $\Rcal_1\subseteq \Xcal_1\times \Ycal_1$. We assume that
+    \begin{itemize}
+        \item Both Sigma protocols use the same challenge space $\Ccal=\bit^{n}$.
+        \item Both protocols are HVZK with simulators $\Sim_0$ and $\Sim_1$ respectively.
+    \end{itemize}
+    We can combine them to form a Sigma protocol for the relation $\Rcal_\textsf{OR}\subseteq \Xcal_\textsf{OR}\times \Ycal_\textsf{OR}$, where $\Xcal_\textsf{OR} \triangleq \Xcal_0\times \Xcal_1$ and $\Ycal_\textsf{OR} \triangleq \bit \times (\Ycal_0\cup \Ycal_1)$:
+    \[
+        \Rcal_\textsf{OR} \triangleq \biggl\{ \left((x_0, x_1), (b,y)\right)\in \Xcal_\textsf{OR}\times \Ycal_\textsf{OR} \biggm\vert (x_b, y)\in \Rcal_b \biggr\}.
+    \]
+    In other words, for a given pair of statements $x_0\in\Xcal_0$ and $x_1\in \Xcal_1$, this OR protocol allows a prover to convince a skeptical verifier that he ``knows'' a witness for $x_0$ or a witness for $x_1$. Nothing else should be revealed. In particular the protocol should not reveal which witness the prover actually have. The protocol $(P, V)$ runs as follows, where the prover $P$ is initialized with $\left((x_0, x_1), (b,y)\right)\in\Rcal_\textsf{OR}$, the verifier $V$ is initialized with $(x_0, x_1)\in\Xcal_0\times \Xcal_1$, and $d\triangleq 1-b$:
+    \begin{enumerate}[label=(\alph*)]
+        \item $P$ computes $(\com_d, \ch_d, \resp_d) \sample \Sim_d(x_d)$. $P$ also runs $P_b(x_b, y)$ to get a commitment $\com_b$ and sends the pair $(\com_0, \com_1)$ to $V$.
+        \item $V$ computes $\ch\sample\Ccal$ and sends the challenge $\ch$ to $P$.
+        \item $P$ computes $\ch_b \coloneqq \ch \oplus \ch_d$. $P$ feeds the challenge $\ch_b$ to $P_b( x_b, y)$, obtaining a response $\resp_b$, and sends $(\ch_0, \resp_0, \resp_1)$ to $V$.
+        \item $V$ computes $\ch_1 \coloneqq \ch \oplus \ch_0$ and checks that $(\com_i, \ch_i, \resp_i)$ is an accepting conversation for $x_i$, where $i = 0, 1$.
+    \end{enumerate}
+    Show that the above protocol is indeed a Sigma protocol for $\Rcal_\textsf{OR}$. In other words, show that the protocol satisfies completeness, special soundness, and HVZK.
+\end{problem}
+
+
+\begin{answer}
+    \leavevmode\par
+    \proofcase{Proof of Completeness}
+    Let $((x_0, x_1), (b, y)) \in \Rcal_{\mathsf{OR}}$.
+    
+    For simplicity, for any Sigma protocol $(P, V)$ for an NP relation $\Rcal\subseteq \Xcal\times \Ycal$, we define the last step of $V$ as a deterministic function (or rather, a predicate) $V(x, \com, \ch, \resp)\in\bit$ (using the same symbol $V$ as the verifier), where $x\in\Xcal$ is the statement given to the verifier, and $(\com, \ch, \resp)$ the transcript of a conversation. We also define a transcript $(\com, \ch, \resp)$ of a conversation in a Sigma protocol $(P, V)$ to be \textit{accepting} for a statement $x\in\Xcal$ if $V(x, \com, \ch, \resp)=1$.
+
+    Since $(P_0, V_0)$ and $(P_1, V_1)$ are both Sigma protocols and are thus complete, for each  $b\in\bit$, there exists $\epsilon_b(n)=\negl(n)$ such that for every $n\in\Nbb$ and every $(x, y)\in \Rcal_b$, 
+    \begin{equation}\label{eq:p5-1-1}
+        1-\epsilon_b(n)= \Pr\left[\langle P_b(x, y), V_b(x) \rangle =1\right]
+        = \Pr_{\substack{(\com, \st)\sample P_b(x, y)\\\ch \Usample \bit^n \\\resp \sample  P_b(\st, \ch)}}\left[ V_b(x, \com, \ch, \resp) = 1\right],
+    \end{equation}
+    where  $\st$ denotes the internal state of $P_b$.
+
+    Also, since $(P_0, V_0)$ and $(P_1, V_1)$ are both HVZK with respective simulators $\Sim_0$ and $\Sim_1$, for each $b\in\bit$, every $n\in\Nbb$, and every $(x, y)\in \Rcal_b$, we have
+    \[
+        (\com', \ch', \resp') \eqdist (\com, \ch, \resp)
+        \qquad
+        \textrm{where}
+        \;\;
+        \begin{gathered}
+            (\com', \ch', \resp')\sample \Sim_b(x) \\
+             (\com, \st)\sample P_b(x, y), \ch \Usample \bit^n, \resp \sample  P_b(\st, \ch)
+        \end{gathered},
+    \]
+    which implies that
+    \begin{multline*}
+        \Pr[V_b(x, \com', \ch', \resp')=1] 
+        = \sum_{(com, ch, resp)} \highlight{CarnationPink}{\Pr[(\com', \ch', \resp') = (com, ch, resp)]} \Pr[V_b(x, com, ch, resp)=1] \\
+        = \sum_{(com, ch, resp)} \highlight{CarnationPink}{\Pr[(\com, \ch, \resp) = (com, ch, resp)]} \Pr[V_b(x, com, ch, resp)=1] 
+        = \Pr[V_b(x, \com, \ch, \resp)=1] 
+    \end{multline*}
+    as $V_b(x, \;\cdot\;): (com, ch, resp)\mapsto 0/1$ is simply a deterministic function of the transcript $(com, ch, resp)$ of  a conversation.
+    Then, by the completeness of $(P_b, V_b)$ (cf. \eqref{eq:p5-1-1}), we have
+    \begin{equation}\label{eq:p5-1-2}
+        \Pr[V_b(x, \com', \ch', \resp')=1]=
+        \Pr[V_b(x, \com, \ch, \resp)=1]=1-\negl(n).
+    \end{equation}
+    This means that the  transcript $(\com', \ch', \resp')$ simulated by $\Sim_b(x)$ can be accepted by $V_b(x)$ with high probability, as if it were a transcript of a conversation between $P_b(x, y)$ and $V_b(x)$.
+    
+    Finally, for all $n\in\Nbb$ and every $((x_0, x_1), (b,y))\in\Rcal_\mathsf{OR}$, since $(x_b, y)\in\Rcal_b$, we have
+    \begin{align*}
+        &\Pr\left[\langle P((x_0, x_1), (b, y)), V(x_0, x_1) \rangle = 1\right]\\
+        =& \Pr\left[(\com_0, \ch_0, \resp_0)\textrm{ is accepting for } x_0 \textrm{ in } (P_0, V_0) \land (\com_1, \ch_1, \resp_1)\textrm{ is accepting for } x_1 \textrm{ in } (P_1, V_1) \right]\\
+        =& \Pr\left[ V_0(x_0, \com_0, \ch_0, \resp_0)=1 \land V_1(x_1, \com_1, \ch_1, \resp_1)=1\right]\\
+        =& \Pr\left[ V_b(x_b, \com_b, \ch_b, \resp_b)=1 \land V_{1-b}(x_{1-b}, \com_{1-b}, \ch_{1-b}, \resp_{1-b})=1\right]\\
+        =& \Pr_{\substack{(\com_{1-b}, \ch_{1-b}, \resp_{1-b})\sample \Sim_{1-b}(x_{1-b})\\(\com_b, \st)\sample P_b(x_b, y)\\\ch \Usample \bit^n \\\resp_b\sample  P_b(\st, \ch\oplus \ch_{1-b})}}\left[ V_b(x_b, \com_b, \ch\oplus \ch_{1-b}, \resp_b)=1 \land V_{1-b}(x_{1-b}, \com_{1-b}, \ch_{1-b}, \resp_{1-b})=1\right]\\
+        \ge& 1-\left(1- \Pr_{\substack{(\cdot, \ch_{1-b},\cot)\sample \Sim_{1-b}(x_{1-b})\\(\com_b, \st)\sample P_b(x_b, y)\\\ch \Usample \bit^n \\\resp_b\sample  P_b(\st, \ch\oplus \ch_{1-b})}}\left[ V_b(x_b, \com_b, \ch\oplus \ch_{1-b}, \resp_b)=1 \right]\right)\\
+        &\qquad -\left(1- \Pr_{(\com_{1-b}, \ch_{1-b}, \resp_{1-b})\sample \Sim_{1-b}(x_{1-b})}\left[ V_{1-b}(x_{1-b}, \com_{1-b}, \ch_{1-b}, \resp_{1-b})=1\right] \right)
+        \qquad (\textrm{by Union Bound})\\
+        \stackrel{(\twemoji{mushroom})}=&  \overbrace{\Pr_{\substack{(\com_b, \st)\sample P_b(x_b, y)\\\ch_b \Usample \bit^n \\\resp_b\sample  P_b(\st, \ch_b)}}\left[ V_b(x_b, \com_b, \ch_b, \resp_b)=1 \right]}^{\begin{aligned}=1-\negl(n)\;\; (\textrm{by \eqref{eq:p5-1-1} and } (x_b, y)\in\Rcal_b)\end{aligned}}\\
+        &\qquad + \underbrace{\Pr_{(\com_{1-b}, \ch_{1-b}, \resp_{1-b})\sample \Sim_{1-b}(x_{1-b})}\left[ V_{1-b}(x_{1-b}, \com_{1-b}, \ch_{1-b}, \resp_{1-b})=1\right]}_{\begin{aligned}=1-\negl(n)\;\; (\textrm{by \eqref{eq:p5-1-2}})\end{aligned}}
+        -1\\
+        =& 1-\negl(n)-\negl(n)= 1-\negl(n).
+    \end{align*}
+
+    Note that in the step (\twemoji{mushroom}), since $\ch\Usample\bit^n$ is uniformly random and independent of $\ch_d$, $\ch_b\triangleq \ch\oplus \ch_d$ must be uniformly random and independent of $\ch_d$. Thus, we substitute every occurrence of $\ch\oplus \ch_d$ with a shared, fresh $\ch_b\Usample \bit^n$ (and every occurrence of $\ch_d$ with $\ch\oplus \ch_b$). 
+
+    Hence, by definition, the (potentially) Sigma protocol $(P, V)$ for $\Rcal_\mathsf{OR}$ satisfies completeness.
+    
+    \proofcase{Proof of Special Soundness}
+
+    Since $(P_0, V_0)$ and $(P_1, V_1)$ are both Sigma protocols and are thus specially sound, there exist polynomial-time algorithms $\Ext_0, \Ext_1$, each of which takes as input $x_b\in\Xcal_b$ and two accepting conversation transcripts $(\com_b, \ch_b, \resp_b)$ and $(\com_b, \ch_b', \resp_b')$ where $\ch_b\neq \ch_b'$, and outputs $y_b\in \Ycal_b$ such that $(x_b, y_b)\in\Rcal_b$. That is, for each $b\in\bit$, for any $x_b\in\Xcal_b$ and any conversation transcripts $(\com_b, \ch_b, \resp_b)$ and $(\com_b, \ch_b', \resp_b')$, there is 
+    \begin{equation}\label{eq:p5-2-1}
+        \ch_b\neq \ch_b' \land V_b(x_b, \com_b, \ch_b, \resp_b)=V_b(x_b, \com_b, \ch_b', \resp_b')=1
+        \implies \left(x_b, \Ext_b(\com_b, \ch_b, \ch_b', \resp_b, \resp_b')\right) \in \Rcal_b.
+    \end{equation}
+
+    We construct as follows a polynomial-time deterministic algorithm $\Ext$ that takes as input a statement $(x_0, x_1)\in\Xcal_\mathsf{OR}\triangleq \Xcal_0\times \Xcal_1$ and two accepting conversation transcripts $(\com, \ch, \resp)$ and $(\com, \ch', \resp')$ where $\ch\neq \ch'$, and outputs $(b,y)\in\Ycal_\mathsf{OR}\triangleq \bit\times (\Ycal_0\cup \Ycal_1)$ such that $((x_0, x_1),(b, y))\in \Rcal_\mathsf{OR}$:
+    \begin{simplebox}
+        \small
+        \noindent
+        $\underline{\Ext\left((x_0, x_1) \in\Xcal_\mathsf{OR}, \com, \ch, \ch', \resp, \resp'\right)}$
+        \begin{algorithmic}[1]
+            \State Parse $(\com_0, \com_1) \coloneqq \com$, $(\ch_0, \resp_0, \resp_1)\coloneqq \resp$, $(\ch_0', \resp_0', \resp_1')\coloneqq \resp'$
+            \State Compute $\ch_1\coloneqq \ch\oplus \ch_0$, $\ch_1'\coloneqq \ch'\oplus \ch_0'$
+            \If{$\ch_0\neq \ch_0'$}
+                \State $(b, y)\coloneqq \left( 0, \Ext_0(x_0, \com_0, \ch_0, \ch_0', \resp_0, \resp_0') \right)$
+            \Else 
+                \State $(b, y)\coloneqq \left( 1,  \Ext_1(x_1, \com_1, \ch_1, \ch_1', \resp_1, \resp_1') \right)$
+            \EndIf
+            \State\Return $(b,y)$
+        \end{algorithmic}
+    \end{simplebox}
+    Clearly $\Ext$ is deterministic and polynomial-time as both $\Ext_0$ and $\Ext_1$ are deterministic and polynomial-time. Then, using Hoare Logic, we verify that for any $(x_0, x_1)\in\Xcal_\mathsf{OR}$ and any conversation transcripts $(\com, \ch, \resp)$ and $(\com, \ch', \resp')$ where $\ch\neq \ch'$ such that both transcripts are accepting, i.e., $V((x_0, x_1), \com, \ch, \resp)=V((x_0, x_1), \com, \ch', \resp')=1$, there is 
+    \[
+        \left((x_0, x_1), (b, \Ext(\com, \ch, \ch', \resp, \resp'))\right) \in \Rcal_\mathsf{OR}.
+    \]
+
+    \begin{observation}\label{obs:p5-2-1}
+        For any $\ch,\ch', \ch_0,\ch_0' \in \bit^n$, if $\ch\neq \ch'$, then either $\ch_0\neq \ch_0'$ or $\ch_0=\ch_0'$ holds, the latter of which implies $\ch\oplus \ch_0\neq \ch'\oplus \ch_0'$.
+         That is,
+         \[
+            \vDash \forall  \ch,\ch', \ch_0,\ch_0' \in \bit^n\Bigl( \ch\neq \ch' \implies \ch_0\neq \ch_0' \lor \ch\oplus \ch_0\neq \ch'\oplus \ch_0' \Bigr).
+         \]
+    \end{observation}
+    
+    \begin{simplebox}
+        \small
+        \noindent
+        $\underline{\Ext\left((x_0, x_1) \in\Xcal_\mathsf{OR}, \com, \ch, \ch', \resp, \resp'\right)}$
+        \begin{algorithmic}[1]
+            \Statex $\left\{\ch\neq \ch'\land  V((x_0, x_1), \com, \ch, \resp)=V((x_0, x_1), \com, \ch', \resp')=1\right\}$ \Comment{Precondition}
+            \Statex $\left\{(\ch_0\neq \ch_0' \lor \ch\oplus \ch_0\neq \ch'\oplus \ch_0')\land  V((x_0, x_1), \com, \ch, \resp)=V((x_0, x_1), \com, \ch', \resp')=1\right\}$ \Comment{Implied by \autoref{obs:p5-2-1}}
+            \State Parse $(\com_0, \com_1) \coloneqq \com$, $(\ch_0, \resp_0, \resp_1)\coloneqq \resp$, $(\ch_0', \resp_0', \resp_1')\coloneqq \resp'$
+            \Statex $\left\{(\ch_0\neq \ch_0' \lor \ch\oplus \ch_0\neq \ch'\oplus \ch_0')\land  \begin{aligned}V((x_0, x_1), (\com_0, \com_1), \ch, (\ch_0, \resp_0, \resp_1))&=\\ V((x_0, x_1), (\com_0, \com_1), \ch', (\ch_0', \resp_0', \resp_1'))&=1\end{aligned}\right\}$
+            \Statex $\left\{(\ch_0\neq \ch_0' \lor \ch\oplus \ch_0\neq \ch'\oplus \ch_0')\land  \begin{aligned} V_0(x_0, \com_0, \ch_0, \resp_0)&=V_1(x_1, \com_1, \ch\oplus \ch_0, \resp_1)=\\ V_0(x_0, \com_0, \ch_0', \resp_0')&=V_1(x_1, \com_1, \ch'\oplus \ch_0', \resp_1') =1\end{aligned}\right\}$ \Comment{Implied by def. of $V$}
+            \State Compute $\ch_1\coloneqq \ch\oplus \ch_0$, $\ch_1'\coloneqq \ch'\oplus \ch_0'$
+            \Statex $\left\{(\ch_0\neq \ch_0' \lor \ch_1\neq \ch_1')\land  \begin{aligned} V_0(x_0, \com_0, \ch_0, \resp_0)&=V_1(x_1, \com_1, \ch_1, \resp_1)=\\ V_0(x_0, \com_0, \ch_0', \resp_0')&=V_1(x_1, \com_1, \ch_1', \resp_1') =1\end{aligned}\right\}$ 
+            \If{$\ch_0\neq \ch_0'$}
+                \Statex\hspace*{\algorithmicindent} $\left\{(\ch_0\neq \ch_0' \lor \ch_1\neq \ch_1')\land  \begin{aligned} V_0(x_0, \com_0, \ch_0, \resp_0)&=V_1(x_1, \com_1, \ch_1, \resp_1)=\\ V_0(x_0, \com_0, \ch_0', \resp_0')&=V_1(x_1, \com_1, \ch_1', \resp_1') =1\end{aligned} \land \ch_0\neq \ch_0'\right\}$ 
+                \Statex\hspace*{\algorithmicindent} $\left\{\ch_0\neq \ch_0' \land V_0(x_0, \com_0, \ch_0, \resp_0)=V_0(x_0, \com_0, \ch_0', \resp_0')=1\right\}$  \Comment{Implied}
+                \Statex\hspace*{\algorithmicindent} $\left\{(x_0, \Ext_0(x_0, \com_0, \ch_0, \ch_0', \resp_0, \resp_0')) \in \Rcal_0\right\}$ \Comment{Implied by \eqref{eq:p5-2-1}}
+                \State $(b, y)\coloneqq \left( 0, \Ext_0(x_0, \com_0, \ch_0, \ch_0', \resp_0, \resp_0') \right)$
+                \Statex\hspace*{\algorithmicindent} $\left\{(x_b, y) \in \Rcal_b\right\}$
+            \Else 
+                \Statex\hspace*{\algorithmicindent} $\left\{(\ch_0\neq \ch_0' \lor \ch_1\neq \ch_1')\land  \begin{aligned} V_0(x_0, \com_0, \ch_0, \resp_0)&=V_1(x_1, \com_1, \ch_1, \resp_1)=\\ V_0(x_0, \com_0, \ch_0', \resp_0')&=V_1(x_1, \com_1, \ch_1', \resp_1') =1\end{aligned} \land \ch_0= \ch_0'\right\}$ 
+                \Statex\hspace*{\algorithmicindent} $\left\{\ch_1\neq \ch_1' \land V_1(x_1, \com_1, \ch_1, \resp_1)=V_1(x_1, \com_1, \ch_1', \resp_1')=1\right\}$ \Comment{Implied}
+                \Statex\hspace*{\algorithmicindent} $\left\{(x_1, \Ext_1(x_1, \com_1, \ch_1, \ch_1', \resp_1, \resp_1')) \in \Rcal_1\right\}$ \Comment{Implied by \eqref{eq:p5-2-1}}
+                \State $(b, y)\coloneqq \left( 1,  \Ext_1(x_1, \com_1, \ch_1, \ch_1', \resp_1, \resp_1') \right)$
+                \Statex\hspace*{\algorithmicindent} $\left\{(x_b, y) \in \Rcal_b\right\}$
+            \EndIf
+            \Statex $\left\{(x_b, y) \in \Rcal_b\right\}$
+            \Statex $\left\{\left((x_0, x_1), (b, y)\right) \in \Rcal_\mathsf{OR}\right\}$ \Comment{Implied by def. of $\Rcal_\mathsf{OR}$ (Postcondition)}
+            \State\Return $(b,y)$
+        \end{algorithmic}
+    \end{simplebox}
+
+    Therefore, by definition, the (potentially) Sigma protocol $(P, V)$ for $\Rcal_\mathsf{OR}$ satisfies special soundness.
+    
+    \proofcase{Proof of HVZK}
+    As reasoned before, since $(P_0, V_0)$ and $(P_1, V_1)$ are both HVZK with respective simulators $\Sim_0$ and $\Sim_1$, for each $b\in\bit$ and $n\in\Nbb$, for every $(x_b, y_b)\in \Rcal_b$, we have
+    \begin{equation}\label{eq:p5-3-2}
+        (\com_b', \ch_b', \resp_b') \eqdist (\com_b, \ch_b, \resp_b)
+        \qquad
+        \textrm{where}
+        \;\;
+        \begin{gathered}
+            (\com_b', \ch_b', \resp_b')\sample \Sim_b(x_b) \\
+             (\com_b, \st)\sample P_b(x_b, y_b), \ch_b \Usample \bit^n, \resp_b \sample  P_b(\st, \ch_b)
+        \end{gathered}.
+    \end{equation}
+
+    We construct as follows a PPT algorithm $\Sim$ such that for all $n\in\Nbb$ and $((x_0, x_1), (b, y))\in\Rcal_\mathsf{OR}$, on input $(x_0, x_1)$, $\Sim$ outputs a transcript $(\com', \ch', \resp')$ of a (simulated) conversation such that $(\com', \ch', \resp')$ is distributed identically to a transcript $(\com, \ch, \resp)$ of a conversation between $P((x_0, x_1), (b,y))$ and $V(x_0, x_1)$, i.e.,
+    \begin{equation}\label{eq:p5-3-1}
+        (\com', \ch', \resp') \eqdist (\com, \ch, \resp)
+        \qquad
+        \textrm{where}
+        \;\;
+        \begin{gathered}
+            (\com', \ch', \resp')\sample \Sim(x_0, x_1) \\
+            (\com, \st)\sample P((x_0, x_1), (b,y)), \ch \Usample \bit^n, \resp \sample  P(\st, \ch)
+        \end{gathered}.
+    \end{equation}
+
+    \begin{simplebox}
+        \small
+        \noindent
+        $\underline{\Sim\left((x_0, x_1) \in\Xcal_\mathsf{OR}\right)}$
+        \begin{algorithmic}[1]
+            \State $(\com_0', \ch_0', \resp_0')\sample \Sim_0(x_0)$
+            \State $(\com_1', \ch_1', \resp_1')\sample \Sim_1(x_1)$
+            \State\Return $\left(\com'\coloneqq (\com_0', \com_1'), \ch'\coloneqq \ch_0'\oplus \ch_1', \resp'\coloneqq (\ch_0', \resp_0', \resp_1') \right)$
+        \end{algorithmic}
+    \end{simplebox}
+
+    Clearly $\Sim$ is a PPT algorithm. We then prove \eqref{eq:p5-3-1} as follows. For all $n\in\Nbb$ and $((x_0, x_1), (b, y))\in\Rcal_\mathsf{OR}$, define the following random variables:
+    \begin{itemize}
+        \item $(\com=(\com_0, \com_1), \st)\sample P((x_0, x_1), (b,y))$, $\ch \Usample \bit^n$, $\resp=(\ch_0, \resp_0, \resp_1) \sample  P(\st, \ch)$, or equivalently,
+        \begin{itemize}
+            \item $(\com_{1-b}, \ch_{1-b}, \resp_{1-b})\sample \Sim_{1-b}(x_{1-b})$,
+            \item $(\com_b, \st)\sample P_b(x_b, y)$,
+            \item $\ch \Usample\bit^n$,
+            \item $\ch_b \triangleq \ch\oplus \ch_{1-b}$, and
+            \item $\resp_b\sample P_b(\st, \ch_b)$;
+        \end{itemize}
+        \item $(\com'=(\com_0', \com_1'), \ch'=\ch_0'\oplus \ch_1', \resp'=(\ch_0', \resp_0', \resp_1'))\sample \Sim(x_0, x_1)$, or equivalently,
+        \begin{itemize}
+            \item $(\com_0', \ch_0', \resp_0')\sample \Sim_0(x_0)$ and
+            \item $(\com_1', \ch_1', \resp_1')\sample \Sim_1(x_1)$.
+        \end{itemize}
+    \end{itemize}
+    Then, to arrive at \eqref{eq:p5-3-1}, there are two cases to show:
+    \begin{itemize}
+        \item \textbf{Case 1}: $b=0$. Then we have
+        \begin{align*}
+            &(\com', \ch', \resp')\\
+            =&  \left( (\com_0', \com_1'), \ch_0'\oplus \ch_1', (\ch_0', \resp_0', \resp_1') \right)\\
+            =&  \left( (\com_b', \com_{1-b}'), \ch_b'\oplus \ch_{1-b}', (\ch_b', \resp_b', \resp_{1-b}') \right)\\
+            \eqdist&  \left( (\com_b', \com_{1-b}), \ch_b'\oplus \ch_{1-b}, (\ch_b', \resp_b', \resp_{1-b}) \right) \\
+            &\qquad (\because (\com_{1-b}, \ch_{1-b}, \resp_{1-b}),(\com_{1-b}', \ch_{1-b}', \resp_{1-b}')\iid \Sim_{1-b}(x_{1-b}))\\
+            \eqdist& \left( (com, \com_{1-b}), ch\oplus \ch_{1-b}, (ch,  resp, \resp_{1-b}) \right) \textrm{ where } (com, st)\sample P_b(x_b, y), ch\Usample\bit^n, resp\sample P_b(st, ch) \\
+            &\qquad (\because  (\com_b', \ch_b', \resp_b') \eqdist(com, ch , resp) \textrm{ by \eqref{eq:p5-3-2}})\\
+            \eqdist& \left( (com, \com_{1-b}), {ch}^\bigstar, ({ch}^\bigstar\oplus \ch_{1-b},  resp, \resp_{1-b}) \right)\\
+            &\qquad\qquad\qquad\qquad\qquad\qquad \textrm{where }(com, st)\sample P_b(x_b, y), {ch}^\bigstar\Usample\bit^n, resp\sample P_b(st, {ch}^\bigstar\oplus \ch_{1-b}) \\
+            & (\because  ch \textrm{ is fresh, uniform, and independent of } \ch_{1-b} \implies {ch}^\bigstar\triangleq ch\oplus \ch_{1-b} \textrm{ is also uniform,}\\
+            &\qquad \textrm{so we redefine }  {ch}^\bigstar \Usample\bit^n, ch\triangleq {ch}^\bigstar\oplus \ch_{1-b} \textrm{ so that } {ch}^\bigstar \textrm{ becomes fresh})\\
+            \eqdist& \left( (\com_b, \com_{1-b}), \ch, (\ch\oplus \ch_{1-b},  \resp_b, \resp_{1-b}) \right) \qquad (\because (com, ch, resp)\eqdist (\com_b, \ch, \resp_b))\\
+            =& \left( (\com_b, \com_{1-b}), \ch, (\ch_b,  \resp_b, \resp_{1-b}) \right)
+            = \left( (\com_0, \com_{1}), \ch, (\ch_0,  \resp_0, \resp_{1}) \right)
+            = \left(\com, \ch, \resp\right).
+        \end{align*} 
+
+        \item  \textbf{Case 2}: $b=1$. Likewise, we have
+        \begin{align*}
+            &(\com', \ch', \resp')\\
+            =&  \left( (\com_0', \com_1'), \ch_0'\oplus \ch_1', (\ch_0', \resp_0', \resp_1') \right)\\
+            =&  \left( (\com_{1-b}', \com_b'), \ch_b'\oplus \ch_{1-b}', (\ch_{1-b}', \resp_{1-b}', \resp_{b}') \right)\\
+            \eqdist&  \left( (\com_{1-b}, \com_b'), \ch_b'\oplus \ch_{1-b}, (\ch_{1-b}, \resp_{1-b}, \resp_{b}') \right) \\
+            &\qquad (\because (\com_{1-b}, \ch_{1-b}, \resp_{1-b}),(\com_{1-b}', \ch_{1-b}', \resp_{1-b}')\iid \Sim_{1-b}(x_{1-b}))\\
+            \eqdist& \left( ( \com_{1-b}, com), ch\oplus \ch_{1-b}, (\ch_{1-b},  \resp_{1-b}, resp) \right) \textrm{ where } (com, st)\sample P_b(x_b, y), ch\Usample\bit^n, resp\sample P_b(st, ch) \\
+            &\qquad (\because  (\com_b', \ch_b', \resp_b') \eqdist(com, ch , resp) \textrm{ by \eqref{eq:p5-3-2}})\\
+            \eqdist& \left( ( \com_{1-b}, com), {ch}^\bigstar, (\ch_{1-b},  \resp_{1-b}, resp) \right)\\
+            &\qquad\qquad\qquad\qquad\qquad\qquad \textrm{where }(com, st)\sample P_b(x_b, y), {ch}^\bigstar\Usample\bit^n, resp\sample P_b(st, {ch}^\bigstar\oplus \ch_{1-b}) \\
+            & (\because  ch \textrm{ is fresh, uniform, and independent of } \ch_{1-b} \implies {ch}^\bigstar\triangleq ch\oplus \ch_{1-b} \textrm{ is also uniform,}\\
+            &\qquad \textrm{so we redefine }  {ch}^\bigstar \Usample\bit^n, ch\triangleq {ch}^\bigstar\oplus \ch_{1-b} \textrm{ so that } {ch}^\bigstar \textrm{ becomes fresh})\\
+            \eqdist& \left( (\com_{1-b}, \com_b), \ch, (\ch_{1-b},  \resp_{1-b}, \resp_b) \right) \qquad (\because (com, ch, resp)\eqdist (\com_b, \ch, \resp_b))\\
+            =& \left( (\com_{1-b}, \com_b), \ch, (\ch_{1-b},  \resp_{1-b}, \resp_b) \right)
+            = \left( (\com_0, \com_{1}), \ch, (\ch_0,  \resp_0, \resp_{1}) \right)
+            = \left(\com, \ch, \resp\right).
+        \end{align*} 
+    \end{itemize}
+    In either case, we have $(\com', \ch', \resp') \eqdist \left(\com, \ch, \resp\right)$, as desired.
+
+    Therefore, by definition, the (potentially) Sigma protocol $(P, V)$ for $\Rcal_\mathsf{OR}$ satisfies HVZK.
+\end{answer}

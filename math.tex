@@ -19,6 +19,7 @@
 \let\epsilon\varepsilon
 \newcommand{\minus}{\scalebox{0.75}[1.0]{$-$}}
 \renewcommand{\bar}[1]{\overline{#1}}
+\renewcommand{\tilde}[1]{\widetilde{#1}}
 \DeclarePairedDelimiter\abs{\lvert}{\rvert}
 \DeclarePairedDelimiter\norm{\lVert}{\rVert}
 \newcommand{\concat}{\mathbin{\Vert}}
@@ -42,6 +43,7 @@
 \newcommand{\Usample}{\mathrel{\xleftarrow{\$}}}
 \newcommand{\prdist}[2]{\pr\limits_{#1}\left[\ #2\ \right]}
 \newcommand{\iid}{\overset{\mathrm{iid}}{\sim}}
+\newcommand{\eqdist}{\overset{\mathrm{d}}{=}}
 \newcommand{\indep}{\mathrel{\perp\!\!\!\perp}}
 
 % =========================
@@ -49,6 +51,7 @@
 % 0. basic defs
 \newcommand{\ind}{\approx} % indistinguishable
 \newcommand{\aympind}{\approx_c} % asymptotically indistinguishable
+\newcommand{\adv}{\mathop{\mathrm{Adv}}}
 % 1. Primitive / scheme names
 \newcommand{\PKE}{\mathsf{PKE}}
 \newcommand{\SKE}{\mathsf{SKE}}
@@ -74,15 +77,18 @@
 \newcommand{\Ext}{\mathsf{Ext}}
 \newcommand{\Sim}{\mathsf{Sim}}
 \newcommand{\Trans}{\mathsf{Trans}}
+\newcommand{\RO}{\mathsf{RO}}
 % 3. Keys / ciphertexts / common objects
 \newcommand{\pk}{\mathsf{pk}}
 \newcommand{\sk}{\mathsf{sk}}
 \newcommand{\ct}{\mathsf{ct}}
 \newcommand{\crs}{\mathsf{crs}}
 \newcommand{\st}{\mathsf{st}}
-\newcommand{\com}{\mathsf{com}}
+\newcommand{\accept}{\mathsf{accept}}
+\newcommand{\reject}{\mathsf{reject}}
 % 4. Functions
 \newcommand{\negl}{\mathsf{negl}}
+\newcommand{\nonnegl}{\mathsf{nonnegl}}
 \newcommand{\poly}{\mathsf{poly}}
 % 5. Entities in games / proofs
 \newcommand{\Adv}{\mathbf{Adv}}
@@ -90,9 +96,10 @@
 \newcommand{\Hyb}{\mathsf{Hyb}}
 \renewcommand{\Game}{\mathbf{\mathsf{G}}}
 % 6. Protocol-specific notation
-\newcommand{\commit}{\mathsf{commit}}
-\newcommand{\chan}{\mathsf{ch}}
+\newcommand{\com}{\mathsf{com}}
+\newcommand{\ch}{\mathsf{ch}}
 \newcommand{\resp}{\mathsf{resp}}
+\newcommand{\commit}{\mathsf{commit}}
 \newcommand{\interact}[1]{\left<#1\right>}
 
 % =========================
@@ -103,6 +110,7 @@
 \newcommand{\Mcal}{\mathcal{M}}
 \newcommand{\Kcal}{\mathcal{K}}
 \newcommand{\Ical}{\mathcal{I}}
+\newcommand{\Tcal}{\mathcal{T}}
 \newcommand{\Dcal}{\mathcal{D}}
 \newcommand{\Gcal}{\mathcal{G}}
 \newcommand{\Ocal}{\mathcal{O}}
@@ -114,6 +122,9 @@
 \newcommand{\Zbb}{\mathbb{Z}}
 \newcommand{\Rbb}{\mathbb{R}}
 \newcommand{\Gbb}{\mathbb{G}}
+\newcommand{\Tsf}{\mathsf{T}}
+\newcommand{\Usf}{\mathsf{U}}
+\newcommand{\Lfrak}{\mathfrak{L}}
 
 % =========================
 % arrows for sequence diagram

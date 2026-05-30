@@ -1,0 +1,410 @@
+\begin{problem}[Various FO transformation]\label{p2}
+    \leavevmode\par
+    In this problem, let $\Pi = (\Gen, \Enc, \Dec)$ be a PKE scheme.
+    \begin{enumerate}[label=(\roman*)]
+        \item Suppose that $\Pi$ is $\delta$-correct, $\gamma$-spread and OW-CPA secure, where $\delta$ and $2^{-\gamma}$ are negligible. Let $G:\Mcal\to \Rcal$ be a random oracle and $\Tsf$ be the transformation defined in the class. Show that $\Tsf[\Pi, G]$ is OW-CCA secure.
+    \end{enumerate}
+    
+    In the following we introduce another variant $\Usf^{\not\bot}$ of the $\Usf$ transformation taught in the class that converts a OW-CCA PKE scheme into an IND-CCA KEM. The transformation $\Usf^{\not\bot}$ is used in CRYSTALS-Kyber, the NIST PQC standard KEM, works similarly to the $\Usf$ transformation defined in the class but with ``implicit rejection'' of inconsistent ciphertexts. The construction is given as follows: the transformation $\Usf^{\not\bot}$ takes as input a PKE scheme $\Pi = (\Gen, \Enc, \Dec)$ with message space $\Mcal$ and an RO $H: \Mcal\times \Ccal\to \Kcal$, and outputs a KEM $\Pi_{\KEM^{\not\bot}}=\Usf^{\not\bot}[\Pi, H]=(\Gen^{\not\bot}, \Encaps, \Decaps^{\not\bot})$. The algorithms are defined below:
+    \begin{simplebox}
+        \small
+        \noindent
+        \begin{minipage}[t]{0.32\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Gen^{\not\bot}(1^n)$}
+                \Indent
+                    \State $(\pk, \sk)\sample \Gen(1^n)$
+                    \State $s\Usample\Mcal$
+                    \State $\sk' \coloneqq (\sk, s)$
+                    \State \Return $(\pk, \sk')$
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.32\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Encaps(\pk)$}
+                \Indent
+                    \State $m\Usample \Mcal$
+                    \State $\ct\sample \Enc_\pk(m)$
+                    \State $k\coloneqq H(m,\ct)$
+                    \State \Return $(k,\ct)$
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.32\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Decaps^{\not\bot}_{\sk'}(\ct)$}
+                \Indent
+                    \State $(\sk, s)\coloneqq \sk'$
+                    \State $m' \coloneqq \Dec_\sk(\ct)$
+                    \If{$m'\neq \bot$}
+                        \State\Return $k\coloneqq H(m, \ct)$
+                    \Else 
+                        \State\Return $k\coloneqq H(s, \ct)$
+                    \EndIf
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+    \end{simplebox}
+    One can see that the $\Encaps$ is the same as the one defined in the class. The $\Usf^{\not\bot}$ and $\Usf$ essentially differ in decapsulation: $\Decaps$ from $\Usf$ rejects if $\ct$ decrypts to $\bot$, whereas $\Decaps^{\not\bot}$ from $\Usf^{\not\bot}$ returns a pseudorandom key $k$.
+    \begin{enumerate}[label=(\roman*)]
+        \setcounter{enumi}{1}
+        \item Show that if $\Pi = (\Gen, \Enc, \Dec)$ is a OW-CCA secure PKE scheme and $H: \Mcal\times \Ccal\to \Kcal$ is an RO, then $\Pi_{\KEM^{\not\bot}} = \Usf^{\not\bot}[\Pi, H]$ is IND-CCA secure.
+    \end{enumerate}
+    \begin{remark}
+        Actually both $\Usf$ and $\Usf^{\not\bot}$ can take as input a OW-CCA PKE with randomized encryption and output an IND-CCA KEM. However there are also other variants, for instances, $\Usf_m$ and $\Usf^{\not\bot}_m$, whose output KEMs derive key as $k = H(m)$, require that the input PKE is \textcolor{red}{deterministic} as the output of $\Tsf$ transformation.
+    \end{remark}
+\end{problem}
+
+
+
+\begin{answer}[i]
+    We prove this by contradiction. Suppose to the contrary that $\Tsf[\Pi, G]=(\Gen', \Enc', \Dec')$ is not OW-CCA secure in the random oracle model.
+    This means there exists a PPT oracle adversary $\Adv$ such that in the experiment $\PKE^{OW-CCA}$ (given in \autoref{fig:p2-game1}) under the random oracle model, the advantage of $\Adv$, i.e. $\Pr[\Adv \textrm{ wins } \PKE^{OW-CCA}]$, is nonnegligible (as a function of $n$). 
+    
+    Note that $\Enc$ is randomized yet $\Enc'$ is deterministic. Moreover, in the experiment $\PKE^{OW-CCA}$, the random oracle $G$ is simulated by lazy sampling: the challenger $\Ch$ maintains a set $\Lfrak_G\subseteq \Mcal_n\times \Rcal_n$ of all random oracle queries made by $\Adv$ so far, with the convention that 
+    \[
+        G(m)=r \iff (m,r)\in \Lfrak_G.
+    \]
+    for all  messages $m\in\Mcal_n$ that have been queried to $G(\cdot)$.
+    Also, since the challenger knows $m^\ast$ and its corresponding randomness $r^\ast$, we can store $(m^\ast, r^\ast)$ explicitly in the set $\Lfrak_G$, which is no longer the case in the reduction $R$.
+    
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv \\
+            (\pk, \sk)\sample \Gen'(1^n)=\Gen(1^n) &  &\\
+            m^\ast\Usample \Mcal_n, r^\ast\Usample\Rcal_n &&\\
+            \Lfrak_G\coloneqq \{(m^\ast, r^\ast)\}\;\; (\because (m, r)\in \Lfrak_G\iff G(m)=r  ) & &\\
+            ct^\ast\coloneqq \Enc'_\pk(m^\ast)=\Enc_\pk (m^\ast; r^\ast) & \XR{(\pk, ct^\ast)}\\
+            \makecell[c]{
+                \textrm{If } \exists r  \textrm{ s.t. } (m_i, r)\in \Lfrak_G\\
+                \textrm{Then } r_i\coloneqq r\\
+                \textrm{Else } r_i\Usample \Rcal_n;\; \Lfrak_G\coloneqq \Lfrak_G\cup \{(m_i, r_i)\}
+            } & \makecell[c]{\XL{m_i}\\\\\\\XR{r_i}} & \textrm{Query } G(\cdot)\\ 
+            \makecell[c]{
+                m_i' \coloneqq \Dec'_\sk(ct_i)
+                =\begin{cases}
+                    \Dec_\sk(ct_i) & \textrm{if } \begin{aligned}&\Dec_\sk(ct_i)\neq\bot\land \\&\Enc_\pk(\Dec_\sk(ct_i); G(\Dec_\sk(ct_i)))=ct_i \end{aligned}\\
+                    \bot &\textrm{otherwise}
+                \end{cases}\\
+                \textrm{where } G(\cdot) \textrm{ is the same oracle provided by } \Ch
+            } & \makecell[c]{\XL{ct_i\neq ct^\ast}\\\\\\\XR{{m_i'}}} & \textrm{Query } \Dec'_\sk(\cdot)\\
+            \textrm{$\Adv$ wins if $m' = m^\ast$} & \XL{m'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{OW-CCA}$}
+        \label{fig:p2-game1}
+    }
+
+    Let $q_G=O(\poly(n))$ (resp. $q_{\Dec'}=O(\poly(n))$) be an upper bound  of the number of issues that $\Adv$ queries to the random oracle $G$ (resp. $\Dec'_\sk(\cdot)$). We construct a PPT reduction $R$ that breaks the OW-CPA security of $\Pi$. The construction of $R$ is provided in the experiment $\PKE^{OW-CPA}$ (cf. \autoref{fig:p2-game2}). Worth noting, $R$ assigns $G(m^\ast)\triangleq r^\ast$ (which is valid as both are fresh and uniform) and similarly uses lazy sampling to simulate the random oracle $G$: it maintains a set $\Lfrak_G\subseteq \Mcal_n\times \Rcal_n$ such that 
+    \[
+        G(m)=r \iff (m,r)\in \Lfrak_G \lor (m,r)=(m^\ast, r^\ast)
+    \]
+    for all  messages $m\in\Mcal_n$ that have been queried to $G(\cdot)$, as $R$ does not know $m^\ast, r^\ast$ sampled by the challenger. 
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & R & & \Adv \\
+            (\pk, \sk)\sample\Gen(1^n) &&&&\\
+            m^\ast\Usample\Mcal_n, r^\ast\Usample\Rcal_n &&&&\\
+            ct^\ast\coloneqq \Enc_\pk(m^\ast;r^\ast) & \XR{(\pk, ct^\ast)} & \Lfrak_G \coloneqq \emptyset & \XR{(\pk, ct^\ast)}&\\
+            && \makecell[l]{
+                \textrm{If } \exists r  \textrm{ s.t. } (m_i, r)\in \Lfrak_G\\
+                \textrm{Then } r_i\coloneqq r\\
+                \textrm{Else } r_i\Usample \Rcal_n;\; \Lfrak_G\coloneqq \Lfrak_G\cup \{(m_i, r_i)\}
+            } & \makecell[c]{\XL{m_i}\\\\\\\XR{r_i}} & \textrm{Query } G(\cdot)\\ 
+            && \makecell[l]{
+                \textrm{If } \exists (m,r)\in\Lfrak_G \textrm{ s.t. } \Enc_\pk(m;r)=ct_i\\
+                \textrm{Then } m_i'\coloneqq m\\
+                \textrm{Else } m_i'\coloneqq \bot
+            } & \makecell[c]{\XL{ct_i\neq ct^\ast}\\\\\\\XR{{m_i'}}} & \textrm{Query } \Dec'_\sk(\cdot)\\
+            \textrm{$R$ wins if $m'' = m^\ast$} & \XL{m''} & m'' \begin{cases}
+                \coloneqq m' &\textrm{with } \frac{1}{q_G+1} \textrm{ prob.}\\
+                \Usample \{m\mid (m,\cdot)\in \Lfrak_G\} &\textrm{with } \frac{q_G}{q_G+1} \textrm{ prob.}
+            \end{cases} & \XL{m'} & 
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{OW-CPA}$}
+        \label{fig:p2-game2}
+    }
+    Clearly $R$ runs in PPT since $\Adv$ is a PPT algorithm and the size of $\Lfrak_G$ is at most the number of queries made by $\Adv$ to $G$, which is bounded above by $q_G=O(\poly(n))$.
+    
+    WLOG, we assume $\Adv$ always queries distinct $m_i$ (resp. $ct_i$) to $G(\cdot)$ (resp. $\Dec'_\sk(\cdot)$) as we may otherwise construct another $\Adv'$ that internally records the answers and answers itself on repeated queries.
+    To see why in the experiment $\PKE^{OW-CPA}$, believing in the output of $\Adv$ with probability only $\frac{1}{q_G+1}$ while uniformly sampling a previously queried message from the ``log'' $\Lfrak_G$ with probability $\frac{q_G}{q_G+1}$ in the last step guarantees $R$ a nonnegligible advantage, we make the following observations.
+    \begin{enumerate}
+        \item In the experiment $\PKE^{OW-CPA}$, under the following three conditions will both oracles, namely $G(\cdot)$ and $\Dec'_\sk(\cdot)$, simulated by $R$ here behave identically to (i.e., output values distributed identically to) the real oracles in \autoref{fig:p2-game1}:
+        \begin{itemize}
+            \item[Event $I$] There is no query $ct_i$ to $\Dec'_\sk(\cdot)$ such that (1) $m''_i\neq \bot$ (i.e. $m''_i\in \Mcal_n$), (2) $m''_i\notin \{m\mid (m,\cdot)\in \Lfrak_G\}$ (i.e. $m''_i$ has never been queried to $G(\cdot)$ before), and (3) $\Enc_\pk(m''_i; G(m''_i))=ct_i$, where we define $m''\triangleq \Dec_\sk(ct_i)$.  
+            \item[Event $II$] Every $(m_i, r_i)$ is not \textit{problematic}, where $m_1, m_2,\ldots$ are all (distinct) queries to $G(\cdot)$, $r_1, r_2,\ldots \Usample \Rcal_n$ are the corresponding randomness stored in $\Lfrak_G$,  and  we call a message-randomness pair $(m,r)\in\Mcal_n\times \Rcal_n$ \textit{problematic} if it triggers a correctness error in $\Pi$, i.e., $\Dec_\sk(\Enc_\pk(m; r))\neq m$.
+            \item[Event $III$] $m^\ast$ has never been queried to $G(\cdot)$. 
+        \end{itemize}
+        It's straightforward to see that given $III$ (i.e., $m^\ast$ has never been queried to $G(\cdot)$), $R$ perfectly simulates $G(\cdot)$, as  $m_i=m^\ast$ is the only query that will trigger the discrepancy between outputs of the simulated $G(\cdot)$ and real $G(\cdot)$: on $m_i=m^\ast$, the simulated one samples a fresh $r_i\Usample\Rcal_n$ whilst the real one returns $r^\ast$.\\
+        Next, we argue that conditioning on $I$, $II$, and $III$,  the simulated and real decryption oracles $\Dec'_\sk(\cdot)$ output identical values for every query, by considering a single query $ct_i$ to $\Dec'_\sk(\cdot)$ and define $m''_i\triangleq \Dec_\sk(ct_i)$:
+        \begin{itemize}
+            \item If $m''_i$ has never been queried to $G(\cdot)$ before, then, on the one hand, we see that in \autoref{fig:p2-game1}, $m''_i\neq m^\ast$ by $III$ and thus (2) must hold, so either (1) or (3) must fail by $I$, which implies that in the real decryption oracle, either the decryption step or re-encryption step fails, so it will output $\bot$.
+            On the other hand, suppose in \autoref{fig:p2-game2} $\exists (m,r)\in\Lfrak_G$ such that $\Enc_\pk(m;r)=ct_i$, then we would have $m''_i=\Dec_\sk(ct_i)=\Dec_\sk(\Enc_\pk(m;r))=m\in \Mcal_n$, where the last equation follows from $II$ (which tells us $(m,r)$ is not \textit{problematic}). This would imply $m''_i=m$ has been queried to $G(\cdot)$ before, which is a contradiction, so the simulated decryption oracle will output $\bot$. 
+            Hence we know both decryption oracles output $\bot$. 
+
+            \item Otherwise, $m''_i$ has been queried to $G(\cdot)$ before, and by $III$ we must have $m''_i\neq m^\ast$.
+            This implies that in both experiments,  $(m''_i, r_i)\in\Lfrak_G$ where $G(m''_i)\triangleq r_i\Usample R_n$, which implies by $II$ that $\Dec_\sk(\Enc_\pk(m''_i; r_i))= m''_i$.
+            On the one hand, we see that in \autoref{fig:p2-game1}, since $m''_i\neq \bot$ and $\Enc_\pk(m''_i; G(m''_i))=\Enc_\pk(m''_i; r_i)$, the real decryption oracle outputs $m''_i$ if $\Enc_\pk(m''_i; r_i)=ct_i$ and $\bot$ otherwise. 
+            On the other hand, in \autoref{fig:p2-game2}, the simulated decryption oracle also outputs $m''_i$ if $\Enc_\pk(m''_i; r_i)=ct_i$ and $\bot$ otherwise.
+            Hence we know both decryption oracles output the same value.
+        \end{itemize}
+        We conclude that if in the last step $R$ chooses to believe in the answer returned by $\Adv$, then
+        \begin{align*}
+            &\Pr[R \textrm{ wins } \PKE^{OW-CPA} \mid m''\coloneqq m']\\
+            \ge& \Pr[m'=m^\ast]\\
+            \ge& \Pr[m'=m^\ast \land I \land II\land III]\\
+            =& \Pr[\Adv \textrm{ wins } \PKE^{OW-CCA} \land I \land II\land III]\\
+            &\qquad (\textrm{since in both experiemnts, inputs to } \Adv \textrm{ are identically distributed}\\
+            &\qquad\qquad \textrm{and each oracle ($G(\cdot)$ and $\Dec'_\sk(\cdot)$) behaves identically for every query})\\
+            \ge& \Pr[\Adv \textrm{ wins } \PKE^{OW-CCA}] - \Pr[\neg I] - \Pr[\neg II]- \Pr[\neg III].
+            \qquad (\textrm{by Union Bound})
+        \end{align*} That is,
+        \begin{equation}\label{eq:p2-1-1}
+            \Pr[\Adv \textrm{ wins } \PKE^{OW-CCA}] \le 
+            \Pr[\neg I] + \Pr[\neg II]+ \Pr[\neg III] +\Pr[R \textrm{ wins } \PKE^{OW-CPA} \mid m''\coloneqq m'].
+        \end{equation}
+        
+        \item Note that there are at most $q_{\Dec'}$ queries to the decryption oracle $\Dec'_\sk(\cdot)$. Hence, by $\gamma$-spreadness of $\Pi$, the probability that Event $I$ does not happen is actually negligible:
+        \begin{align}\label{eq:p2-1-2}
+            \Pr\left[\neg I \right]
+            &= \Pr\left[\bigvee_{i=1}^{q_{\Dec'}} \left( m''_i\in\Mcal_n \land m''_i\notin \{m\mid (m,\cdot)\in \Lfrak_G\} \land \Enc_\pk(m''_i; G(m''_i))=ct_i \right) \right]
+            \qquad (\textrm{recall } m''_i\triangleq \Dec_\sk(ct_i))\notag\\
+            &\le \sum_{i=1}^{q_{\Dec'}} \Pr\left[ m''_i\in\Mcal_n \land m''_i\notin \{m\mid (m,\cdot)\in \Lfrak_G\} \land \Enc_\pk(m''_i; G(m''_i))=ct_i \right]
+            \qquad (\textrm{by Union Bound})\notag\\
+            &\le \sum_{i=1}^{q_{\Dec'}} \Pr\left[ \Enc_\pk(m''_i; G(m''_i))=ct_i \biggm\vert m''_i\in\Mcal_n \land m''_i\notin \{m\mid (m,\cdot)\in \Lfrak_G\} \right]\notag\\
+            &= \sum_{i=1}^{q_{\Dec'}} \Pr_{r\Usample\Rcal_n}\left[  \Enc_\pk(m''_i; r)=ct_i  \biggm\vert m''_i\in\Mcal_n \land m''_i\notin \{m\mid (m,\cdot)\in \Lfrak_G\} \right]\notag\\
+            &\qquad\qquad\qquad (\textrm{since } m''_i\in\Mcal_n \textrm{has never been queried to } G(\cdot) \textrm{ before, } G(m''_i)\in\Rcal_n \textrm{ is uniform and fresh})\notag\\
+            &\le \sum_{i=1}^{q_{\Dec'}} 2^{-\gamma}
+            \qquad (\textrm{since } \Pi \textrm{ is } \gamma\textrm{-spread, i.e., } \Pr_{r\Usample\Rcal_n}\left[ct=\Enc_\pk(m; r)\right] \le 2^{-\gamma}\;\; \forall m\in\Mcal_n, ct\in\Ccal_n)\notag\\
+            &= q_{\Dec'} \cdot 2^{-\gamma}.
+        \end{align}
+        (Note that all probabilities above are taken over $(\pk, \sk)\sample\Gen(1^n)$.)
+        
+        \item Note that there are at most $q_G$ queries to the random oracle $G(\cdot)$. Hence, by $\delta$-correctness of $\Pi$, the probability that Event $II$ does not happen is actually negligible:
+        \begin{align}\label{eq:p2-1-3}
+            \Pr\left[\neg II \right]
+            &= \Pr_{r_1,\ldots,r_{q_G}\Usample \Rcal_n}\left[\bigvee_{i=1}^{q_G}   \Dec_\sk(\Enc_\pk(m_i; r_i))\neq m_i\right]
+            \qquad (\textrm{since $\{m_i\}$ are distinct, every $r_i$ is fresh})\notag\\
+            &\le \sum_{i=1}^{q_G} \Pr_{r_i\Usample \Rcal_n}\left[\Dec_\sk(\Enc_\pk(m_i; r_i))\neq m_i\right]
+            \qquad (\textrm{by Union Bound})\notag\\
+            &\le \sum_{i=1}^{q_G} \delta 
+            \qquad (\textrm{since } \Pi \textrm{ is }\delta\textrm{-correct, i.e., } 
+            \Pr_{r\Usample\Rcal_n}\left[\Dec_\sk(\Enc_\pk(m;r)) \neq  m\right]\le \delta\;\;\forall m\in\Mcal_n)\notag\\
+            &= q_G\cdot \delta.
+        \end{align}
+        (Note that all probabilities above are taken over $(\pk, \sk)\sample\Gen(1^n)$.)
+        
+        \item We do not proceed to bound $\Pr[\neg III]$. Instead, observe that if Event $III$ fails in the experiment $\PKE^{OW-CPA}$, which means that $\Adv$ has queried $m^\ast$ to $G(\cdot)$, then $m^\ast$ must be listed in the set $\Lfrak_G$, i.e., $m^\ast \in \{m\mid (m, \cdot)\in\Lfrak_G\}$, after $\Adv$ returns $m'$ to $R$. Therefore, if in the last step $R$ chooses to uniformly select a previously queried message from $\Lfrak_G$, then the probability that $R$ selects the correct answer $m^\ast$ is bounded below by:
+        \begin{align*}
+            \Pr[R\textrm{ wins } \PKE^{OW-CPA} \mid m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}]
+            &= \Pr_{m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}}[m''=m^\ast]\\
+            &\ge \Pr_{m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}}[m''=m^\ast \land \neg III]\\
+            &\ge \Pr[\neg III]\Pr_{m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}}[m''=m^\ast \mid  \neg  III]\\
+            &\ge \Pr[\neg III]\cdot \frac{1}{\abs*{\Lfrak_G}} \qquad (\because (m^\ast,\cdot) \textrm{ must be in } \Lfrak_G)\\
+            &\ge \Pr[\neg III]\cdot \frac{1}{q_G} \qquad (\because \abs*{\Lfrak_G}\le q_G).
+        \end{align*}
+        Hence,
+        \begin{equation}\label{eq:p2-1-4}
+            \Pr[\neg III]\le q_G\cdot \Pr[R\textrm{ wins } \PKE^{OW-CPA} \mid m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}].
+        \end{equation}
+    \end{enumerate}
+
+    Putting it all together, we have
+    \begin{align*}
+        \Pr[\Adv \textrm{ wins } \PKE^{OW-CCA}] 
+        &\le \Pr[\neg I] + \Pr[\neg II]+ \Pr[\neg III]\\
+        &\qquad\quad+\Pr[R \textrm{ wins } \PKE^{OW-CPA} \mid m''\coloneqq m']
+        \qquad\qquad\qquad (\textrm{by } \eqref{eq:p2-1-1})\\
+        &\le  q_{\Dec'} \cdot 2^{-\gamma} + q_G\cdot \delta \\
+        &\qquad\quad + q_G\cdot \Pr[R\textrm{ wins } \PKE^{OW-CPA} \mid m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}]\\
+        &\qquad\quad + \Pr[R \textrm{ wins } \PKE^{OW-CPA} \mid m''\coloneqq m']
+        \qquad\qquad\qquad (\textrm{by } \eqref{eq:p2-1-2}, \eqref{eq:p2-1-3}, \eqref{eq:p2-1-4})\\
+        &= q_{\Dec'} \cdot 2^{-\gamma} + q_G\cdot \delta + (q_G+1)\\
+        &\qquad \left(\frac{q_G}{q_G+1}\cdot \Pr[R\textrm{ wins } \PKE^{OW-CPA} \mid m'' \Usample \{m\mid (m, \cdot)\in\Lfrak_G\}]\right.\\
+        &\qquad\;\; \left.+ \frac{1}{q_G+1} \cdot \Pr[R \textrm{ wins } \PKE^{OW-CPA} \mid m''\coloneqq m']\right)\\
+        &= q_{\Dec'} \cdot 2^{-\gamma} + q_G\cdot \delta + (q_G+1)\Pr[R \textrm{ wins } \PKE^{OW-CPA}],
+        \qquad (\textrm{by construction of } R)
+    \end{align*}
+    which gives us
+    \begin{align*}
+        \Pr[R \textrm{ wins } \PKE^{OW-CPA}]
+        &\ge \frac{1}{q_G+1}\left(\Pr[\Adv \textrm{ wins } \PKE^{OW-CCA}] - q_{\Dec'} \cdot 2^{-\gamma} - q_G\cdot \delta\right)\\
+        &= \underbrace{\frac{1}{O(\poly(n))}}_{\begin{gathered}=\nonnegl(n)\end{gathered}}\underbrace{\left(\nonnegl(n) - \underbrace{O(\poly(n)) \negl(n)}_{\begin{gathered}=\negl(n)\end{gathered}}- \underbrace{O(\poly(n))\negl(n)}_{\begin{gathered}=\negl(n)\end{gathered}}\right)}_{\begin{gathered}=\nonnegl(n)\end{gathered}}
+        && (\textrm{by assumption})\\
+        &= \nonnegl(n).
+    \end{align*}
+    This means that $R$ has nonnegligible advantage in the experiment $\PKE^{OW-CPA}$.
+
+    Hence, by definition, $\Pi$ is not OW-CPA secure, contradicting our assumption.
+\end{answer}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{answer}[ii]
+    We prove this contradiction. Suppose to the contrary that the KEM scheme $\Pi_{\KEM^{\not\bot}}=\Usf^{\not\bot}[\Pi, H]=(\Gen^{\not\bot}, \Encaps, \Decaps^{\not\bot})$ is not IND-CCA-secure in the random oracle model. This means that there exist a PPT oracle adversary $\Adv$ and a nonnegligible function $\epsilon(\cdot)$ such that in the experiment $\KEM^{\mathsf{IND-CCA}}$ (cf. \autoref{fig:p2-game3}) under the random oracle model, $\Adv$ wins with advantage $\epsilon(n)$, i.e.,
+    \begin{equation}\label{eq:p2-2-3}
+        \Pr\left[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right]=\frac{1}{2}+\epsilon(n)
+    \end{equation}
+    for all $n\in\Nbb$.
+
+    Worth noting, in the experiment $\KEM^{\mathsf{IND-CCA}}$, we have expanded the definitions of $\Gen^{\not\bot}, \Encaps, \Decaps^{\not\bot}$ for convenience, and applied lazy sampling to simulate the random oracle $H$: the challenger $\Ch$ maintains a set $\Lfrak_H\subseteq (\Mcal_n\times \Ccal_n)\times \Kcal_n$ of all random oracle queries made by $\Adv$ so far, with the convention that 
+    \begin{equation}\label{eq:p2-2-1}
+        H(m, \ct)=k \iff ((m,\ct), k)       \in \Lfrak_H.
+    \end{equation}
+    for all message-ciphertext pairs $(m,\ct)\in\Mcal_n\times \Ccal_n$ that have been queried to $H(\cdot)$.
+    Also, since the challenger knows $m^\ast$, $\ct^\ast$, and its corresponding pseudorandom key $k_0$, we can store $((m^\ast, \ct^\ast), k_0)$ explicitly in the set $\Lfrak_H$, which is no longer the case in the reduction $R$ as shown later.
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{H(\cdot), \Decaps^{\not\bot}_{\sk'}(\cdot)} \\
+            (\pk, \sk)\sample\Gen(1^n);\; s\Usample \Mcal_n;\; \sk'\coloneqq (\sk, s) &  &\\
+            \makecell[c]{
+                m^\ast\Usample\Mcal_n;\; \ct^\ast\sample\Enc_\pk(m)\\
+                k_0 \Usample \Kcal_n;\; \Lfrak_H\coloneqq \{((m^\ast, \ct^\ast),k_0)\}
+            }&&\\
+            b\Usample\bit &&\\
+            k_1\Usample \Kcal_n & \XR{(\pk, \ct^\ast, k_b)}&\\
+            \makecell[l]{
+                \textbf{If } \exists k  \textrm{ s.t. } ((m_i, \ct_i), k)\in \Lfrak_H\\
+                \textbf{Then } k_i\coloneqq k\\
+                \textbf{Else } k_i\Usample \Kcal_n;\\\qquad \Lfrak_H\coloneqq \Lfrak_H\cup \{((m_i,\ct_i), k_i)\}
+            } & \makecell[c]{\XL{m_i, \ct_i}\\\\\\\\\XR{k_i}} & \textrm{Query } H(\cdot)\\ 
+            \makecell[l]{
+                m_i\coloneqq \Dec_\sk(\ct_i)\\
+                \textbf{If } m_i\neq \bot \\
+                \textbf{Then } k_i\coloneqq H(m_i, \ct_i)\\
+                \textbf{Else } k_i\coloneqq H(s, \ct_i)\\
+                \textrm{where } H(\cdot) \textrm{ is the same oracle provided by } \Ch
+            } & \makecell[c]{\XL{\ct_i\neq \ct^\ast}\\\\\\\\\\\XR{{k_i}}} & \textrm{Query } \Decaps^{\not\bot}_{\sk'}(\cdot)\\
+            \textrm{$\Adv$ wins if $b' = b$} & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\KEM^{\mathsf{IND-CCA}}$}
+        \label{fig:p2-game3}
+    }
+
+    Let $q_H=O(\poly(n))$ (resp. $q_{\Decaps^{\not\bot}}=O(\poly(n))$) be an upper bound  of the number of issues that $\Adv$ queries to the random oracle $H$ (resp. $\Decaps^{\not\bot}_{\sk'}(\cdot)$). We construct a PPT reduction $R$ that breaks the OW-CCA security of the PKE scheme $\Pi=(\Gen, \Enc, \Dec)$. The construction of $R$ is provided in the experiment $\PKE^{\mathsf{OW-CCA}}$ (cf. \autoref{fig:p2-game4}). Likewise, $R$ uses lazy sampling to simulate the random oracle $H$: it maintains a set $\Lfrak_H\subseteq (\Mcal_n\times\Ccal_n)\times  \Kcal_n$ such that 
+    \begin{equation}\label{eq:p2-2-2}
+        H(m, \ct)=k \iff ((m,\ct), k) \in \Lfrak_H \lor ((m,\ct),k)= ((m^\ast, \ct^\ast), k_0),
+    \end{equation}
+    for all message-ciphertext pairs $(m,\ct)\in\Mcal_n\times \Ccal_n$ that have been queried to $H(\cdot)$. Worth noting, $R$ samples $k_0\triangleq H(m^\ast, \ct^\ast)\Usample \Kcal_n$ without saving it to $\Lfrak_H$ because $R$ does not know $m^\ast$, which is sampled by the challenger. (Note that $R$ can indeed sample $H(m^\ast, \ct^\ast)$ as it has not been queried before and is thus fresh and uniform, albeit not knowing $m^\ast$.)
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & R^{\Dec_\sk(\cdot)} & & \Adv^{H(\cdot), \Decaps^{\not\bot}_{\sk'}(\cdot)} \\
+            (\pk, \sk)\sample\Gen(1^n) &&&&\\
+            m^\ast\Usample\Mcal_n &&&&\\
+            \ct^\ast\sample \Enc_\pk(m^\ast) & \XR{(\pk, ct^\ast)} & \Lfrak_H \coloneqq \emptyset & &\\
+            && s\Usample \Mcal_n;\; \sk'\coloneqq (\sk, s) &&\\
+            && k_0\triangleq H(m^\ast, \ct^\ast) \Usample \Kcal_n &&\\
+            && b\Usample\bit &&\\
+            && k_1\Usample \Kcal_n & \XR{(\pk, \ct^\ast, k_b)} & \\
+            &&\makecell[l]{
+                \textbf{If } \exists k  \textrm{ s.t. } ((m_i, \ct_i), k)\in \Lfrak_H\\
+                \textbf{Then } k_i\coloneqq k\\
+                \textbf{Else } k_i\Usample \Kcal_n;\;\\\qquad \Lfrak_H\coloneqq \Lfrak_H\cup \{((m_i,\ct_i), k_i)\}
+            } & \makecell[c]{\XL{m_i, \ct_i}\\\\\\\\\XR{k_i}} & \textrm{Query } H(\cdot)\\ 
+            & \makecell[c]{
+                \XLR{\textrm{Query } \Dec_\sk(\ct_i \neq \ct^\ast)}
+                \\\\\\\\\\\\
+            }
+            &\makecell[l]{
+                m_i\coloneqq \Dec_\sk(\ct_i)\\
+                \textbf{If } m_i\neq \bot \\
+                \textbf{Then } k_i\coloneqq H(m_i, \ct_i)\\
+                \textbf{Else } k_i\coloneqq H(s, \ct_i)\\
+                \textrm{where } H(\cdot) \textrm{ is the oracle provided by } R\\
+                \quad \Dec_\sk(\cdot) \textrm{ is the oracle provided by } \Ch
+            } & \makecell[c]{\XL{\ct_i\neq \ct^\ast}\\\\\\\\\\\\\XR{{k_i}}} & \textrm{Query } \Decaps^{\not\bot}_{\sk'}(\cdot)\\
+            \textrm{$R$ wins if $m' = m^\ast$} & \XL{m'} & m'\Usample \{m\mid ((m,\cdot),\cdot)\in \Lfrak_H\} & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{\mathsf{OW-CCA}}$}
+        \label{fig:p2-game4}
+    }
+    Clearly $R$ runs in PPT since $\Adv$ is a PPT algorithm and the size of $\Lfrak_H$ is at most the number of queries to $H(\cdot)$, which is bounded above by $q_H+q_{\Decaps^{\not\bot}}=O(\poly(n))$.
+
+    WLOG, we assume $\Adv$ always queries distinct $(m_i,k_i)$ (resp. $\ct_i$) to $H(\cdot)$ (resp. $\Decaps^{\not\bot}_{\sk'}(\cdot)$) as we may otherwise construct another $\Adv'$ that internally records the answers and answers itself on repeated queries.
+    
+    Define $\textrm{QUERY}^\PKE$ and $\textrm{QUERY}^\KEM$  as the events on which $\Adv$ has ever queried $(m^\ast, \ct^\ast)$ to the oracle $H(\cdot)$ in the experiments $\PKE^{\mathsf{OW-CCA}}$ and $\KEM^{\mathsf{IND-CCA}}$, respectively.
+    It's straightforward to see that in the experiment $\PKE^{\mathsf{OW-CCA}}$, before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$, both oracles simulated by $R$, namely $H(\cdot)$ and  $\Decaps^{\not\bot}_{\sk'}(\cdot)$, have been behaving exactly the same as the real oracles in \autoref{fig:p2-game3} (i.e., output values distributed identically to those from the real ones). We argue as follows:
+    \begin{itemize}
+        \item Comparing \eqref{eq:p2-2-1} and \eqref{eq:p2-2-2}, we may observe that the only input that can trigger the behavioral discrepancy between oracles $H(\cdot)$ in \autoref{fig:p2-game3} (real) and in \autoref{fig:p2-game4} (simulated) is $(m^\ast, \ct^\ast)$: on $(m_i,\ct_i)=(m^\ast, \ct^\ast)$, the simulated one samples a fresh $k_i\Usample\Kcal_n$ whilst the real one returns $k_0$. Also, the oracle $\Decaps^{\not\bot}_{\sk'}(\cdot)$ will never make a query $(m^\ast, \ct^\ast)$ to $H(\cdot)$ because we know the query $\ct_i\neq \ct^\ast$.         
+        Therefore, before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$, $R$ has been perfectly simulating $H(\cdot)$.
+        
+        \item In the oracle $\Decaps^{\not\bot}_{\sk'}(\cdot)$ simulated by $R$, since $\ct_i\neq \ct^\ast$, the decryption oracle $\Dec_\sk(\cdot)$ simulated by the challenger always outputs the same values as the real decryption function $\Dec_\sk$ in \autoref{fig:p2-game3} (as $R$ is only not allowed to query $\ct^\ast$). Combining with the previous observation that $H(\cdot)$ has been perfectly simulated, we see that $R$ has also been perfectly simulating $\Decaps^{\not\bot}_{\sk'}(\cdot)$. That is, the simulated $\Decaps^{\not\bot}_{\sk'}(\cdot)$ has been behaving the same as the real one in \autoref{fig:p2-game3}, before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$.
+    \end{itemize}
+    We conclude that all inputs to $\Adv$ and outputs from the oracles $H(\cdot)$ and  $\Decaps^{\not\bot}_{\sk'}(\cdot)$ have been distributed identically to those in  $\KEM^{\mathsf{IND-CCA}}$ \textcolor{red}{before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$}. Hence we have
+    \begin{equation}\label{eq:p2-2-3}
+        \Pr\left[\textrm{QUERY}^\PKE \right]= \Pr\left[\textrm{QUERY}^\KEM\right].
+    \end{equation}
+
+    Now observe in the experiment $\KEM^{\mathsf{IND-CCA}}$ that since $k_0$ and $k_1$ are both uniformly sampled, $k_b$ is in fact independent of $b\in\bit$. 
+    Moreover, if $\neg \textrm{QUERY}^\KEM$ (i.e., $\Adv$ has never queried $(m^\ast, \ct^\ast)$), then all outputs of $H(\cdot)$ must be independent of $k_0$. Also, as $\Decaps^{\not\bot}_{\sk'}(\cdot)$ never queries $(\cdot, \ct^\ast)$ to $H(\cdot)$, all outputs of $\Decaps^{\not\bot}_{\sk'}(\cdot)$ must also be independent of $k_0$. Independence from $k_1$ is immediate as well. These together imply that $k_b$, together with all the other random variables  in the \textit{view} of $\Adv$ (e.g., $\pk, \ct^\ast$, outputs of $H(\cdot)$, outputs of $\Decaps^{\not\bot}_{\sk'}(\cdot)$, etc.), is  independent of $k_0$ and $k_1$. 
+    Hence, the view of $\Adv$ and thus its output $b'$ are independent of $b\in\bit$. As $b$ is uniform, we see that $\Adv$ has exactly $\frac{1}{2}$ probability to correctly guess $b$, that is,
+    \begin{equation}\label{eq:p2-2-4}
+        \Pr\left[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \biggm\vert \neg \textrm{QUERY}^\KEM \right]
+        = \Pr_{b\Usample\bit}\left[\Adv^{H(\cdot), \Decaps^{\not\bot}_{\sk'}(\cdot)}(\pk, \ct^\ast, k_b)=b \biggm\vert \neg \textrm{QUERY}^\KEM \right]
+        =\frac{1}{2}.
+    \end{equation} 
+    From this we reason that
+    \begin{align*}
+        \frac{1}{2}+\epsilon(n)
+        &=  \Pr\left[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right] && (\textrm{by \eqref{eq:p2-2-3}})\\
+        &= \Pr\left[\textrm{QUERY}^\KEM\right]\Pr\left[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}}  \biggm\vert  \textrm{QUERY}^\KEM \right]\\
+        &\qquad\qquad\qquad +\Pr\left[\neg \textrm{QUERY}^\KEM\right] \Pr\left[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}}  \biggm\vert \neg \textrm{QUERY}^\KEM \right]\\
+        &\le \Pr\left[\textrm{QUERY}^\KEM\right]\cdot 1 + \left(1-  \Pr\left[\textrm{QUERY}^\KEM\right]\right) \cdot \frac{1}{2} 
+        && (\textrm{by \eqref{eq:p2-2-4}})\\
+        &= \frac{1}{2}+\frac{1}{2}\Pr\left[\textrm{QUERY}^\KEM\right]\\
+        &= \frac{1}{2}+\frac{1}{2}\Pr\left[\textrm{QUERY}^\PKE\right],
+        && (\textrm{by \eqref{eq:p2-2-3}})
+    \end{align*}
+    which gives us
+    \begin{equation}\label{eq:p2-2-5}
+        \Pr\left[\textrm{QUERY}^\PKE\right] \ge 2\epsilon(n).
+    \end{equation}
+
+    Lastly, observe in the experiment $\PKE^{\mathsf{OW-CCA}}$ that given $\textrm{QUERY}^\PKE$ (i.e., $\Adv$ has queried $(m^\ast, \ct^\ast)$), then, as $m^\ast\in\{m\mid ((m,\cdot),\cdot)\in\Lfrak_H \}$, the probability that $R$ selects a correct $m'=m^\ast$ is at least 
+    \begin{equation}\label{eq:p2-2-6}
+        \Pr_{m'\Usample \{m\mid ((m,\cdot),\cdot)\in\Lfrak_H \}}\left[m'=m^\ast \Bigm\vert \textrm{QUERY}^\PKE\right]
+        \ge \frac{1}{\abs*{\Lfrak_H}}\ge \frac{1}{q_H+q_{\Decaps^{\not\bot}}}=\frac{1}{O(\poly(n))}=\nonnegl(n).
+    \end{equation}
+    (Recall that the size of $\Lfrak_H$ is at most the number of queries to $H(\cdot)$, which is bounded above by $q_H+q_{\Decaps^{\not\bot}}$.) Hence, the win rate of $R$ in $\PKE^{\mathsf{OW-CCA}}$ is bounded below by
+    \begin{align*}
+        \Pr[R \textrm{ wins } \PKE^{\mathsf{OW-CCA}}]
+        &= \Pr[ m'=m^\ast ]\\
+        &\ge \Pr\left[m'=m^\ast \land \textrm{QUERY}^\PKE\right]\\
+        &= \Pr\left[\textrm{QUERY}^\PKE\right]\Pr\left[m'=m^\ast \Bigm\vert \textrm{QUERY}^\PKE\right]\\
+        &\ge (2\epsilon(n)) \cdot \nonnegl(n)
+        && (\textrm{by \eqref{eq:p2-2-5} and \eqref{eq:p2-2-6}})\\
+        &= 2\nonnegl(n)\cdot \nonnegl(n)
+        && (\textrm{by assumption})\\
+        &= \nonnegl(n).
+    \end{align*}
+    This means that $R$ has nonnegligible advantage in the experiment $\PKE^{\mathsf{OW-CCA}}$.
+
+    Hence, by definition, the PKE scheme $\Pi= (\Gen, \Enc, \Dec)$ is not OW-CCA secure, contradicting our assumption.
+\end{answer}

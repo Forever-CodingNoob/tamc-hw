@@ -1,0 +1,476 @@
+\begin{problem}[From KEM to PKE]\label{p4}
+    \leavevmode\par
+    In class, we've shown how to achieve an IND-CCA secure KEM via FO transformation. In this problem, we show that we can upgrade it to an IND-CCA secure PKE with the help of an IND-CCA secure SKE scheme.
+
+    We show how to obtain an IND-CCA secure PKE scheme $\PKE$ via:
+    \begin{itemize}
+        \item An IND-CCA secure KEM scheme $\KEM = (\Gen_\KEM, \Encaps, \Decaps)$, where the output key $k\in\bit^{\ell(n)}$ for security parameter $1^n$.
+        \item An IND-CCA secure SKE scheme $\SKE = (\Gen_\SKE, \Enc_\SKE, \Dec_\SKE)$, where $\Gen_\SKE(1^n)$ uniformly samples $k\sample \bit^{\ell(n)}$. The message space on security parameter $1^n$ is defined as $\Mcal_n$.
+    \end{itemize}
+    The combined PKE scheme $\PKE = (\Gen_\PKE, \Enc_\PKE, \Dec_\PKE)$ with message space also $\Mcal_n$ is defined as follows:
+    \begin{simplebox}
+        \small
+        \noindent
+        \begin{minipage}[t]{0.3\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Gen_\PKE(1^n)$}
+                \Indent
+                \State \Return $\Gen_\KEM(1^n)$
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.32\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Enc_\PKE(\pk, m\in\Mcal_n)$}
+                \Indent
+                    \State $(\ct_\KEM, k)\sample \Encaps(\pk)$
+                    \State $\ct_\SKE \sample \Enc_\SKE(k, m)$
+                    \State \Return $(\ct_\KEM, \ct_\SKE)$ 
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.36\textwidth}
+            \begin{algorithmic}[1]
+                \Statex \textbf{$\Dec_\PKE(\sk, \ct_\PKE^\ast=(\ct_\KEM^\ast, \ct_\SKE^\ast))$}
+                \Indent
+                    \State $k^\ast \coloneqq \Decaps_\sk(\ct_\KEM^\ast)$
+                    \If{$k^\ast = \bot$}
+                        \State \Return $\bot$
+                    \Else 
+                        \State \Return $\Dec_\SKE(k^\ast, \ct_\SKE^\ast)$
+                    \EndIf
+                \EndIndent
+            \end{algorithmic}
+        \end{minipage}
+    \end{simplebox}
+    Show that the previous construction is indeed an IND-CCA secure PKE scheme.\\
+    (\textbf{Hint.} In order to play with the PKE adversary, you will need to simulate the decryption oracle. It is natural to see that you will need the decryption oracle from the SKE scheme. How can you bridge the two interface? To achieve this, you will have to somehow make use of the IND-CCA property of the KEM scheme.)
+\end{problem}
+
+
+
+\begin{answer}
+    We prove correctness first, followed by a proof of IND-CCA security of the scheme $\PKE$.   
+
+    \proofcase{Proof of Correctness}
+    Since both $\KEM$ and $\SKE$ are correct (w.r.t. their own correctness definitions), we know that there exist negligible functions $\mu(\cdot), \epsilon(\cdot)$ such that for every $n\in\Nbb$ and every message $m\in\Mcal_n$,
+    \begin{equation}\label{eq:p4-1}
+        \left\{
+        \begin{aligned} 
+            &\Pr_{(\pk, \sk)\sample \Gen_\KEM(1^n)}\left[(\ct, k)\sample \Encaps(\pk): \Decaps_\sk(\ct)=k \right] && \ge 1-\mu(n)\\
+            &\Pr_{k\sample\Gen_\SKE(1^n)}\left[\Dec_\SKE(k, \Enc_\SKE(k, m))=m \right]
+            = \Pr_{k\Usample\bit^{\ell(n)}}\left[\Dec_\SKE(k, \Enc_\SKE(k, m))=m \right]&& \ge 1-\epsilon(n)
+        \end{aligned}
+        \right.
+    \end{equation}
+
+    Therefore, for every $n\in\Nbb$ and every message $m\in\Mcal_n$, we have
+    \begin{align*}
+        &\Pr_{(\pk, \sk)\sample \Gen_\PKE(1^n)}\left[\Dec_\PKE(\pk, \Enc_\PKE(\pk, m))=m \right]\\
+        =&  \Pr_{(\pk, \sk)\sample \Gen_\KEM(1^n)}\left[\begin{aligned}
+            (\ct_\KEM, k)&\sample\Encaps(\pk)\\
+            k^\ast &\triangleq  \Decaps_\sk(\ct_\KEM)
+        \end{aligned}: \left.\begin{cases}
+            \bot &\textrm{if } k^\ast=\bot\\
+            \Dec_\SKE\left(k^\ast, \Enc_\SKE(k, m)\right) &\textrm{otherwise}
+        \end{cases}\right\} = m\right]\\
+        \ge& \Pr_{(\pk, \sk)\sample \Gen_\KEM(1^n)}\left[ (\ct_\KEM, k)\sample\Encaps(\pk):  \Decaps_\sk(\ct_\KEM)=k \land \Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)=m \right]
+        \;\; (\textrm{by implication})\\
+        \ge& 1-\left(1-\Pr_{(\pk, \sk)\sample \Gen_\KEM(1^n)}\left[ (\ct_\KEM, k)\sample\Encaps(\pk):\Decaps_\sk(\ct_\KEM)= k\right]\right)\\
+        &\quad - \biggl(1-\underbrace{\Pr_{(\pk, \sk)\sample \Gen_\KEM(1^n)}\left[ (\cdot, k)\sample\Encaps(\pk): \Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right]}_{\begin{gathered}
+            \ge \Pr_{k\Usample\bit^{\ell(n)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right]-\negl(n)
+            \;\; (\textrm{by \autoref{claim:p4-1}})
+        \end{gathered}}\biggr)
+        \qquad (\textrm{by Union Bound})\\
+        \ge& 1-(1-(1-\mu(n))) -(1- ((1-\epsilon(n))-\negl(n))) 
+        \qquad (\textrm{by \eqref{eq:p4-1}})\\
+        =& 1-\mu(n) -\epsilon(n) -\negl(n) \\
+        =& 1-\negl(n)-\negl(n) -\negl(n)= 1-\negl(n),
+    \end{align*}
+    which implies that $\PKE=(\Gen_\PKE, \Enc_\PKE, \Dec_\PKE)$ is a correct PKE scheme.
+
+    It suffices to show \autoref{claim:p4-1} indeed holds, which implies that for all $n\in\Nbb$ and every message $m\in\Mcal_n$,
+    \[
+        \Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\cdot, k)\sample\Encaps(\pk)}}\left[ \Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right]\ge \Pr_{k\Usample\bit^{\ell(n)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right]-\negl(n),
+    \]
+    as used in the reasoning above.
+    
+    \begin{claim}\label{claim:p4-1}
+        There exists a negligible function $\nu(\cdot)$ such that for all $n\in\Nbb$ and every message $m\in\Mcal_n$,
+        \[
+            \abs*{\Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\cdot, k)\sample\Encaps(\pk)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right] - \Pr_{k\Usample\bit^{\ell(n)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right]}
+            \le \nu(n).
+        \]
+    \end{claim}
+    \begin{proof}
+        For convenience, denote 
+        \[
+            \Delta_n \triangleq \Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\cdot, k)\sample\Encaps(\pk)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right] - \Pr_{k\Usample\bit^{\ell(n)}}\left[\Dec_\SKE\left(k, \Enc_\SKE(k, m)\right)= m \right].
+        \]
+        Suppose to the contrary that the claim does not hold, meaning that there exist $c\gt 0$ and an ensemble $\ensemble{m^\ast_n}{n}$ of messages, where $m^\ast_n\in\Mcal_n$ for each $n\in\Nbb$, such that
+        \begin{equation}\label{eq:p4-2}
+            \abs*{\Delta_n} \ge \frac{1}{n^c} \quad \textrm{for infinitely many $n\in\Nbb$ (or more precisely, for all $n\in S$ where $S\subseteq \Nbb$ is infinite)}.
+        \end{equation}
+        In fact, it'd be better to know on which $n\in\Nbb$ we have $\abs*{\Delta_n} \ge \frac{1}{n^c}$, so we explicitly define (possibly infinite) subsets of $\Nbb$:
+        \[
+            S\triangleq \left\{n\in\Nbb \biggm\vert \abs*{\Delta_n} \ge \frac{1}{n^c} \right\},
+            \quad S_+\triangleq \left\{n\in S \mid \Delta_n \gt 0 \right\},
+            \quad S_-\triangleq \left\{n\in S \mid \Delta_n \lt 0 \right\}.
+        \]
+        Since $S= S_+ \cup S_-$ and $S$ is infinite by \eqref{eq:p4-2}, either $S_+$ or $S_-$ is infinite.
+        \end{proof}\begin{proof}[cont'd]
+
+        We can then construct PPT oracle adversaries (a reduction) $\Adv, \Adv'$ such that either of the two breaks the IND-CCA security of $\KEM= (\Gen_\KEM, \Encaps, \Decaps)$ as follows:
+        \begin{simplebox}
+            \small
+            \noindent
+            \begin{minipage}[t]{0.5\textwidth}
+                \begin{algorithmic}[1]
+                    \Statex \textbf{$\Adv^{\Decaps_\sk(\cdot)}(\pk, \ct, k_b)$}
+                    \Indent
+                    \If{$ \Dec_\SKE(k_b, \Enc_\SKE(k_b, m^\ast_n)) =  m^\ast_n$}
+                        \State \Return $b'\coloneqq 0$
+                    \Else
+                        \State \Return $b'\coloneqq 1$
+                    \EndIf
+                    \EndIndent
+                \end{algorithmic}
+            \end{minipage}
+            \hfill
+            \begin{minipage}[t]{0.48\textwidth}
+                \begin{algorithmic}[1]
+                    \Statex \textbf{${\Adv'}^{\Decaps_\sk(\cdot)}(\pk, \ct, k_b)$}
+                    \Indent
+                    \State\Return $1- \Adv^{\Decaps_\sk(\cdot)}(\pk, \ct, k_b)$
+                    \EndIndent
+                \end{algorithmic}
+            \end{minipage}
+        \end{simplebox}
+
+        Clearly $\Adv$ runs in PPT. For all $n\in S_+\subseteq\Nbb$, in the IND-CCA experiment $\KEM^{\mathsf{IND-CCA}}$ of $\KEM$, the probability that $\Adv$ wins is:
+        \begin{align*}
+            &\Pr[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}}]\\
+            =& \Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\ct, k_0)\sample\Encaps(\pk)\\k_1\Usample\bit^{\ell(n)}\\b\Usample\bit}}\left[ \Adv^{\Decaps_\sk(\cdot)}(\pk, \ct, k_b) = b \right]\\
+            =& \frac{1}{2}\Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\ct, k_0)\sample\Encaps(\pk)}}\left[ \Adv^{\Decaps_\sk(\cdot)}(\pk, \ct, k_0) = 0 \right]
+            + \frac{1}{2}\Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\ct, k_0)\sample\Encaps(\pk)\\k_1\Usample\bit^{\ell(n)}}}\left[ \Adv^{\Decaps_\sk(\cdot)}(\pk, \ct, k_1) = 1 \right]\\
+            =&  \frac{1}{2}\Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\cdot, k_0)\sample\Encaps(\pk)}}\left[ \Dec_\SKE(k_0, \Enc_\SKE(k_0, m^\ast_n)) =  m^\ast_n \right]
+            + \frac{1}{2}\Pr_{\substack{k_1\Usample\bit^{\ell(n)}}}\left[ \Dec_\SKE(k_1, \Enc_\SKE(k_1, m^\ast_n)) \neq   m^\ast_n \right]\\
+            =& \frac{1}{2}+\frac{1}{2}\left(\Pr_{\substack{(\pk, \sk)\sample \Gen_\KEM(1^n)\\(\cdot, k_0)\sample\Encaps(\pk)}}\left[ \Dec_\SKE(k_0, \Enc_\SKE(k_0, m^\ast_n)) =  m^\ast_n \right] - \Pr_{k_1\Usample\bit^{\ell(n)}}\left[ \Dec_\SKE(k_1, \Enc_\SKE(k_1, m^\ast_n)) =   m^\ast_n \right]\right)\\
+            =& \frac{1}{2}+\frac{1}{2}\Delta_n\\
+            =& \frac{1}{2}+\frac{1}{2}\abs*{\Delta_n} \qquad (\because n\in S_+)\\
+            \ge&  \frac{1}{2}+\frac{1}{2n^c}. \qquad (\textrm{by \eqref{eq:p4-2}})
+        \end{align*}
+        Notice that $\Adv'$ is basically the complement of $\Adv$, so for all $n\in S_- = S\setminus S_+\subseteq\Nbb$, in the IND-CCA experiment $\KEM^{\mathsf{IND-CCA}}$ of $\KEM$, the probability that $\Adv'$ wins is:
+        \begin{align*}
+            \Pr[\Adv' \textrm{ wins } \KEM^{\mathsf{IND-CCA}}]
+            = 1- \Pr[\Adv \textrm{ wins } \KEM^{\mathsf{IND-CCA}}]
+            &= 1-\left( \frac{1}{2}+\frac{1}{2}\Delta_n\right) \qquad (\textrm{by previous calculation})\\
+            &= \frac{1}{2}-\frac{1}{2}\Delta_n\\
+            &= \frac{1}{2}+\frac{1}{2}\abs*{\Delta_n} \qquad (\because n\in S_-)\\
+            &\ge  \frac{1}{2}+\frac{1}{2n^c}. \qquad (\textrm{by \eqref{eq:p4-2}})
+        \end{align*}
+
+        Recall that either $S_+$ or $S_-$ is infinite. If $S_+$ is infinite, then from the reasoning above we know that for infinitely many $n\in\Nbb$ (namely, for all $n\in S_+$), $\Adv$ wins $\KEM^{\mathsf{IND-CCA}}$ with advantage at least $\frac{1}{2n^c}$, which is nonnegligible. If $S_-$ is infinite, then from the reasoning above we know that for infinitely many $n\in\Nbb$ (namely, for all $n\in S_-$), $\Adv'$ wins $\KEM^{\mathsf{IND-CCA}}$ with advantage at least $\frac{1}{2n^c}$, which is nonnegligible. Hence, either $\Adv$ or $\Adv'$ breaks the IND-CCA  security of $\KEM$, which is a contradiction.
+    \end{proof}
+
+    Hence the correctness of $\PKE$ is proved.
+
+    \proofcase{Proof of IND-CCA security}
+    We prove this by contradiction.
+    Suppose to the contrary that $\PKE = (\Gen_\PKE, \Enc_\PKE, \Dec_\PKE)$ is not IND-CCA-secure.
+    Then there exist a PPT oracle adversary $\Adv$ and a nonnegligible function $\epsilon(\cdot)$ such that in the IND-CCA experiment $\PKE^{\mathsf{IND-CCA}}$ of $\PKE$ (cf. \autoref{fig:p4-game1}), for all $n\in\Nbb$,  $\Adv$ wins with advantage $\epsilon(n)$, i.e.,
+    \begin{equation}\label{eq:p4-3}
+        \Pr\left[\Adv \textrm{ wins } \PKE^{\mathsf{IND-CCA}} \right]=\frac{1}{2}+\epsilon(n).
+    \end{equation}
+    Note that, in the experiment $\PKE^{\mathsf{IND-CCA}}$, we have expanded the definitions of $\PKE = (\Gen_\PKE, \Enc_\PKE, \Dec_\PKE)$ for convenience.
+    {\small
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{\Dec_\PKE(\sk, \cdot)} \\
+            (\pk, \sk)\sample\Gen_\KEM(1^n) &&\\
+            & \XR{\pk} &\\
+            \vcenter{\hbox{%
+                \small
+                \begin{minipage}{0.42\textwidth}
+                \begin{simplebox}
+                $\underline{\Dec_\PKE(\sk,\ct_\PKE)}$
+                \begin{algorithmic}[1]
+                \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                \State $k\coloneqq \Decaps_\sk(\ct_\KEM)$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{{\ct_\PKE}_i}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+            b\Usample \bit & \XL{(m_0, m_1)} &\\
+            (\ct_\KEM^\ast, k^\ast)\sample \Encaps(\pk) &&\\
+            \ct_\SKE^\ast \sample \Enc_\SKE(k^\ast, m_b) &&\\
+            \ct_\PKE^\ast\coloneqq (\ct_\KEM^\ast, \ct_\SKE^\ast) & \XR{\ct_\PKE^\ast} & \\ 
+            \vcenter{\hbox{%
+                \small
+                \begin{minipage}{0.42\textwidth}
+                \begin{simplebox}
+                $\underline{\Dec_\PKE(\sk,\ct_\PKE\neq \ct_\PKE^\ast)}$
+                \begin{algorithmic}[1]
+                \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                \State $k\coloneqq \Decaps_\sk(\ct_\KEM)$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{{\ct_\PKE}_i\neq \ct_\PKE^\ast}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+            \textrm{$\Adv$ wins if $b' = b$} & \XL{b'} & \\
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\PKE^{\mathsf{IND-CCA}}$}
+        \label{fig:p4-game1}
+    }
+
+    Now consider a slightly different game $\Game_1$ (cf. \autoref{fig:p4-game2}), where the SKE key $k^\ast\in\bit^{\ell(n)}$ is uniformly sampled instead of generated by $\Encaps$. 
+    We claim that thanks to the IND-CCA security of $\KEM$, the difference between win rates of $\Adv$ in experiment $\PKE^{\mathsf{IND-CCA}}$ and game $\Game_1$ is guaranteed to be negligible.
+
+    \begin{claim}\label{claim:p4-2}
+        There exists a negligible function $\nu(\cdot)$ such that for all $n\in\Nbb$,
+        \[
+            \abs*{\Pr\left[\Adv \textrm{ wins } \PKE^{\mathsf{IND-CCA}} \right] - \Pr\left[\Adv \textrm{ wins } \Game_1 \right]} \le \nu(n).
+        \]
+    \end{claim}
+    
+    {\footnotesize
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{\Dec_\PKE(\sk, \cdot)} \\
+            (\pk, \sk)\sample\Gen_\KEM(1^n) & & \\
+            (\ct_\KEM^\ast, \textcolor{red}{\cdot})\sample \Encaps(\pk);\;\textcolor{red}{k^\ast\Usample \bit^{\ell(n)}} & \XR{\pk} &\\
+            \vcenter{\hbox{%
+                \footnotesize
+                \begin{minipage}{0.44\textwidth}
+                \begin{simplebox}
+                $\underline{\Dec_\PKE(\sk,\ct_\PKE)}$
+                \begin{algorithmic}[1]
+                \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                \State $k\coloneqq \begin{cases}
+                    \textcolor{red}{k^\ast}&\textcolor{red}{\textrm{if } \ct_\KEM=\ct_\KEM^\ast}\\
+                    \Decaps_\sk(\ct_\KEM) &\textrm{if } \ct_\KEM\neq \ct_\KEM^\ast
+                \end{cases}$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{{\ct_\PKE}_i}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+            b\Usample \bit & \XL{(m_0, m_1)} &\\
+            \ct_\SKE^\ast \sample \Enc_\SKE(k^\ast, m_b) &&\\
+            \ct_\PKE^\ast\coloneqq (\ct_\KEM^\ast, \ct_\SKE^\ast) & \XR{\ct_\PKE^\ast} & \\ 
+            \vcenter{\hbox{%
+                \footnotesize
+                \begin{minipage}{0.44\textwidth}
+                \begin{simplebox}
+                $\underline{\Dec_\PKE(\sk,\ct_\PKE\neq \ct_\PKE^\ast)}$
+                \begin{algorithmic}[1]
+                \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                \State $k\coloneqq \begin{cases}
+                    \textcolor{red}{k^\ast}&\textcolor{red}{\textrm{if } \ct_\KEM=\ct_\KEM^\ast}\\
+                    \Decaps_\sk(\ct_\KEM) &\textrm{if } \ct_\KEM\neq \ct_\KEM^\ast
+                \end{cases}$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{{\ct_\PKE}_i\neq \ct_\PKE^\ast}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+            \textrm{$\Adv$ wins if $b' = b$} & \XL{b'} & \\
+            \end{array}
+        \]
+        \vspace{-0.6cm}
+        \captionof{figure}{Game $\Game_1$}
+        \label{fig:p4-game2}
+    }
+
+    
+    \begin{proof}[Proof of \autoref{claim:p4-2}]
+        Consider the following PPT oracle adversary $R$ attacking the IND-CCA security of $\KEM$ in experiment $\KEM^{\mathsf{IND-CCA}}$:
+        {\footnotesize
+        \[
+                \begin{array}{@{} c c c c c @{}}
+                \Ch & & R^{\Decaps_\sk(\cdot)} & & \Adv^{\Dec_\PKE(\sk, \cdot)} \\
+                (\pk, \sk)\sample\Gen_\KEM(1^n) &&&&\\
+                (\ct_\KEM^\ast, k_0)\sample \Encaps(\pk) &&&&\\
+                k_1\Usample \bit^{\ell(n)}&&&&\\
+                d\Usample\bit;\; k^\ast\coloneqq k_d  & \XR{(\pk, \ct_\KEM^\ast, k^\ast)} & & \XR{(\pk, \ct_\KEM^\ast, k^\ast)} &\\
+                & \makecell[c]{\XL{\ct_\KEM\neq \ct_\KEM^\ast}\\\XR{\Decaps_\sk(\ct_\KEM)}} &\vcenter{\hbox{%
+                    \footnotesize
+                    \begin{minipage}{0.44\textwidth}
+                    \begin{simplebox}
+                    $\underline{\Dec_\PKE(\sk,\ct_\PKE)}$
+                    \begin{algorithmic}[1]
+                    \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                    \State $k\coloneqq \begin{cases}
+                        k^\ast &\textrm{if }\ct_\KEM=\ct_\KEM^\ast\\
+                        \Decaps_\sk(\ct_\KEM) &\textrm{if } \ct_\KEM\neq \ct_\KEM^\ast
+                    \end{cases}$
+                    \State \Return $\begin{cases}
+                        \bot & \textrm{if } k = \bot\\
+                        \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                    \end{cases}$
+                    \end{algorithmic}
+                    \end{simplebox}
+                    \end{minipage}%
+                }} & \makecell[c]{\XL{{\ct_\PKE}_i}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+                && b\Usample \bit & \XL{(m_0, m_1)} &\\
+                && \ct_\SKE^\ast \sample \Enc_\SKE(k^\ast, m_b) &&\\
+                && \ct_\PKE^\ast\coloneqq (\ct_\KEM^\ast, \ct_\SKE^\ast) & \XR{\ct_\PKE^\ast} & \\ 
+                & \makecell[c]{\XL{\ct_\KEM\neq \ct_\KEM^\ast}\\\XR{\Decaps_\sk(\ct_\KEM)}} &\vcenter{\hbox{%
+                    \footnotesize
+                    \begin{minipage}{0.44\textwidth}
+                    \begin{simplebox}
+                    $\underline{\Dec_\PKE(\sk,\ct_\PKE\neq \ct_\PKE^\ast)}$
+                    \begin{algorithmic}[1]
+                    \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+                    \State $k\coloneqq \begin{cases}
+                        k^\ast&\textrm{if } \ct_\KEM=\ct_\KEM^\ast\\
+                        \Decaps_\sk(\ct_\KEM) &\textrm{if } \ct_\KEM\neq \ct_\KEM^\ast
+                    \end{cases}$
+                    \State \Return $\begin{cases}
+                        \bot & \textrm{if } k = \bot\\
+                        \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                    \end{cases}$
+                    \end{algorithmic}
+                    \end{simplebox}
+                    \end{minipage}%
+                }} & \makecell[c]{\XL{{\ct_\PKE}_i\neq \ct_\PKE^\ast}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+                \textrm{$R$ wins if $d' = d$} & \XL{d'} & d'\coloneqq [b'=b] & \XL{b'}& \\
+                \end{array}
+            \]
+            \vspace{-0.6cm}
+            \captionof{figure}{Experiment $\KEM^{\mathsf{IND-CCA}}$}
+            \label{fig:p4-game3}
+        }
+        \vspace{-1cm}
+        \end{proof}\begin{proof}[cont'd]
+        Clearly $\Adv$ runs in PPT as $\Adv$ also runs in PPT. 
+        
+        Note that in the decryption oracle $\Dec_\PKE(\sk, \cdot)$ simulated by $R$, it is not allowed to query $\ct_\KEM^\ast$ to the decapsulation oracle $\Decaps_\sk(\cdot)$ provided by the challenger, so $R$ instead answers $k^\ast$ itself when $ct_\KEM = ct_\KEM^\ast$. We discuss the two cases of $d\in\bit$:
+        \begin{itemize}
+            \item If $d=0$, then key $k^\ast$ is generated by $\Encaps$. Observe that conditioning on $ \Decaps_\sk( \ct_\KEM^\ast)=k^\ast$ (i.e. the key $k^\ast$ is correctly decapsulated), with the use of the abovementioned sidestep, the decryption oracle $\Dec_\PKE(\sk, \cdot)$ simulated by $R$ is in fact equivalent to the one in $\PKE^{\mathsf{IND-CCA}}$. 
+            Thus, the \textit{view} of $\Adv$ in $\KEM^{\mathsf{IND-CCA}}$ is distributed identically to that of $\Adv$ in the original experiment $\PKE^{\mathsf{IND-CCA}}$.
+            \item If $d=1$, then key $k^\ast$ is uniform and independent. Observe that the decryption oracle $\Dec_\PKE(\sk, \cdot)$ simulated by $R$ is in fact equivalent to the one in  $\Game_1$. Thus, the \textit{view} of $\Adv$ in $\KEM^{\mathsf{IND-CCA}}$ is distributed identically to that of $\Adv$ in the modified game $\Game_1$.
+        \end{itemize}
+        Since $\KEM$ is an IND-CCA-secure KEM and $R$ is a PPT adversary, there exists a negligible function $\nu_1(\cdot)$ such that for all $n\in\Nbb$, $ \Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right] \le \frac{1}{2}+\nu_1(n)$, so we have
+        \begin{align*}
+            &\frac{1}{2}+\nu_1(n)\\
+            =&\Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right]\\
+            =&\frac{1}{2}\Pr\left[b'\neq b\mid d=0  \right]+\frac{1}{2}\Pr\left[b'= b  \mid d=1 \right]\\
+            \ge&\frac{1}{2}\Pr\left[b'\neq b\land \Decaps_\sk( \ct_\KEM^\ast)=k^\ast \mid d=0  \right]+\frac{1}{2}\Pr\left[b'= b  \mid d=1 \right]\\
+            =& \frac{1}{2}\Pr\left[\Adv \textrm{ loses and  } \Decaps_\sk( \ct_\KEM^\ast)=k^\ast \textrm{ in } \PKE^{\mathsf{IND-CCA}}  \right]+\frac{1}{2}\Pr\left[ \Adv \textrm{ wins }   \Game_1  \right]\\
+            \ge& \frac{1}{2}\biggl(1- \Pr\left[\Adv \textrm{ wins }  \PKE^{\mathsf{IND-CCA}}\right] - \overbrace{\Pr_{\substack{(\pk, \sk)\sample\Gen_\KEM(1^n)\\(\ct_\KEM^\ast, k^\ast)\sample \Encaps(\pk)}}\left[\Decaps_\sk( \ct_\KEM^\ast)\neq k^\ast\right]}^{\begin{aligned}\le \negl(n) \;\; (\textrm{by the correctness of } \KEM)\end{aligned}}  \biggr)  +\frac{1}{2}\Pr\left[\Adv \textrm{ wins }  \Game_1\right]\\
+            &\hspace{12cm} (\textrm{by Union Bound})\\
+            \ge& \frac{1}{2}+\frac{1}{2}\left(\Pr\left[\Adv \textrm{ wins }  \Game_1\right] - \Pr\left[\Adv \textrm{ wins }  \PKE^{\mathsf{IND-CCA}}\right]\right) -\frac{1}{2}\negl(n),
+        \end{align*}
+        which gives us
+        \begin{equation}\label{eq:p4-4}
+            \Pr\left[\Adv \textrm{ wins }  \Game_1\right] - \Pr\left[\Adv \textrm{ wins }  \PKE^{\mathsf{IND-CCA}}\right] 
+            \le 2\nu_1(n) + \negl(n) = \nu_1'(n),
+            \quad \textrm{for some } \nu_1'(n)=\negl(n).
+        \end{equation}
+        
+        Now consider the ``complement'' PPT adversary $R'$ of $R$ that outputs the exact opposite bit as $R$, i.e., ${R'}^{\Decaps_\sk(\cdot)}(\pk, \ct_\KEM^\ast, k^\ast)\triangleq 1- R^{\Decaps_\sk(\cdot)}(\pk, \ct_\KEM^\ast, k^\ast)$. Likewise, since $\KEM$ is an IND-CCA-secure KEM and $R'$ is a PPT adversary, by a similar reasoning, we deduce that there also exists a negligible function $\nu_2(\cdot)$ such that for all $n\in\Nbb$
+        \begin{equation}\label{eq:p4-5}
+            \Pr\left[\Adv \textrm{ wins }  \Game_1\right] - \Pr\left[\Adv \textrm{ wins }  \PKE^{\mathsf{IND-CCA}}\right] 
+            \ge -2\nu_2(n) - \negl(n) = -\nu_2'(n),
+            \quad \textrm{for some } \nu_2'(n)=\negl(n).
+        \end{equation}
+        
+        Let $\nu(n)\triangleq \max(\nu_1'(n), \nu_2'(n))$, which is clearly negligible. Combing \eqref{eq:p4-4} and \eqref{eq:p4-5}, we finally obtain
+        \[
+            \abs*{\Pr\left[\Adv \textrm{ wins }  \Game_1\right] - \Pr\left[\Adv \textrm{ wins }  \PKE^{\mathsf{IND-CCA}}\right]}
+            \le \nu(n),
+        \]
+        as desired.
+    \end{proof}
+
+    \autoref{claim:p4-2} and equation \eqref{eq:p4-3} together tell us that
+    \begin{equation}\label{eq:p4-6}
+        \Pr\left[\Adv \textrm{ wins } \Game_1 \right]\ge \Pr\left[\Adv \textrm{ wins } \PKE^{\mathsf{IND-CCA}} \right] - \negl(n) =  \frac{1}{2}+\epsilon(n) - \negl(n).
+    \end{equation}
+    This allows us to construct a PPT oracle adversary (a reduction) $R$ that breaks the IND-CCA security of $\SKE$. The construction of $R$ is provided in the following IND-CCA experiment $\SKE^{\mathsf{IND-CCA}}$ of $\SKE$. (Note that $k^\ast\sample \Gen_\SKE(1^n)$ is equivalent to $k^\ast\Usample\bit^{\ell(n)}$.)
+    {\footnotesize
+        \[
+        \begin{array}{@{} c c c c c @{}}
+        \Ch & & R^{\Enc_\SKE^{\mathsf{oracle}}(k^\ast, \cdot), \Dec_\SKE^{\mathsf{oracle}}(k^\ast, \cdot)} & & \Adv^{\Dec_\PKE(\sk, \cdot)} \\
+        \textcolor{red}{k^\ast\Usample \bit^{\ell(n)}} & \XR{1^n} & (\pk, \sk)\sample\Gen_\KEM(1^n) &&\\
+        &&(\ct_\KEM^\ast, \cdot)\sample \Encaps(\pk) & \XR{\pk} &\\
+        & \makecell[c]{\XL{\ct_\SKE}\\\XR{\Dec_\SKE(k^\ast, \ct_\SKE)}} &\vcenter{\hbox{%
+            \footnotesize
+            \begin{minipage}{0.42\textwidth}
+            \begin{simplebox}
+            $\underline{\Dec_\PKE(\sk,\ct_\PKE)}$
+            \begin{algorithmic}[1]
+            \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+            \If{$\ct_\KEM=\ct_\KEM^\ast$}
+                \State \Return $\Dec_\SKE^{\mathsf{oracle}}(k^\ast, \ct_\SKE)$
+            \Else
+                \State $k\coloneqq \Decaps_\sk(\ct_\KEM)$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+            \EndIf
+            \end{algorithmic}
+            \end{simplebox}
+            \end{minipage}%
+        }} & \makecell[c]{\XL{{\ct_\PKE}_i}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+        b\Usample \bit & \XL{(m_0, m_1)} &  & \XL{(m_0, m_1)} &\\
+        \ct_\SKE^\ast \sample \Enc_\SKE(k^\ast, m_b) & \XR{\ct_\SKE^\ast} & \ct_\PKE^\ast\coloneqq (\ct_\KEM^\ast, \ct_\SKE^\ast) & \XR{\ct_\PKE^\ast} & \\ 
+        & \makecell[c]{\XL{\ct_\SKE\neq \ct_\SKE^\ast}\\\XR{\Dec_\SKE^{\mathsf{oracle}}(k^\ast, \ct_\SKE)}} &\vcenter{\hbox{%
+            \footnotesize
+            \begin{minipage}{0.42\textwidth}
+            \begin{simplebox}
+            $\underline{\Dec_\PKE(\sk,\ct_\PKE\neq \ct_\PKE^\ast)}$
+            \begin{algorithmic}[1]
+            \State Parse $(\ct_\KEM, \ct_\SKE)\coloneqq \ct_\PKE$
+            \If{$\ct_\KEM=\ct_\KEM^\ast$}
+                \State \Return $\Dec_\SKE^{\mathsf{oracle}}(k^\ast, \ct_\SKE)$
+            \Else
+                \State $k\coloneqq \Decaps_\sk(\ct_\KEM)$
+                \State \Return $\begin{cases}
+                    \bot & \textrm{if } k = \bot\\
+                    \Dec_\SKE(k, \ct_\SKE) & \textrm{if } k\neq \bot
+                \end{cases}$
+            \EndIf
+            \end{algorithmic}
+            \end{simplebox}
+            \end{minipage}%
+        }} & \makecell[c]{\XL{{\ct_\PKE}_i\neq \ct_\PKE^\ast}\\\XR{\Dec_\PKE(\sk, {\ct_\PKE}_i)}} & \textrm{Query } \Dec_\PKE(\sk, \cdot)\\
+        \textrm{$R$ wins if $b' = b$} & \XL{b'} & & \XL{b'}& \\
+        \end{array}
+        \]
+        \vspace{-0.6cm}
+        \captionof{figure}{Experiment $\SKE^{\mathsf{IND-CCA}}$}
+        \label{fig:p4-game4}
+    }
+
+    Clearly $R$ runs in PPT as $\Adv$ also runs in PPT. 
+
+    Observe that the \textit{view} of $\Adv$ in experiment $\SKE^{\mathsf{IND-CCA}}$ is distributed identically to that of $\Adv$ in game $\Game_1$. This is because in $\SKE^{\mathsf{IND-CCA}}$, we have just delegated the job of challenger in game $\Game_1$ to the new challenger and PPT oracle adversary $R$. To make it clearer, it's not hard to check that the decryption oracle $\Dec_\PKE(\sk, \cdot)$ simulated by $R$ here is in fact equivalent to the one in $\Game_1$. Therefore, for all $n\in\Nbb$, the win rate of $R$ in experiment $\SKE^{\mathsf{IND-CCA}}$ is simply
+    \begin{align*}
+        \Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right]
+        = \Pr\left[\Adv \textrm{ wins } \Game_1 \right]
+        \stackrel{\eqref{eq:p4-6}}\ge =  \frac{1}{2}+\epsilon(n) - \negl(n).
+    \end{align*}
+    This tells us that the advantage  of $R$ is at least $\epsilon(n) - \negl(n)$, which is nonnegligible.
+
+    Hence, by definition, $\SKE= (\Gen_\SKE, \Enc_\SKE, \Dec_\SKE)$ is not IND-CCA-secure, which contradicts our assumption, so $\PKE=(\Gen_\PKE, \Enc_\PKE, \Dec_\PKE)$ must be IND-CCA-secure.
+\end{answer}

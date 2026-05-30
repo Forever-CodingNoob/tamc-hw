@@ -40,7 +40,13 @@
 \usepackage[usenames,dvipsnames]{xcolor} % Driver-independent color extensions
 \usepackage{rotating} % Rotation tools
 \usepackage{listings, style/lstlisting} % Environment for non-formatted code, !uses style file!
-\usepackage{pseudocode} % Environment for specifying algorithms in a natural way
+\usepackage[noend]{algpseudocode} % Environment for specifying algorithms in a natural way
+\algdef{SE}[Indent]{Indent}{EndIndent}{}{}
+\algtext*{Indent}
+\algtext*{EndIndent}
+\makeatletter
+\algnewcommand{\StatexIndent}[1]{\Statex \hskip\ALG@tlm #1}
+\makeatother
 \usepackage{style/avm} % Environment for f-structures, !uses style file!
 \usepackage{booktabs} % Enhances quality of tables
 

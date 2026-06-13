@@ -1,8 +1,11 @@
 \usepackage{mathtools}
+\usepackage{stmaryrd}
 \usepackage{fbox}
 %\usepackage{etoolbox}
 \usepackage{twemojis} % for emojis
 \usepackage{esvect} % cooler vectors \vv
+\usepackage{bm} % cooler bold font \bm
+\usepackage{nicematrix} % cooler matrices
 
 % =========================
 % elementry operations
@@ -13,6 +16,7 @@
 \let\oldemptyset\emptyset
 \let\emptyset\varnothing
 \apptocmd{\lim}{\limits}{}{}
+\newcommand{\Mod}[1]{\ (\mathrm{mod}\ #1)}
 %\let\implies\Rightarrow
 %\let\impliedby\Leftarrow
 %\let\iff\Leftrightarrow
@@ -49,10 +53,12 @@
 % =========================
 % cryotographic notations
 % 0. basic defs
+\newcommand{\negl}{\mathsf{negl}}
+\newcommand{\nonnegl}{\mathsf{nonnegl}}
+\newcommand{\poly}{\mathsf{poly}}
 \newcommand{\ind}{\approx} % indistinguishable
 \newcommand{\aympind}{\approx_c} % asymptotically indistinguishable
-\newcommand{\adv}{\mathop{\mathrm{Adv}}}
-% 1. Primitive / scheme names
+% 1. Schemes / hard problems
 \newcommand{\PKE}{\mathsf{PKE}}
 \newcommand{\SKE}{\mathsf{SKE}}
 \newcommand{\KEM}{\mathsf{KEM}}
@@ -61,7 +67,14 @@
 \newcommand{\LWE}{\mathsf{LWE}}
 \newcommand{\DLWE}{\mathsf{DLWE}}
 \newcommand{\SLWE}{\mathsf{SLWE}}
-% 2. Schemes
+\newcommand{\SIS}{\mathsf{SIS}}
+\newcommand{\ISIS}{\mathsf{ISIS}}
+\newcommand{\ID}{\mathsf{ID}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\FS}{\mathop{\mathsf{FS}}} % Fiat-Shamir transform
+\renewcommand{\Game}{\mathbf{\mathsf{G}}}
+\newcommand{\Hyb}{\mathsf{Hyb}}
+% 2. Functions/Algorithms in schemes
 \newcommand{\Gen}{\mathsf{KeyGen}}
 \newcommand{\Setup}{\mathsf{Setup}}
 \newcommand{\Enc}{\mathsf{Enc}}
@@ -78,7 +91,7 @@
 \newcommand{\Sim}{\mathsf{Sim}}
 \newcommand{\Trans}{\mathsf{Trans}}
 \newcommand{\RO}{\mathsf{RO}}
-% 3. Keys / ciphertexts / common objects
+% Objects
 \newcommand{\pk}{\mathsf{pk}}
 \newcommand{\sk}{\mathsf{sk}}
 \newcommand{\ct}{\mathsf{ct}}
@@ -86,21 +99,15 @@
 \newcommand{\st}{\mathsf{st}}
 \newcommand{\accept}{\mathsf{accept}}
 \newcommand{\reject}{\mathsf{reject}}
-% 4. Functions
-\newcommand{\negl}{\mathsf{negl}}
-\newcommand{\nonnegl}{\mathsf{nonnegl}}
-\newcommand{\poly}{\mathsf{poly}}
-% 5. Entities in games / proofs
+% Entities
 \newcommand{\Adv}{\mathbf{Adv}}
 \newcommand{\Ch}{\mathsf{Ch}}
-\newcommand{\Hyb}{\mathsf{Hyb}}
-\renewcommand{\Game}{\mathbf{\mathsf{G}}}
-% 6. Protocol-specific notation
-\newcommand{\com}{\mathsf{com}}
-\newcommand{\ch}{\mathsf{ch}}
-\newcommand{\resp}{\mathsf{resp}}
-\newcommand{\commit}{\mathsf{commit}}
-\newcommand{\interact}[1]{\left<#1\right>}
+% Protocol-specific notation
+\newcommand{\com}{\mathsf{com}} % Sigma-protocol: commitment
+\newcommand{\ch}{\mathsf{ch}} % Sigma-protocol: challenge
+\newcommand{\resp}{\mathsf{resp}} % Sigma-protocol: response
+\newcommand{\commit}{\mathsf{commit}} % Commitment scheme: commitment
+\newcommand{\interact}[1]{\left<#1\right>} % interactive scheme: interact
 
 % =========================
 % shorthands for convenience
@@ -125,6 +132,7 @@
 \newcommand{\Tsf}{\mathsf{T}}
 \newcommand{\Usf}{\mathsf{U}}
 \newcommand{\Lfrak}{\mathfrak{L}}
+\newcommand{\Tfrak}{\mathfrak{T}}
 
 % =========================
 % arrows for sequence diagram

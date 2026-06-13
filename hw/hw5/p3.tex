@@ -1,0 +1,184 @@
+\begin{problem}[Lamport Signature is secure]\label{p3}
+    \leavevmode\par
+    In this problem, we will show that we can in fact construct signatures solely from one-way functions. Consider the following security definition of one-time signature: in the one-time signature experiment $\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)$,
+    \begin{itemize}
+        \item $\Gen(1^n)$ is run to obtain keys $(\pk, \sk)$.
+        \item Adversary $\Adv$ is given $\pk$ and asks a single query $m'$ to its oracle $\Sign_\sk(\cdot)$. $\Adv$ then outputs $(m, \sigma)$.
+        \item The output of the experiment is defined to be $1$ if and only if $\Vrfy_\pk(m, \sigma) = 1$ and $m\neq m'$.
+    \end{itemize}
+    Signature scheme $\Pi = (\Gen, \Sign, \Vrfy)$ is \textit{existentially unforgeable under a single-message attack}, or is a \textit{one-time} signature scheme, if for all PPT adversaries $\Adv$, there exists a negligible function $\mu(\cdot)$ such that
+    \[
+        \Pr\biggl[ \mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n) =1 \biggr] \le \mu(n).
+    \]
+    
+    The Lamport's Signature is described as following: Let $H : \bit^n\to \bit^n$ be a OWF. Construct a signature scheme for messages of length $\ell = \ell(n)$ as follows:
+    \begin{itemize}
+        \item $\Gen$: On input $1^n$, proceed as follows for $i\in [\ell]$: 
+        \begin{itemize}
+            \item Choose uniform $x_{i,0}, x_{i,1}\in\bit^n$.
+            \item Compute $y_{i,0} \coloneqq H(x_{i,0}) and y_{i,1} \coloneqq H(x_{i,1})$.
+        \end{itemize}
+        Output the public key $\pk \coloneqq \{y_{i,0}, y_{i, 1}\}_{i=1}^\ell$ and the private key $\sk\coloneqq \{x_{i,0}, x_{i, 1}\}_{i=1}^\ell$.
+
+        \item $\Sign$: On input a private key $\sk$ as above and a message $m\in\bit^\ell$ with $m=m_1\cdots m_\ell$, output the signature $\sigma\coloneqq (x_{1,m_1} , \ldots,  x_{\ell, m_\ell})$.
+
+        \item $\Vrfy$: On input a public key $\pk$ as above, a message $m\in\bit^\ell$ with $m=m_1\cdots m_\ell$, and a signature $\sigma=(x_1, \ldots, x_\ell)$, output $1$ if and only if $H(x_i) = y_{i,m_i}$ for all $i\in[\ell]$.
+    \end{itemize}
+    Show that the above constriction is a one-time signature scheme.
+\end{problem}
+
+
+
+\begin{answer}
+    Let  $\Pi = (\Gen, \Sign, \Vrfy)$ denote the Lamport's signature scheme.
+    To prove the one-timeness of $\Pi$, let $\Adv$ be a PPT adversary attacking the one-timeness of $\Pi$ in experiment $\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)$. Our goal is to prove that $\Pr\left[\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)=1\right] \le \negl(n)$ for all $n\in\Nbb$ by constructing another adversary (a reduction) $\Rcal$ attacking the one-wayness of $H:\bit^n\to \bit^n$ such that $\Pr\left[\mathsf{OW}_{\Rcal, H}(n)=1\right]\le \negl(n) \implies \Pr\left[\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)=1\right] \le \negl(n)$, thereby reducing the one-wayness of $H$ to the one-timeness of the signature scheme $\Pi$. Note that $\mathsf{OW}_{\Rcal, H}(n)$ denotes the experiment used in the definition of one-wayness, where the function to be tested and the adversary are instantiated with $H$ and $\Rcal$, respectively.
+
+    For simplicity, let us split the randomized function $\Adv$ into two parts: $\Adv_1$ (randomized) and $\Adv_2$ (deterministic), such that
+    \[
+        \Adv^{\Sign_\sk(\cdot)} (\pk; r) = \textrm{let } (m', \st)\coloneq \Adv_1(\pk; r) \textrm{ in } \Adv_2(\st, \pk, \Sign_\sk(m'))
+    \]
+    for any key pair $(\pk, \sk)$ and randomness $r$. (Note that $\st$ denotes the internal state that $\Adv_1$ passes to $\Adv_2$.)
+    
+    Now consider the following two games, namely $\Game_0$ and $\Game_1$, where $\Game_0$ is just the original one-time signature experiment $\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)$ with an additional $(i^\bigstar, j^\bigstar)\Usample [\ell]\times \bit$, and $\Game_1$ is a slightly modified version of $\Game_0$. Note that lines 5-8 are the simulation of the signing oracle $\Sign_\sk(\cdot)$, to which $\Adv$ will query once throughout each game. 
+    \begin{simplebox}
+        \small
+        \noindent
+        $\underline{\textrm{GAMES } \Game_0^\Adv(n), \Game_1^\Adv(n)}$
+        \begin{algorithmic}[1]
+            \color{red}
+            \State $\textrm{HIT} \coloneqq \bot$ \Comment{Only in $\Game_1$}
+            \color{Magenta}
+            \State $(i^\bigstar, j^\bigstar)\Usample [\ell]\times \bit$
+            \color{black}
+            \State $x_{i,j} \Usample \bit^n$, $y_{i,j}\coloneqq H(x_{i, j})$ for each $(i,j)\in [\ell]\times \bit$
+            \State $\sk \coloneqq \{x_{i,0}, x_{i, 1}\}_{i=1}^\ell, \pk \coloneqq \{y_{i,0}, y_{i, 1}\}_{i=1}^\ell$
+            \State $(m' \in \bit^\ell, \st) \sample \Adv_1(\pk)$
+            \State Parse $m'_1\cdots m'_\ell \coloneqq m'$
+            \color{red}
+            \If{$m'_{i^\bigstar}=j^\bigstar$} \Comment{Only in $\Game_1$}
+            \State $\textrm{HIT} \coloneqq \top$  \Comment{Only in $\Game_1$}
+            \EndIf
+            \color{black}
+            \State $\sigma' \coloneqq (x_{1, m'_1}, \ldots, x_{\ell, m'_\ell})\in \bit^{n\times \ell}$
+            \State $(m\in \bit^\ell,\sigma\in \bit^{n\times \ell})\sample \Adv_2(\st, \pk, \sigma')$
+            \State Parse $m_1\cdots m_\ell\coloneqq m,  (x_1,\ldots, x_\ell)\coloneqq \sigma$
+            \color{blue}
+            \State\Return $\left\llbracket \left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m\neq m' \right\rrbracket$ \Comment{Only in $\Game_0$}
+            \color{red}
+            \If{$\textrm{HIT} = \top$} \Comment{Only in $\Game_1$}
+            \State\Return $0$ \Comment{Only in $\Game_1$}
+            \Else \Comment{Only in $\Game_1$}
+            \State\Return $\left\llbracket \left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar \right\rrbracket$ \Comment{Only in $\Game_1$}
+            \EndIf
+        \end{algorithmic}
+    \end{simplebox}
+    
+    Define the set $I\triangleq \{i\in [\ell] \mid m_i\neq m'_i\}$ and the event $\textrm{WIN} \triangleq \left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m\neq m'$. Conditioning on $\textrm{WIN}$, since there must be some $i\in [\ell]$ such that $m_1\neq m'_i$, $\abs*{I}\ge 1$, meaning that 
+    \begin{equation}\label{eq:p3-4}
+        \Exp\left(\frac{\abs*{I}}{\ell} \mid \textrm{WIN}\right)\ge \frac{1}{\ell}.
+    \end{equation}
+    Moreover, since $i^\bigstar$ is independent of all inputs of $\Adv_1, \Adv_2$ and thus independent of their outputs $m'$ and $m$, $i^\bigstar$ must be independent of  $I=\{i\in [\ell] \mid m_i\neq m'_i\}$ as well. Therefore, as $i^\bigstar\in [\ell]$ is uniform, we have
+    \begin{equation}\label{eq:p3-1}
+        \Pr_{i^\bigstar\Usample [\ell]}\left[i^\bigstar \in I \mid \textrm{WIN}\right]
+        = \Exp\left(\frac{\abs*{I}}{\ell}\biggm\vert \textrm{WIN}  \right)
+        \stackrel{\eqref{eq:p3-4}}\ge \frac{1}{\ell}.
+    \end{equation}
+    Likewise, since $j^\bigstar$ is independent of all inputs of $\Adv_1, \Adv_2$ and therefore independent of their outputs $m'$ and $(m=m_1\cdots m_\ell, \sigma=(x_1,\ldots, x_\ell))$, regardless of the value of $i^\bigstar$, $j^\bigstar$ is surely independent of $m_{i^\bigstar}$. Thus,
+    \begin{equation}\label{eq:p3-2}
+        \Pr_{i^\bigstar\Usample [\ell], j^\bigstar\Usample\bit}\left[i^\bigstar \in I \land m_{i^\bigstar}=j^\bigstar\mid \textrm{WIN}\right]
+        = \Pr_{i^\bigstar\Usample [\ell]}\left[i^\bigstar \in I \mid \textrm{WIN}\right]\Pr_{j^\bigstar\Usample\bit}[m_{i^\bigstar}=j^\bigstar]
+        \stackrel{\eqref{eq:p3-1}}\ge \frac{1}{\ell}\cdot \frac{1}{2}=\frac{1}{2\ell}.
+    \end{equation}
+    (We've used the fact that $m_{i^\bigstar}=j^\bigstar$ and $\textrm{WIN}$ are independent, which can be justified by the aforementioned observation that $j^\bigstar$ is independent of $(m, \sigma)$.)
+
+    Lastly, it's immediate that
+    \begin{equation}\label{eq:p3-3}
+        \Pr[\textrm{WIN}]
+        =\Pr\left[\left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m\neq m'\right]
+        =\Pr\left[\Game_0^\Adv(n)=1  \right].
+    \end{equation}
+
+    We can now deduce that for all $n\in\Nbb$,
+    \begin{align}\label{eq:p3-5}
+        \Pr\left[\Game_1^\Adv(n)=1  \right]
+        &= \Pr\left[\left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar  \textcolor{red}{\land m'_{i^\bigstar}\neq j^\bigstar} \right] \notag\\
+        &= \Pr\left[\left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar  \right] 
+        \; (\because m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar \implies \textcolor{red}{m'_{i^\bigstar}\neq j^\bigstar}  )\notag\\
+        &= \Pr\left[ \left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m\neq m' \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar  \right]
+        \qquad (\because m_{i^\bigstar}\neq m'_{i^\bigstar} \implies m\neq m') \notag\\
+        &= \Pr\left[ \textrm{WIN} \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar  \right] \notag\\
+        &= \Pr\left[ \textrm{WIN} \land i^\bigstar\in I \land m_{i^\bigstar}= j^\bigstar \right]
+        \qquad (\textrm{by definition of } I) \notag\\
+        &= \Pr\left[ \textrm{WIN}\right] \Pr\left[  i^\bigstar\in I \land m_{i^\bigstar}= j^\bigstar \mid \textrm{WIN}\right] \notag\\
+        &\ge \frac{1}{2\ell}\Pr\left[ \textrm{WIN}\right] 
+        \qquad (\textrm{by \eqref{eq:p3-2}}) \notag\\
+        &= \frac{1}{2\ell}  \Pr\left[\Game_0^\Adv(n)=1  \right]
+        \qquad (\textrm{by \eqref{eq:p3-3}})  \notag\\
+        &= \frac{1}{2\ell}  \Pr\left[\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)=1  \right].
+    \end{align}
+    
+    Having $\eqref{eq:p3-5}$, we construct a PPT adversary $\Rcal$ attacking the one-wayness of $H$ by running $\Adv$ as a subroutine, such that the \textit{view} of $\Adv$ in the OW experiment $\mathsf{OW}_{\Rcal, H}(n)$ is identically distributed to that of $\Adv$ in game $\Game_1^\Adv(n)$.
+    The construction of $\Rcal$ is given in the OW experiment $\mathsf{OW}_{\Rcal, H}(n)$ (cf. \autoref{fig:p3-game1}).
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & \Rcal & & \Adv^{\Sign_\sk(\cdot)} \\
+            x\Usample\bit^n &&&&\\
+            y\coloneqq H(x) & \XR{(1^n, y\in\bit^n)} & (i^\bigstar, j^\bigstar)\Usample [\ell]\times \bit &&\\
+            && y_{i^\bigstar, j^\bigstar} \coloneqq y &&\\
+            &&  x_{i,j} \Usample \bit^n, y_{i,j}\coloneqq H(x_{i, j}) &&\\
+            && \textrm{for each } (i,j)\in ([\ell]\times \bit)\setminus \{(i^\bigstar, j^\bigstar)\} & \XR{\pk\coloneqq \{y_{i,0}, y_{i, 1}\}_{i=1}^\ell}&\\
+            & \textcolor{red}{\XL{\bot\textrm{ (ABORT)}}} &\vcenter{\hbox{%
+                \small
+                \begin{minipage}{0.42\textwidth}
+                \begin{simplebox}
+                $\underline{\Sign_\sk(m'\in\bit^\ell)}$
+                \begin{algorithmic}[1]
+                \State Parse $m'_1\cdots m'_\ell \coloneqq m'$
+                \color{red}
+                \If{$m'_{i^\bigstar}=j^\bigstar$}
+                \State \textrm{ABORT}
+                \EndIf
+                \color{black}
+                \State\Return $\sigma' \coloneqq (x_{1, m'_1}, \ldots, x_{\ell, m'_\ell})$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{m'\in \bit^\ell}\\\XR{\sigma' \in \bit^{n\times \ell}}} & \textrm{Query } \Sign_\sk(\cdot)\\
+            && \textrm{Parse } m_1\cdots m_\ell\coloneqq m,  (x_1,\ldots, x_\ell)\coloneqq \sigma&\XL{(m\in \bit^\ell, \sigma\in \bit^{n\times \ell})}& \\
+            \makecell[c]{\mathsf{OW}_{\Rcal, H}(n)=1 \\ \textrm{if } H(x') = y} & \XL{x'} & x'\coloneqq x_{i^\bigstar} & &
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\mathsf{OW}_{\Rcal, H}(n)$}
+        \label{fig:p3-game1}
+    }
+
+    Clearly $\Rcal$ is a PPT algorithm since $\Adv$ is a PPT algorithm.
+
+    It's also clear that the \textit{view} of $\Adv$ in the OW experiment $\mathsf{OW}_{\Rcal, H}(n)$ is identically distributed to that of $\Adv$ in game $\Game_1^\Adv(n)$, as we previously claimed.
+    Hence, we deduce that for all $n\in\Nbb$, in experiment $\mathsf{OW}_{\Rcal, H}(n)$,
+    \begin{align}\label{eq:p3-6}
+        \Pr\left[\mathsf{OW}_{\Rcal, H}(n)=1  \right]
+        &= \Pr\left[H(x_{i^\bigstar})=y_{i^\bigstar, j^\bigstar} \land \textcolor{red}{\land m'_{i^\bigstar}\neq j^\bigstar} \right] \notag\\
+        &\ge \Pr\left[\left( \bigwedge_{i=1}^\ell H(x_i)=y_{i, m_i} \right) \land m_{i^\bigstar}\neq m'_{i^\bigstar} \land  m_{i^\bigstar} = j^\bigstar  \textcolor{red}{\land m'_{i^\bigstar}\neq j^\bigstar} \right] \notag\\
+        &= \Pr\left[\Game_1^\Adv(n)=1  \right]
+        \qquad (\because \textrm{The views of $\Adv$ in $\mathsf{OW}_{\Rcal, H}(n)$ and $\Game_1^\Adv(n)$ are iden. dist.}) \notag\\
+        &\ge \frac{1}{2\ell}  \Pr\left[\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)=1  \right].
+        \qquad (\textrm{by \eqref{eq:p3-5}})
+    \end{align}
+
+    Since $H$ is assumed to be one-way and $\Rcal$ is a PPT adversary attacking the one-wayness of $H$, by definition, there exists a negligible function $\epsilon(\cdot)$ such that for all $n\in\Nbb$,
+    \begin{equation}\label{eq:p3-7}
+        \Pr\left[\mathsf{OW}_{\Rcal, H}(n)=1  \right] \le \epsilon(n).
+    \end{equation}
+
+    Assume $\ell=\ell(n)=O(\poly(n))$, which is reasonable because the signature scheme $\Pi = (\Gen, \Sign, \Vrfy)$ has to be efficiently computable (in particular, polynomial-time computable) to be actually useful. 
+    Combining \eqref{eq:p3-6} and \eqref{eq:p3-7}, we finally conclude that for all $n\in\Nbb$,
+    \[
+        \Pr\left[\mathsf{Sig-Forge}^{\mathsf{1-time}}_{\Adv, \Pi}(n)=1  \right]
+        \le 2\ell \Pr\left[\mathsf{OW}_{\Rcal, H}(n)=1  \right] \le 2\ell \epsilon(n)
+        =2O(\poly(n)) \negl(n),
+    \]
+    which is still negligible. 
+    As the choice of the PPT adversary $\Adv$ is arbitrary, by definition, the signature scheme $\Pi = (\Gen, \Sign, \Vrfy)$ is a one-time signature scheme.  This completes our proof.
+\end{answer}

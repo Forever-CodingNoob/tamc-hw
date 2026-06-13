@@ -371,7 +371,7 @@
         Since $\KEM$ is an IND-CCA-secure KEM and $R$ is a PPT adversary, there exists a negligible function $\nu_1(\cdot)$ such that for all $n\in\Nbb$, $ \Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right] \le \frac{1}{2}+\nu_1(n)$, so we have
         \begin{align*}
             &\frac{1}{2}+\nu_1(n)\\
-            =&\Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right]\\
+            \ge&\Pr\left[R \textrm{ wins } \KEM^{\mathsf{IND-CCA}} \right]\\
             =&\frac{1}{2}\Pr\left[b'\neq b\mid d=0  \right]+\frac{1}{2}\Pr\left[b'= b  \mid d=1 \right]\\
             \ge&\frac{1}{2}\Pr\left[b'\neq b\land \Decaps_\sk( \ct_\KEM^\ast)=k^\ast \mid d=0  \right]+\frac{1}{2}\Pr\left[b'= b  \mid d=1 \right]\\
             =& \frac{1}{2}\Pr\left[\Adv \textrm{ loses and  } \Decaps_\sk( \ct_\KEM^\ast)=k^\ast \textrm{ in } \PKE^{\mathsf{IND-CCA}}  \right]+\frac{1}{2}\Pr\left[ \Adv \textrm{ wins }   \Game_1  \right]\\

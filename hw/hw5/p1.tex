@@ -1,0 +1,326 @@
+\begin{problem}[Facts about SIS]\label{p1}
+    \leavevmode\par
+    \begin{enumerate}[label=(\roman*)]
+        \item \textbf{(Short integer solution exists.)} Let $q(n)$ be prime, $m\gt n\log q, \beta\gt\sqrt{m}$. Show that for all $A\in \Zbb_q^{n\times m}$, there exists some short vector $r\in\Zbb^m$ such that $Ar=\bm{0}_n\in\Zbb_q^n$, $\norm{r}_2\le \beta$, and $r\neq \bm{0}_m$.
+
+        \item \textbf{(Inhomogeneous SIS is harder than SIS.)} The \textit{Inhomogeneous Short Integer Solution (ISIS)} problem $\ISIS_{n,m,q,\beta}$ with parameters $n,m,q,\beta$ is the problem that given $A\Usample \Zbb_q^{n\times m}$ and $y\Usample\Zbb_q^{n}$, find a ``short'' vector $r\in\Zbb^m$ such that $Ar \equiv y \Mod q$ and $\norm{r}_2\le \beta$. As with the SIS problem, for sufficiently large $q$, $m\gt n\log q$, and $\beta\gt \sqrt{m}$, ISIS is believed to be hard, namely, for all PPT algorithms $\Adv$ there is a negligible function $\mu(\cdot)$ such that for every $n\in\Nbb$,
+        \[
+            \Pr\biggl[A\Usample \Zbb_q^{n\times m}, y\Usample\Zbb_q^{n}: r\in\Zbb^m \sample \Adv(1^n, A, y) \textrm{ s.t. } Ar\equiv y\Mod q \land \norm{r}_2\le \beta \biggr] \le \mu(n).
+        \]
+        Show that there exists some constant $c$ such that for $\hat{m} \gt m$ and $\hat{\beta} = \beta + c$, $\SIS_{n, \hat{m},q, \hat{\beta}}$ is hard implies $\ISIS_{n,m,q,\beta}$ is hard. In other words, please show that if there is an efficient solver for $\ISIS_{n,m,q,\beta}$ then there is an efficient algorithm that solves $\SIS_{n, \hat{m},q, \hat{\beta}}$.
+
+        \item \textbf{(SIS is harder than DLWE.)} Let $q = n^{10}, \alpha = n^{-5}, m \gt n \log q, \beta = O(\sqrt{n\log q})$ and $\chi$ be the discrete Gaussian distribution with standard deviation $\alpha\cdot q$. Show that if $\DLWE_{n,m,q,\chi}$ is hard, then $\SIS_{n,m,q,\beta}$ is hard. In other words,  show that if there is an efficient solver for $\SIS_{n,m,q,\beta}$ then there is an efficient algorithm that solves $\DLWE_{n,m,q,\chi}$.
+    \end{enumerate}
+\end{problem}
+
+
+\begin{answer}[i]
+    \leavevmode\par
+    \begin{idea}
+        \[
+            r\in\bit^m \implies \norm{r}_2\le \sqrt{m}\lt \beta
+        \] 
+    \end{idea}
+    This follows by the pigeonhole principle. Consider the function $f: \Zbb^m\to \Zbb_q^n$ defined by $f(x)=Ax$. Once restricting $f$ to the domain $\bit^m \subseteq \Zbb^m$, we can see that $\abs*{\bit^m}=2^m\gt 2^{n\log q}=q^n=\abs*{\Zbb_q^n}$, i.e., the size of the new domain is larger than that of the codomain. This implies $f|_{\bit^m}: \bit^m\to \Zbb_q^n$ must be non-injective, meaning that there exist distinct $x_1, x_2\in\bit^m$ such that  $f|_{\bit^m}(x_1)=f|_{\bit^m}(x_2)$. In other words, $Ax_1=Ax_2$. Therefore, we let $r\triangleq x_1-x_2 \in \bit^m\setminus \{\bm{0}_m\}$ (which is because $x_1, x_2\in\bit^m$ and $x_1\neq x_2$) and then obtain $Ar=A(x_1-x_2)=Ax_1-Ax_2=\bm{0}_m$. Lastly, it's easy to verify the second to last requirement for $r$ holds: $\norm{r}_2=\sqrt{r_1^2+\cdots+r_m^2}\le \sqrt{1^2+\cdots+1^2}=\sqrt{m}\lt \beta$, as $r_i\in\bit$ for each $i$.
+\end{answer}
+
+
+
+\begin{answer}[ii]
+    Let $c\triangleq 1$.\\
+    We prove by contrapositive that for any positive integers $n,\hat{m},m,\hat\beta, \beta$ and prime $q$ such that $\hat m\gt m$ and $\hat\beta=\beta+c$, $\SIS_{n, \hat{m},q, \hat{\beta}}$ is hard implies $\ISIS_{n,m,q,\beta}$ is hard. 
+    
+    Let $q$ be a prime and $n,\hat{m},m,\hat\beta, \beta$ be positive integers such that  $\hat m\gt m$ and $\hat\beta=\beta+c$.
+    Assume that there is an efficient algorithm that solves $\ISIS_{n,m,q,\beta}$, more specifically, that there exists a PPT algorithm $\Adv$ such that for all $n\in\Nbb$,
+    \begin{equation}\label{eq:p1-2-1}
+        \mu(n)\triangleq \Pr\biggl[A\Usample \Zbb_q^{n\times m}, y\Usample\Zbb_q^{n}: r\in\Zbb^m \sample \Adv(1^n, A, y) \textrm{ s.t. } Ar\equiv y\Mod q \land \norm{r}_2\le \beta \biggr]
+    \end{equation}
+    is a nonnegligible function of $n$.
+    
+    By abusing $\Adv$, we construct a PPT algorithm $\Rcal$ that solves $\SIS_{n, \hat{m},q, \hat{\beta}}$ as follows.
+    \begin{simplebox}
+        \noindent
+        \begin{algorithmic}[1]
+            \Procedure{$\Rcal$}{$1^n, A\in \Zbb_q^{n\times \hat{m}}$}
+            \State Parse $\;\;
+            \begin{pNiceArray}[first-row, first-col]{c|c}[margin=1pt, cell-space-limits = 3pt]
+                        & m & \hat m - m \\
+                    n   & A_1 & A_2
+            \end{pNiceArray}
+            \coloneqq A$, where $A_1\in\Zbb_q^{n\times m}, A_2\in\Zbb_q^{n\times (\hat m-m)}$.
+            \State $r_2\coloneqq \begin{pmatrix}
+                1 & 0 & \cdots & 0
+            \end{pmatrix}^T \in \Zbb^{\hat m-m}$
+            \State $r_1\sample \Adv\left(1^n, A_1, -A_2r_2\right) \in \Zbb^{m}$
+            \State\Return $r\coloneqq \left(\begin{array}{c}
+                r_1\\
+                \hline
+                r_2
+            \end{array} \right) \in \Zbb^{\hat m}$
+            \EndProcedure
+        \end{algorithmic}
+    \end{simplebox}
+
+    Clearly $\Rcal$ is a PPT algorithm since $\Adv$ is a PPT algorithm. Next, observe that given a random block matrix $\;\;
+    \begin{pNiceArray}[first-row, first-col]{c|c}[margin=1pt, cell-space-limits = 3pt]
+                & m & \hat m - m \\
+            n   & A_1 & A_2
+    \end{pNiceArray}
+    = A \Usample \Zbb_q^{n\times \hat m}$ and a constant vector $r_2\triangleq \begin{pmatrix}1 & 0 & \cdots & 0\end{pmatrix}^T \in \Zbb^{\hat m-m}$, since $A_1$ and $A_2$ are independent, by a basic property of independence (cf. \autoref{lemma:p1-2-1}), $A_1$ and $-A_2 r_2=-A_2\begin{psmallmatrix}1\\0\\\vdots\\0\end{psmallmatrix}$ are also independent. Also, since $A_2=\left(\alpha_{i, j}\right)_{i\in [n],j\in [\hat m-m]}$ for some uniform $\alpha_{i,j}\in\Zbb_q$, we see that
+    \[
+        -A_2r_2=-\begin{pmatrix}
+            \alpha_{1, 1} &\cdots & \alpha_{1, \hat m-m}\\
+            \vdots & \ddots & \vdots \\
+            \alpha_{n, 1} &\cdots & \alpha_{n, \hat m -m}
+        \end{pmatrix}\begin{pmatrix}1\\0\\\vdots\\0\end{pmatrix}
+        =\begin{pmatrix}
+            \alpha_{1, 1}\\ \alpha_{2, 1} \\ \vdots \\ \alpha_{n, 1}
+        \end{pmatrix}
+        \in \Zbb_q^{n}
+    \]
+    is also uniformly random.
+
+    \begin{lemma}\label{lemma:p1-2-1}
+        Let $X_1,\ldots,X_n$ be random variables. If $X_1,\ldots,X_n$  are jointly independent, then so are $f_1(X_1),\ldots, f_n(X_n)$ for any deterministic functions $f_1,\ldots, f_n$ (resp. randomized functions $f_1,\ldots, f_n$ where the internal randomness of each $f_i$ is independent of all other random variables).
+    \end{lemma}
+
+    Therefore, for all $n\in\Nbb$, we denote $r_2\triangleq \begin{pmatrix}1 & 0 & \cdots & 0\end{pmatrix}^T$ and, by the construction of $\Rcal$ and the aforementioned observation, deduce that
+    \begin{align*}
+        &\Pr\biggl[A\Usample \Zbb_q^{n\times \hat m}: r\in\Zbb^{\hat m} \sample \Rcal(1^n, A) \textrm{ s.t. } r\neq \bm{0}_{\hat m} \land  Ar\equiv \bm{0}_{n}\Mod q \land \norm{r}_2\le \hat\beta \biggr]\\
+        =& \Pr\biggl[A_1\Usample \Zbb_q^{n\times m}, A_2\Usample \Zbb_q^{n\times (\hat m-m)}:\\
+        &\qquad  r_1\in\Zbb^{m} \sample \Adv(1^n, A_1, -A_2r_2) \textrm{ s.t. } \left(\begin{array}{c}r_1\\\hline r_2\end{array}\right)\neq \bm{0}_{\hat m} \land  \left(\begin{array}{c|c} A_1&A_2\end{array}\right)\left(\begin{array}{c}r_1\\\hline r_2\end{array}\right)\equiv \bm{0}_{n}\Mod q \land \norm*{\begin{array}{c}r_1\\\hline r_2\end{array}}_2\le \hat\beta \biggr]\\
+        \stackrel{\twemoji{mushroom}}=& \Pr\biggl[A_1\Usample \Zbb_q^{n\times m}, A_2\Usample \Zbb_q^{n\times (\hat m-m)}:  r_1\in\Zbb^{m} \sample \Adv(1^n, A_1, -A_2r_2) \textrm{ s.t. } A_1r_1\equiv -A_2r_2 \Mod q \land \norm*{\begin{array}{c}r_1\\\hline r_2\end{array}}_2\le \hat\beta \biggr]\\
+        \stackrel{\twemoji{deer}}\ge& \Pr\biggl[A_1\Usample \Zbb_q^{n\times m}, A_2\Usample \Zbb_q^{n\times (\hat m-m)}:  r_1\in\Zbb^{m} \sample \Adv(1^n, A_1, -A_2r_2) \textrm{ s.t. } A_1r_1\equiv -A_2r_2 \Mod q \land \norm{r_1}_2\le \beta \biggr]\\
+        =& \Pr\biggl[A_1\Usample \Zbb_q^{n\times m}, y\Usample \Zbb_q^{n}:  r_1\in\Zbb^{m} \sample \Adv(1^n, A_1, y) \textrm{ s.t. } A_1r_1\equiv y \Mod q \land \norm{r_1}_2\le \beta \biggr]\\
+        &\qquad\qquad\qquad (\because \textrm{By the observation above, } y\triangleq -A_2r_2\in \Zbb_q^{n} \textrm{ is uniformly random and indepent of } A_1.)\\
+        =& \mu(n)\qquad (\textrm{by \eqref{eq:p1-2-1}}),
+    \end{align*}
+    which is nonnegligible by assumption. To make it clearer, in the deduction above, the step (\twemoji{mushroom}) follows from the fact that $r_2\neq \bm{0}_{\hat m -m}$, which implies that $\left(\begin{array}{c}r_1\\\hline r_2\end{array}\right)\neq \bm{0}_{\hat m}$ always holds, and the fact that 
+    \[
+        \left(\begin{array}{c|c} A_1&A_2\end{array}\right)\left(\begin{array}{c}r_1\\\hline r_2\end{array}\right)\equiv \bm{0}_{n}\Mod q
+        \iff
+        A_1r_1+A_2r_2\equiv \bm{0}_{n}\Mod q
+        \iff
+        A_1r_1\equiv-A_2r_2\Mod q;
+    \] moreover, denoting $r_1=\begin{pmatrix}
+        \gamma_1 & \gamma_2 & \cdots & \gamma_m
+    \end{pmatrix}^T$, where $\gamma_i\in\Zbb$ for each $i$, the step (\twemoji{deer}) follows from a simple observation that
+    \begin{align*}
+        \norm{r_1}_2 = \sqrt{ \gamma_1^2+\ldots+ \gamma_m^2}\le \beta
+        \implies 
+        \norm*{\begin{array}{c}r_1\\\hline r_2\end{array}}_2 
+        &=  \sqrt{ \gamma_1^2+\ldots+ \gamma_m^2+1^2}\\
+        &=  \sqrt{\left(\sqrt{\gamma_1^2+\ldots+ \gamma_m^2}\right)^2+2\cdot \sqrt{\gamma_1^2+\ldots+ \gamma_m^2}\cdot 1+1^2}\\
+        &=  \sqrt{\left(\sqrt{\gamma_1^2+\ldots+ \gamma_m^2}+1\right)^2}\\
+        &=  \sqrt{\gamma_1^2+\ldots+ \gamma_m^2}+1\\
+        &= \norm{r_1}_2 +1\le \beta+1=\beta+c=\hat\beta.
+    \end{align*}
+
+    Therefore, the PPT algorithm $\Rcal$ indeed solves $\SIS_{n, \hat{m},q, \hat{\beta}}$, which implies that $\SIS_{n, \hat{m},q, \hat{\beta}}$ is not hard. Hence proved.
+\end{answer}
+
+
+
+
+
+\begin{answer}[iii]
+    We prove by contrapositive.
+    Assume that there is an efficient algorithm that solves $\SIS_{n,m,q,\beta}$, more specifically, that there exists a PPT algorithm $\Adv$ such that for all $n\in\Nbb$,
+    \begin{equation}\label{eq:p1-3-1}
+        \mu(n)\triangleq \Pr\biggl[A\Usample \Zbb_q^{n\times m}: r\in\Zbb^m \sample \Adv(1^n, A) \textrm{ s.t. } r\neq \bm{0}_m \land  Ar\equiv \bm{0}_n \Mod q \land \norm{r}_2\le \beta \biggr]
+    \end{equation}
+    is a nonnegligible function of $n$.
+
+    By abusing $\Adv$, we construct a PPT algorithm $\Rcal$ that solves $\DLWE_{n,m,q,\chi}$, as provided in the following experiment $\DLWE_{n,m,q,\chi}$. 
+    {
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & \Rcal & & \Adv \\
+            b\Usample\bit &&&&\\
+            A\Usample\Zbb_q^{m\times n}, s\sample\chi^n, e\sample\chi^m &&&&\\
+            u\Usample\Zbb_q^m &&&&\\
+            y\coloneqq \begin{cases}
+                As+e &\textrm{if } b=0 \\
+                u &\textrm{if } b=1 \\
+            \end{cases} & \XR{(1^n, A, y\in\Zbb_q^m)} &  & \XR{(1^n, A^T)} & \\
+            &&&\XL{r\in\Zbb^m}&\\
+            &  & \makecell[l]{
+            \textbf{If } \neg\left(r\neq \bm{0}_m \land  A^Tr\equiv \bm{0}_n \Mod q \land \norm{r}_2\le \beta\right)\\
+            \quad b'\Usample\bit\\
+            \textbf{Else}\\
+            \quad b'\coloneqq\begin{cases}
+                0 & \textrm{if } \abs*{[r^Ty]_q}\le n^7\\
+                1 & \textrm{if } \abs*{[r^Ty]_q}\gt n^7
+            \end{cases}
+            } & & \\
+            \textrm{$\Rcal$ wins if $b' = b$} & \XL{b'} &&&
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\DLWE_{n,m,q,\chi}$}
+        \label{fig:p1-game1}
+    }
+    Here we've introduced a notation $[\cdot]_q:\Zbb_q\to \Zbb$ called \textit{centered mod}. For each $x\in \Zbb_q$, let $[x]_q\in \Zbb$ denote the \textit{central representative} (aka \textit{centered mod}) of $x$ modulo $q$, that is, $[x]_q\in \left[-\frac{q}{2}, \frac{q}{2}\right)$ is such that $[x]_q \bmod q = x\in \Zbb_q$.
+
+    Clearly $\Rcal$ is a PPT algorithm since $\Adv$ is a PPT algorithm. 
+    
+    Denote the event $\textrm{GOOD}\triangleq r\neq \bm{0}_m \land  A^Tr\equiv \bm{0}_n \Mod q \land \norm{r}_2\le \beta$. Observe that
+    \begin{align}\label{eq:p1-3-5}
+        \Pr[\textrm{GOOD}]
+        &= \Pr\biggl[A\Usample \Zbb_q^{m\times n}: r\in\Zbb^m \sample \Adv(1^n, A^T) \textrm{ s.t. } r\neq \bm{0}_m \land  A^Tr\equiv \bm{0}_n \Mod q \land \norm{r}_2\le \beta \biggr]\notag\\
+        &= \Pr\biggl[A'\Usample \Zbb_q^{n\times m}: r\in\Zbb^m \sample \Adv(1^n, A') \textrm{ s.t. } r\neq \bm{0}_m \land  A'r\equiv \bm{0}_n \Mod q \land \norm{r}_2\le \beta \biggr]
+        = \mu(n),
+    \end{align}
+    which is nonnegligible.
+    To analyze the win rate of $\Rcal$ in this experiment, there are 3 cases to consider:
+    \begin{itemize}
+        \item \textbf{Case 1}: $\neg\textrm{GOOD}$
+        \item \textbf{Case 2}: $\textrm{GOOD} \land b=0$
+        \item \textbf{Case 3}: $\textrm{GOOD} \land b=1$
+    \end{itemize}
+    Clearly conditioning on $\neg \textrm{GOOD}$ (Case 1), $\Rcal$ has exactly $\frac{1}{2}$ to win since it guesses the answer uniformly at random. For the rest of the cases, we make the following claims.
+
+    \begin{claim}[Case 2]\label{claim:p1-3-1}
+        For all $n\in\Nbb$ that are sufficiently large,
+        \[
+            \Pr\biggl[\abs*{[r^Ty]_q}\le n^7 \biggm\vert \textrm{GOOD} \land b=0 \biggr]\ge 1- \frac{1}{n^2}.
+        \]
+    \end{claim}
+    \begin{proof}
+        As a side note here, elements of $e\in \Zbb_q^m$ are in $\Zbb_q$ (as defined by the LWE distribution taught in class), which would make the statistical analysis later a lot trickier. Therefore, for the ease of the proof, we replace $e\sample \chi^m$ with $e'\sample \chi^m$ and redefine $e\triangleq e'\bmod q$, where $e'\in\Zbb^m$ and $e\in\Zbb_q^m$, in the experiment.
+
+        Conditioning on $\textrm{GOOD} \land b=0$, we have $y=As+e$, $A^Tr=\bm{0}_n \in \Zbb_q^{n}$, and $\norm{r}_2\le \beta$.  It's easy to see that
+        \[
+            r^Ty=r^T(As+e)=(A^Tr)^Ts + r^Te=\bm{0}_n^Ts+r^Te=r^Te=r^T(e' \bmod q)=r^Te' \bmod q \in\Zbb_q,
+        \]
+        where all element-wise operations are performed in the field $\Zbb_q$. Taking centered mod on both sides, we obtain $[r^Ty]_q = [r^Te' \bmod q ]_q$ and thus $\abs*{[r^Ty]_q} = \abs*{[r^Te'\bmod q ]_q}$. Although calculating the probability that $\abs*{[r^Ty]_q}=\abs*{[r^Te'\bmod q ]_q}\le n^7$ is troublesome, but we may observe that, thanks to the fact that $n^7\lt \frac{1}{2}n^{10}=\frac{q}{2}$, if $\abs*{r^Te'}\le n^7$ (without taking centered mod), then surely $\abs*{[r^Te'\bmod q ]_q}\le n^7$ (with centered mod). Therefore, we then try to find a lower bound of the probability that $\abs*{r^Te'}\le n^7$.
+
+
+        \begin{observation}\label{obs:p1-3-1}
+            Since \[\beta=O(\sqrt{n\log q})=O(\sqrt{10 n\log n})=O(\sqrt{n\log n})=o(\sqrt{ n\cdot n})=o(n),\]
+            there exists $N\in\Nbb$ such that $\beta\lt n$.
+        \end{observation}
+        \vspace{-1cm}
+        \end{proof}\begin{proof}[cont'd]
+        
+        Let $e'=\begin{pmatrix}
+            e'_1 & e'_2 & \cdots& e'_m 
+        \end{pmatrix}^T$. 
+        \textbf{Fixing $r=\begin{pmatrix}
+            r_1 & r_2 & \cdots& r_m 
+        \end{pmatrix}^T\in\Zbb^m$} (to any value $r^\ast\in\Zbb^m$ that is consistent with $ \textrm{GOOD}\land b=0$, i.e., $\Pr[\textrm{GOOD} \land b=0 \land r=r^\ast]\gt 0$), we can in fact calculate the variance of $r^Te'\in\Zbb$ since $r$ is now constant:
+        \begin{align*}
+            \Var(r^Te'\mid r)=\Var\left(\sum_{i=1}^m r_i e'_i \Biggm \vert r\right)
+            &=\sum_{i=1}^m  \Var(r_i e'_i \mid r) && (\because e'_1,\ldots, e'_m \textrm{ are pairwise indep., i.e., } e'_i\indep e'_j \forall i\neq j)\\
+            &= \sum_{i=1}^m  r_i^2\Var(e'_i \mid r)\\
+            &= \sum_{i=1}^m  r_i^2\cdot (n^{5})^2 && (\because e'_i\sim \chi= \Psi_\alpha \implies \sigma_{e'_i}= \alpha \cdot q=n^{5})\\
+            &= n^{10} \norm{r}_2^2 \le n^{10}\beta^2.
+        \end{align*}
+        By \autoref{obs:p1-3-1}, for all $n\ge N$, we have
+        \begin{equation}\label{eq:p1-3-2}
+            \Var(r^Te' \mid r)\le n^{10}\beta^2\le n^{10}n^2=n^{12}.
+        \end{equation}
+        Besides, it's trivial that
+        \[
+            \Exp(r^Te'\mid r) =\Exp\left(\sum_{i=1}^m r_i e'_i \Biggm\vert r\right) = \sum_{i=1}^m r_i \Exp(e'_i \mid r) = \sum_{i=1}^m r_i\cdot 0=0. \qquad (\because e'_i\sim \chi= \Psi_\alpha \implies \mu_{e'_i}=0)
+        \]
+        Then, for all $n\ge N$, we apply Chebyshev's inequality to obtain a lower bound of $ \Pr\left[ \abs*{r^Te'} \le n^7\right]$:
+        \begin{align}\label{eq:p1-3-3}
+            \Pr\left[ \abs*{r^Te'} \le n^7 \mid r\right]
+            &= \Pr\left[ \abs*{r^Te' - \Exp(r^Te'\mid r)} \le n^7 \mid r\right]
+            \ge 1-\frac{\Var(r^Te'\mid r)}{\left(n^7\right)^2}
+            \stackrel{\eqref{eq:p1-3-2}}\ge 1-\frac{n^{12}}{n^{14}}
+            =1-\frac{1}{n^2}.
+        \end{align}
+        Note again that all probabilities, variances, and expectations above are actually conditioned on $\textrm{GOOD} \land b=0$ and $r$ is fixed.
+
+        Putting it all together, we conclude that for all $n\ge N$,
+        \begin{align*}
+            &\Pr\left[\abs*{[r^Ty]_q} \le n^7 \mid \textrm{GOOD} \land b=0\right]\\
+            =& \Pr\left[\abs*{[r^Te' \bmod q ]_q} \le n^7 \mid \textrm{GOOD} \land b=0\right]
+            \qquad (\because [r^Ty]_q = [r^Te' \bmod q ]_q \textrm{ by previous observation})\\
+            \ge&  \Pr\left[\abs*{r^Te'} \le n^7 \mid \textrm{GOOD} \land b=0\right]
+            \qquad (\because \abs*{r^Te'} \le n^7 \implies  \abs*{[r^Te' \bmod q ]_q} \le n^7 \textrm{ by previous observation})\\
+            =& \sum_{r^\ast\in\Zbb^m}\Pr\left[\abs*{r^Te'} \le n^7 \land r=r^\ast \mid \textrm{GOOD} \land b=0\right]\\
+            =& \sum_{r^\ast\in\Zbb^m \textrm{ s.t. } \Pr[\textrm{GOOD} \land b=0 \land r=r^\ast]\gt 0}\Pr[r=r^\ast \mid \textrm{GOOD} \land b=0] \Pr\left[\abs*{r^Te'} \le n^7 \mid \textrm{GOOD} \land b=0 \land r=r^\ast\right]\\
+            \ge& \sum_{r^\ast\in\Zbb^m \textrm{ s.t. } \Pr[\textrm{GOOD} \land b=0 \land r=r^\ast]\gt 0}\Pr[r=r^\ast \mid \textrm{GOOD} \land b=0] \left( 1-\frac{1}{n^2}\right). \qquad (\textrm{by \eqref{eq:p1-3-3}})\\
+            =& \left( 1-\frac{1}{n^2}\right) \sum_{r^\ast\in\Zbb^m}\Pr[r=r^\ast \mid \textrm{GOOD} \land b=0]\\
+            =& \left( 1-\frac{1}{n^2}\right) \Pr[\top \mid \textrm{GOOD} \land b=0]\\
+            =& 1-\frac{1}{n^2},
+        \end{align*}
+        as claimed.
+    \end{proof}
+
+    \begin{claim}[Case 3]\label{claim:p1-3-2}
+        For all $n\in\Nbb$,
+        \[
+            \Pr\biggl[\abs*{[r^Ty]_q}\gt n^7 \biggm\vert \textrm{GOOD} \land b=1 \biggr]= 1- \frac{2n^7+1}{n^{10}}.
+        \]
+    \end{claim}
+    \begin{proof}
+        Conditioning on $\textrm{GOOD} \land b=1$, we know $y=u\in Z_q^m$ and $r\in\Zbb^m$ is nonzero. 
+
+        Let $u=\begin{pmatrix}
+            u_1 & u_2 & \cdots& u_m 
+        \end{pmatrix}^T$. 
+        \textbf{Fixing $r=\begin{pmatrix}
+            r_1 & r_2 & \cdots& r_m 
+        \end{pmatrix}^T\in\Zbb^m$} (to any value $r^\ast\in\Zbb^m$ that is consistent with $ \textrm{GOOD}\land b=1$, i.e., $\Pr[\textrm{GOOD} \land b=1 \land r=r^\ast]\gt 0$), observe that since $r$ is nonzero, there exists some $i^\ast\in [m]$ such that $r_{i^\ast}\neq 0$, so we may split the dot product $r^Ty=r^Tu$ as:
+        \[
+            r^Tu = \sum_{i=0}^m r_iu_i=r_{i^\ast}u_{i^\ast}+\sum_{i\in [m]\setminus \{i^\ast\}} r_iu_i.
+        \]
+        
+        Since $u_{i^\ast}\in \Zbb_q$ is uniform and independent of $r_{i^\ast}$, $r_{i^\ast}u_{i^\ast}\in \Zbb_q$ (where multiplication is performed in $\Zbb_q$) is uniform and thus independent of $r_{i^\ast}$. Note that even though $r_{i^\ast}$ may be dependent on other $r_i$'s, as $r_{i^\ast}u_{i^\ast}$ and $r_{i^\ast}$ are already independent, together with the fact that $u_1,\ldots, u_m$ are jointly independent, we know $r_{i^\ast}u_{i^\ast}$ must be independent of other $r_iu_i$'s and thus independent of the rest of the sum $\sum_{i\in [m]\setminus \{i^\ast\}} r_iu_i$. Again, since $r_{i^\ast}u_{i^\ast}\in \Zbb_q$ is uniform and independent of the rest of the sum $\sum_{i\in [m]\setminus \{i^\ast\}} r_iu_i \in \Zbb_q$, the total sum $\sum_{i=1}^m r_iu_i\in \Zbb_q$ is hence uniform.
+
+        As $r^Tu=\sum_{i=1}^m r_iu_i\in \Zbb_q$ is uniform, $[r^Tu]_q\in \Zbb$ must also be uniform over $\left[-\frac{q-1}{2}, \frac{q-1}{2}\right]$ (the range of $[\cdot]_q:\Zbb_q\to \Zbb$). Hence, we have
+        \begin{equation}\label{eq:p1-3-4}
+            \Pr\left[[r^Tu]_q \gt n^7\mid r\right]
+            = 1- \Pr\left[[r^Tu]_q \le n^7\mid r\right]
+            = 1- \frac{\abs*{\left[-n^7, n^7\right]}}{\abs*{\left[-\frac{q-1}{2}, \frac{q-1}{2}\right]}}
+            = 1-\frac{2n^7+1}{q}
+            =1-\frac{2n^7+1}{n^{10}}.
+        \end{equation}
+        Note again that all probabilities above are actually conditioned on $\textrm{GOOD} \land b=1$ and $r$ is fixed.
+
+        Putting it all together, we conclude that for all $n\in \Nbb$,
+        \begin{align*}
+            &\Pr\left[\abs*{[r^Ty]_q} \gt n^7 \mid \textrm{GOOD} \land b=1\right]\\
+            =& \Pr\left[\abs*{[r^Tu]_q} \gt n^7 \mid \textrm{GOOD} \land b=1\right]\\
+            =& \sum_{r^\ast\in \Zbb^m}\Pr\left[\abs*{[r^Tu]_q} \gt n^7 \land r=r^\ast\mid \textrm{GOOD} \land b=1\right]\\
+            =& \sum_{r^\ast\in \Zbb^m \textrm{ s.t. } \Pr[\textrm{GOOD} \land b=1 \land r=r^\ast]\gt 0} \Pr[r=r^\ast\mid \textrm{GOOD} \land b=1] \Pr\left[\abs*{[r^Tu]_q} \gt n^7 \mid \textrm{GOOD} \land b=1 \land r=r^\ast\right]\\
+            =& \sum_{r^\ast\in \Zbb^m \textrm{ s.t. } \Pr[\textrm{GOOD} \land b=1 \land r=r^\ast]\gt 0} \Pr[r=r^\ast\mid \textrm{GOOD} \land b=1] \left(1-\frac{2n^7+1}{n^{10}}\right)
+            \qquad (\textrm{by \eqref{eq:p1-3-4}})\\
+            =& \left(1-\frac{2n^7+1}{n^{10}}\right) \sum_{r^\ast\in \Zbb^m} \Pr[r=r^\ast\mid \textrm{GOOD} \land b=1]\\
+            =& \left(1-\frac{2n^7+1}{n^{10}}\right) \sum_{r^\ast\in \Zbb^m} \Pr[\top \mid \textrm{GOOD} \land b=1]\\
+            =& 1-\frac{2n^7+1}{n^{10}},
+        \end{align*}
+        as claimed.
+    \end{proof}
+
+    Lastly, since the input $A^T$ to $\Adv$ is independent of $b$, the output $r$ of $\Adv$ must be also independent of $b$, which can be justified by \autoref{lemma:p1-2-1}. Thus, $(A, r)$ is independent of $b$, so $\textrm{GOOD}$, which can be regarded as a binary predicate of $A$ and $r$, is hence independent of $b$. This gives us
+    \begin{equation}\label{eq:p1-3-6}
+        \Pr[b=0 \mid \textrm{GOOD}]=\Pr[b=1 \mid \textrm{GOOD}]
+        = \Pr[b=0] =\Pr[b=1] =\frac{1}{2}.
+    \end{equation}
+
+    Putting it all together, we see that for all $n\in\Nbb$ that are sufficiently large,
+    \begin{align*}
+        &\Pr\left[\Rcal \textrm{ wins }  \DLWE_{n,m,q,\chi}\right]\\
+        =& \Pr\left[\neg \textrm{GOOD}\right]\Pr\left[b'=b \mid \neg \textrm{GOOD}\right]
+        + \Pr[\textrm{GOOD}]\left(\frac{1}{2}\Pr\left[b'=0 \mid \textrm{GOOD}\land b=0\right]+\frac{1}{2}\Pr\left[b'=1 \mid \textrm{GOOD}\land b=1\right] \right)\\
+        &\hspace{15cm} (\textrm{by \eqref{eq:p1-3-6}})\\
+        =& (1-\mu(n))\cdot \frac{1}{2}+\mu(n)\left(\frac{1}{2}\Pr\left[\abs*{[r^Ty]_q}\le n^7 \mid \textrm{GOOD}\land b=0\right]+\frac{1}{2}\Pr\left[\abs*{[r^Ty]_q}\gt n^7 \mid \textrm{GOOD}\land b=1\right]\right)\\
+        &\hspace{15cm} (\textrm{by \eqref{eq:p1-3-5}})\\
+        \ge&  (1-\mu(n))\cdot \frac{1}{2}+\mu(n)\left(\frac{1}{2}\left(1- \frac{1}{n^2}\right)+\frac{1}{2}\left(1-\frac{2n^7+1}{n^{10}}\right)\right)
+        \qquad (\textrm{by \autoref{claim:p1-3-1} and \autoref{claim:p1-3-2}}) \\
+        =& \frac{1}{2}+\frac{1}{2}\mu(n)\left(1- \frac{1}{n^2}-\frac{2n^7+1}{n^{10}}\right).
+    \end{align*}
+    Note that since $1-\frac{1}{2^2}-\frac{2(2)^7+1}{2^{10}}\le 1- \frac{1}{n^2}-\frac{2n^7+1}{n^{10}}\le 1$ and thus
+    \[
+        1- \frac{1}{n^2}-\frac{2n^7+1}{n^{10}}
+        =\Theta(1)=\frac{1}{n^{\Theta(\log^{-1} n)}}=\frac{1}{n^{O(1)}},
+    \]
+    so $1- \frac{1}{n^2}-\frac{2n^7+1}{n^{10}}$ is nonnegligible. (Recall that a nonzero function $\epsilon(\cdot)$ is negligible iff $\epsilon(n)=\frac{1}{n^{\omega(1)}}$.)
+    Moreover, by assumption we know $\mu(n)$ is nonnegligible. Hence, the advantage $\frac{1}{2}\mu(n)\left(1- \frac{1}{n^2}-\frac{2n^7+1}{n^{10}}\right)$ of $\Rcal$ in experiment $\DLWE_{n,m,q,\chi}$ is nonnegligible.
+
+    Therefore, the PPT algorithm $\Rcal$ indeed solves $\DLWE_{n,m,q,\chi}$, which implies that $\DLWE_{n,m,q,\chi}$ is not hard. Hence proved.
+\end{answer}

@@ -70,7 +70,7 @@
             \end{array}
         \]
         \captionof{figure}{Experiment $\PKE^{ZeroEnc}$}
-        \label{fig:p3-game2}
+        \label{fig:p3-game3}
     }
     Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm.
     To analyze the win rate of $R$, observe that for all $n\in\Nbb$:
@@ -137,7 +137,7 @@
             \end{array}
         \]
         \captionof{figure}{Experiment $\PKE^{VectorEnc}$}
-        \label{fig:p3-game3}
+        \label{fig:p3-game4}
     }
     Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm. Also, it's straightforward that in this experiment, the ciphertext $ct=ct_{1,b}\sample \Enc_{\pk}(m_{1,b})$ given by $R$ to $\Adv$ is distributed identically to  $ct$ in the experiment $\PKE^{IND-CPA}$. Hence $R$ wins here iff $\Adv$ wins in $\PKE^{IND-CPA}$. This implies that for all $n\in\Nbb$
     \[
@@ -217,7 +217,7 @@
             \end{array}
         \]
         \captionof{figure}{Experiment $\PKE^{IND-CPA}$}
-        \label{fig:p3-game4}
+        \label{fig:p3-game5}
     }
     Clearly $R$ is a PPT algorithm since $\Adv$ is a PPT algorithm. To analyze the advantage of $R$ in this experiment, for every $n\in\Nbb$ and $i\in \{0,1,\ldots, n\}$, for random variables $(\pk, \sk)\sample \Gen(1^n)$ and $(m_{j,0},m_{j,1})_{j=1}^n \sample \Adv(\pk)$, we introduce the following hybrid distributions over $\Ccal_n^n$:
     \[
@@ -448,7 +448,7 @@
                 \end{array}
             \]
             \captionof{figure}{Experiment $\PKE^{IND-CPA}$}
-            \label{fig:p3-game1}
+            \label{fig:p3-game2}
         }
         Clearly  $\Adv$ is a PPT algorithm. Also, it's straightforward that in this experiment, for all $n\in\Nbb$,
         \begin{align*}

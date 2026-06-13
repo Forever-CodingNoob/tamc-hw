@@ -1,0 +1,245 @@
+\begin{problem}[HVZK with abort is sufficient for Fiat-Shamir Signature]\label{p2}
+    \leavevmode\par
+    In class, we introduced a lattice-based identification scheme which only satisfies a much weaker security notion that allows the prover to abort, and the aborted transcript is not required to be simulatable. While it may seem odd to aim for such week notion, this is in fact sufficient to construct a signature scheme from such ID scheme.
+
+    \noindent (Some definitions)
+
+    Show that, if $\ID_\bot$ is a secure ID scheme with abort that additionally has high first-message min-entropy, then $\Sig = \FS[\ID_\bot; H]$ is a secure signature scheme under the random oracle model.
+\end{problem}
+
+
+
+\begin{answer}
+    Let $\ID_\bot=(\Gen, P_1, P_2, V)$ be an ID scheme with abort and high first-message min-entropy. Denote by $p(n)$ the abort rate of $\ID_\bot$ on security parameter $n\in\Nbb$.   We prove by contrapositive that $\ID_\bot=(\Gen,P_1, P_2, V)$ is secure implies its corresponding Fiat-Shamir signature scheme $\Sig \triangleq \FS[\ID_\bot; H]=(\Gen, \Sign, \Vrfy)$ is also secure, where $H$ is the random oracle.
+
+    Assuming that the signature scheme $\Sig$ is not secure, our goal is to show that the ID scheme $\ID_\bot$ is not secure either. By the security of $\Sig$, there exists a PPT oracle adversary $\Adv$ such that 
+    \begin{equation}\label{eq:p2-1}
+        \epsilon(n)\triangleq \Pr\left[\Adv^H \textrm{ wins } \Sign^{\mathsf{forge}}(n)  \right]
+    \end{equation}
+    is nonnegligible (as a function of $n\in\Nbb$), where the EUF-CMA experiment $\Sign^{\mathsf{forge}}(n)$ (for each $n\in\Nbb$) is described as follows. Note that in $\Sign^{\mathsf{forge}}(n)$, we've expanded the definitions of $\Sign$ and $\Vrfy$ for convenience, and we've also let $\Tfrak_H$ be a subset of $(\Mcal\times \Tcal) \times \Ccal$, where $\Mcal, \Tcal, \Ccal$ denote the message space, commitment space, and challenge space, respectively. 
+    Moreover, for the ease of the proof later, we have the challenger $\Ch$ simulate by lazy sampling the random oracle $H$ to which $\Adv$ has access. 
+    {
+        \[
+            \begin{array}{@{} c c c @{}}
+            \Ch & & \Adv^{H, \Sign_\sk(\cdot)} \\
+            (\pk, \sk)\sample \Gen(1^n) &&\\
+            \Tfrak_H\coloneqq \emptyset, Q\coloneqq \emptyset & \XR{\pk} & \\
+            \vcenter{\hbox{%
+                \small
+                \begin{minipage}{0.44\textwidth}
+                \begin{simplebox}
+                $\underline{H(m_i, \com_i)}$
+                \begin{algorithmic}[1]
+                \If{$\exists \ch$ s.t. $((m_i, \com_i), \ch) \in \Tfrak_H$}
+                \State $\ch_i\coloneqq \ch$
+                \Else
+                \State $\ch_i\Usample\Ccal$
+                \State $\Tfrak_H\coloneqq \Tfrak_H\cup \{((m_i, \com_i), \ch_i)\}$
+                \EndIf
+                \State\Return $\ch_i$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{(m_i, \com_i)}\\\XR{\ch_i}} & \textrm{Query } H(\cdot, \cdot)\\
+            \vcenter{\hbox{%
+                \small
+                \begin{minipage}{0.42\textwidth}
+                \begin{simplebox}
+                $\underline{\Sign_\sk(m)}$
+                \begin{algorithmic}[1]
+                \State $Q\coloneqq Q\cup \{m_j\}$
+                \For{$k=1,\ldots, \lceil t(n) \rceil$}
+                \State $(\com_j, \st_j)\sample P_1(\pk, \sk)$
+                \State $\ch_j \gets H(m_j, \com_j)$
+                \State $\resp_j \sample P_2(\pk, \sk, \st_j, \ch_j)$
+                \If{$\resp_j\neq \bot$}
+                \State\Return $\sigma_j\coloneqq (\com_j, \resp_j)$
+                \EndIf
+                \EndFor
+                \State\Return $\sigma_j\coloneqq \bot$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{m_j}\\\XR{\sigma_j}} & \textrm{Query } \Sign_\sk(\cdot)\\
+            \makecell[c]{\Adv^H \textrm{ wins if } V(\pk, \com^\ast, H(m^\ast, \com^\ast), \resp^\ast)=1 \land m^\ast\notin Q} & \XL{(m^\ast, \sigma^\ast = (\com^\ast, \resp^\ast))}  &
+            \end{array}
+        \]
+        \vspace{-0.8cm}
+        \captionof{figure}{Experiment $\Sign^{\mathsf{forge}}(n)$}
+        \label{fig:p2-game1}
+    }
+
+    From this, we construct a PPT adversary $\Rcal$ (without access to the random oracle $H$) that breaks the security of the underlying ID scheme $\ID_\bot$ with abort. Specifically, we claim that 
+    \[
+        \Pr\left[\Rcal \textrm{ wins } \ID^{\mathsf{forge},\bot}(n)  \right]
+    \]
+    is nonnegligible (as a function of $n$).
+    Note that in order to run/simulate $\Adv^H$, $\Rcal$ must simulate the random oracle $H$ for $\Adv^H$, which is done by lazy sampling in our construction.
+    The construction of $\Rcal$ is given in the following experiment $\ID^{\mathsf{forge},\bot}(n)$, wherein we denote by $\Trans_\sk^\bot$ the transcript oracle and let $\Tfrak_H$ be a subset of $(\Mcal\times \Tcal) \times \Ccal$ for the lazy sampling of $H$ as in experiment $\Sign^{\mathsf{forge}}(n)$. 
+    {\footnotesize
+        \[
+            \begin{array}{@{} c c c c c @{}}
+            \Ch & & \Rcal^{\Trans_\sk^\bot(\cdot)} & & \Adv^{H,\Sign_\sk(\cdot)} \\
+            (\pk, \sk)\sample \Gen(1^n) & \XR{\pk} & i^\ast\Usample [q_H] &&\\
+            && \Tfrak_H\coloneqq \emptyset, Q\coloneqq \emptyset & \XR{\pk} &\\
+            \makecell[c]{\ch_{i^\ast}\Usample\Ccal\\\\\\\\\\\\\\} & \makecell[c]{\XL{\com_{i^\ast}}\\\XR{\ch_{i^\ast}}\\\\\\\\\\\\\\} &\vcenter{\hbox{%
+                \footnotesize
+                \begin{minipage}{0.44\textwidth}
+                \begin{simplebox}
+                $\underline{H(m_i, \com_i)}$
+                \begin{algorithmic}[1]
+                \If{$\exists \ch$ s.t. $((m_i, \com_i), \ch) \in \Tfrak_H$}
+                \State $\ch_i \coloneqq \ch$
+                \ElsIf{on $i^\ast$-th query (i.e., $i=i^\ast$)}
+                \State Send $\com_{i^\ast}$ to $\Ch$ and receive $\ch_{i^\ast}$
+                \State $\Tfrak_H\coloneqq \Tfrak_H\cup \{((m_{i^\ast}, \com_{i^\ast}), \ch_{i^\ast})\}$
+                \Else
+                \State $\ch_i\Usample\Ccal$
+                \State $\Tfrak_H\coloneqq \Tfrak_H\cup \{((m_i, \com_i), \ch_i)\}$
+                \EndIf
+                \State\Return $\ch_i$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{(m_i, \com_i)}\\\XR{\ch_i}} & \textrm{Query } H(\cdot, \cdot)\\
+            \vcenter{\hbox{%
+                \footnotesize
+                \begin{minipage}{0.28\textwidth}
+                \begin{simplebox}
+                $\underline{\Trans_\sk^\bot(\cdot)}$
+                \begin{algorithmic}[1]
+                \State $(\com, \st)\gets P_1(\pk, \sk)$
+                \State $\ch\Usample\Ccal$
+                \State $\resp \gets P_2(\pk, \sk, \st, \ch)$
+                \State\Return if $\resp\neq \bot$ then $(\com, \ch, \resp)$ else $\bot$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }}&\makecell[c]{\XL{\textrm{Query } \Trans_\sk^\bot(\epsilon)}\\\XR{(\com_j, \ch_j, \resp_j)}} &\vcenter{\hbox{%
+                \footnotesize
+                \begin{minipage}{0.44\textwidth}
+                \begin{simplebox}
+                $\underline{\Sign_\sk(m_j)}$
+                \begin{algorithmic}[1]
+                \State $Q\coloneqq Q\cup \{m_j\}$
+                \For{$k=1,\ldots, \lceil t(n) \rceil$}
+                \State $(\com_j, \ch_j, \resp_j)\gets \Trans_\sk^\bot(\epsilon)$
+                \If{$(\com_j, \ch_j, \resp_j)\neq \bot$}
+                \If{$((m_j,\com_j),\;\cdot\;) \in \Tfrak_H$}
+                \State ABORT
+                \Else
+                \State $\Tfrak_H \coloneqq \Tfrak_H \cup \{((m_j, \com_j), \ch_j)\}$
+                \State\Return $\sigma_j\coloneqq (\com_j, \resp_j)$
+                \EndIf
+                \EndIf
+                \EndFor
+                \State\Return $\sigma_j\coloneqq \bot$
+                \end{algorithmic}
+                \end{simplebox}
+                \end{minipage}%
+            }} & \makecell[c]{\XL{m_j}\\\XR{\sigma_j}} & \textrm{Query } \Sign_\sk(\cdot)\\
+            \makecell[c]{\Rcal \textrm{ wins if }\\V(\pk, \com_{i^\ast}, \ch_{i^\ast}, \resp^\ast)=1} & \XL{\resp^\ast} &  & \XL{(m^\ast, (\com^\ast, \resp^\ast))}  &
+            \end{array}
+        \]
+        \captionof{figure}{Experiment $\ID^{\mathsf{forge},\bot}(n)$}
+        \label{fig:p2-game2}
+    }
+
+    Clearly $\Rcal^{\Trans_\sk^\bot(\cdot)}$ is a PPT algorithm since $\Adv^{H,\Sign_\sk(\cdot)}$ is a PPT algorithm and every oracle call takes (probabilistic) polynomial time.
+
+    Let $q_H=O(\poly(n))$ (resp. $q_{S}=O(\poly(n))$) be an upper bound  of the number of issues that $\Adv^{H,\Sign_\sk(\cdot)}$ queries to the oracle $H(\cdot, \cdot)$ (resp. $\Sign_\sk(\cdot)$). WLOG, assume that all queries made by $\Adv^{H,\Sign_\sk(\cdot)}$ are distinct, i.e., that $\Adv^{H,\Sign_\sk(\cdot)}$ never makes the same queries to $H(\cdot, \cdot)$ or $\Sign_\sk(\cdot)$. Define the event $\textrm{WIN}\triangleq V(\pk, \com^\ast, H(m^\ast, \com^\ast), \resp^\ast)=1 \land m^\ast\notin Q$ in experiment $\ID^{\mathsf{forge},\bot}(n)$, meaning that $\Adv^{H,\Sign_\sk(\cdot)}$ outputs a ``correct'' answer as if it were playing in its own experiment $\Sign^{\mathsf{forge}}(n)$.
+    
+    Observe that the distributions of the views of $\Adv^{H,\Sign_\sk(\cdot)}$ in experiments $\Sign^{\mathsf{forge}}(n)$ and $\ID^{\mathsf{forge},\bot}(n)$ are slightly different. This discrepancy in distributions originates from two bad events defined as follows:
+    \begin{itemize}
+        \item $\textrm{BAD}_1$: $\Rcal$ aborts at line 6 in the simulation of oracle $\Sign_\sk(\cdot)$. That is, there exists some $j\in [q_S]$ such that at line 5 of $\Sign_\sk(\cdot)$, $(m_j, \com_j)$ has already been either queried to $H(\cdot, \cdot)$ by $\Adv^{H,\Sign_\sk(\cdot)}$ or generated by $\Trans_\sk^\bot(\epsilon)$ during past executions of $\Sign_\sk(\cdot)$.
+        \item $\textrm{BAD}_2$: $\Adv^{H,\Sign_\sk(\cdot)}$ has never queried to $H(\cdot, \cdot)$ $(m^\ast, \com^\ast)$, which are returned by $\Adv^{H,\Sign_\sk(\cdot)}$ at the end.
+    \end{itemize}
+    It's clear that if $\textrm{BAD}_1$ and $\textrm{BAD}_2$, do not happen, then the probability of $\textrm{WIN}$ in $\ID^{\mathsf{forge},\bot}(n)$  is equivalent to the probability that $\Adv^{H,\Sign_\sk(\cdot)}$ wins in $\Sign^{\mathsf{forge}}(n)$. That is,
+    \[
+        \Pr\left[\textrm{WIN}\mid \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2 \right]
+        = \Pr\left[\Adv^H \textrm{ wins }\Sign^{\mathsf{forge}}(n)\mid \neg \textrm{BAD}_2   \right],
+    \]
+    so
+    \begin{equation}\label{eq:p2-8}
+        \Pr\left[\textrm{WIN} \land \neg \textrm{BAD}_1 \land \neg \textrm{BAD}_2 \right]
+        = \Pr[\neg \textrm{BAD}_1]\Pr\left[\Adv^H \textrm{ wins } \land \neg \textrm{BAD}_2 \textrm{ in } \Sign^{\mathsf{forge}}(n)  \right].
+    \end{equation}
+    
+    Let us find an upper bound of the probability that each bad event occurs.
+
+    If $\textrm{BAD}_1$ occurs in experiment $\ID^{\mathsf{forge},\bot}(n)$, we know that for some $j\in [q_S]$, during the $j$-th execution of $\Sign_\sk(\cdot)$, $(m_j,\com_j)$ matches some past query in the set $\Tfrak_H$, where $(\com_j, \ch_j, \resp_j)\gets \Trans_\sk^\bot(\epsilon)$ is a freshly sampled, valid transcript and $\resp_j\neq \bot$. Recall that $\ID_\bot=(\Gen, P_1, P_2, V)$ has a high first-message min-entropy, that is, there exist some $r(n)$ and $\mu(n)=\negl(n)$ such that $2^{-r(n)}=\negl(n)$ and 
+    \begin{equation}\label{eq:p2-2}
+        \Pr_{(\pk, \sk)\gets \Gen(1^n)}\biggl[\underbrace{\max_{\tilde{\com}\in \Tcal} \Pr_{(\st, \com) \gets P_1(\pk, \sk)}\left[\com=\tilde{\com}\right] \le 2^{-r(n)}}_{\begin{aligned}
+            \triangleq \textrm{GOOD}
+        \end{aligned}} \biggr] \gt 1-\mu(n)
+    \end{equation}
+    for all $n\in\Nbb$. Since we know $(\cdot, \com_j) \gets P_1(\pk, \sk)$ is fresh, for each $((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H$, the probability that $(m_j,\com_j)$ collides with $(\tilde{m}, \tilde{\com})$ is bounded by:
+    \begin{align}\label{eq:p2-3}
+        &\Pr_{(\pk, \sk)\gets \Gen(1^n)}\left[(m_j,\com_j)=(\tilde{m}, \tilde{\com}) \right]\notag\\
+        =& \Pr_{(\pk, \sk)\gets \Gen(1^n)}[\textrm{GOOD}] \Pr_{(\pk, \sk)\gets \Gen(1^n)}\left[(m_j,\com_j)=(\tilde{m}, \tilde{\com}) \bigm\vert \textrm{GOOD}\right]\notag\\
+        &\qquad\qquad\qquad +\Pr_{(\pk, \sk)\gets \Gen(1^n)}[\neg\textrm{GOOD}] \Pr_{(\pk, \sk)\gets \Gen(1^n)}\left[(m_j,\com_j)=(\tilde{m}, \tilde{\com}) \bigm\vert \neg \textrm{GOOD}\right]\notag\\
+        \stackrel{\eqref{eq:p2-2}}\le& 1\cdot  \Pr_{\substack{(\pk, \sk)\gets \Gen(1^n)\\(\cdot, \com_j) \gets P_1(\pk, \sk)}}\left[\com_j = \tilde{\com}\bigm\vert \textrm{GOOD} \right] + \mu(n) \cdot 1\notag\\
+        \stackrel{\eqref{eq:p2-2}}\le& 2^{-r(n)}+\mu(n).
+    \end{align}
+    Moreover, observe that prior to the $j$-th query to $\Sign_\sk(\cdot)$, $(m_j,\com_j)$, there are at most $q_H$ queries made to $H(\cdot, \cdot)$ and $j-1$ queries made to $\Sign_\sk(\cdot)$. This implies that $\Tfrak_H$ contains at most $q_H+(j-1)$ query/answer pairs, i.e., $\abs*{\Tfrak_H}\le q_H+(j-1)$. Therefore, the probability that $(m_j,\com_j)$ collides with ANY $((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H$ is bounded by:
+    \begin{align}\label{eq:p2-4}
+        \Pr\left[\bigvee_{((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H} (m_j,\com_j)=(\tilde{m}, \tilde{\com}) \right]
+        &\le \sum_{((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H}\Pr\left[(m_j,\com_j)=(\tilde{m}, \tilde{\com}) \right]
+        \qquad \textrm{(by Union Bound)}\notag\\
+        &\stackrel{\eqref{eq:p2-3}}\le  \sum_{((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H} (2^{-r(n)}+\mu(n)\notag)\\
+        &= (2^{-r(n)}+\mu(n)) \cdot \abs*{\Tfrak_H}\notag\\
+        &\le (2^{-r(n)}+\mu(n))(q_H+(j-1)).
+    \end{align}
+    As we don't actually know $j\in [q_S]$, we simply apply union bound again to sum up the probabilities that $\Sign_\sk(\cdot)$ aborts on $j$-th query for EVERY $j\in [q_S]$:
+    \begin{align}\label{eq:p2-5}
+        \Pr\left[ \textrm{BAD}_1  \right]
+        = \Pr\left[\bigvee_{j=1}^{q_S}\Sign_\sk(\cdot) \textrm{ aborts on } j \textrm{-th query} \right]
+        &\le \sum_{j=1}^{q_S}\Pr\left[\Sign_\sk(\cdot) \textrm{ aborts on } j \textrm{-th query} \right]\notag\\
+        &= \sum_{j=1}^{q_S}\Pr\left[\bigvee_{((\tilde{m}, \tilde{\com}), \tilde{\ch}) \in \Tfrak_H} (m_j,\com_j)=(\tilde{m}, \tilde{\com}) \right]\notag\\
+        &\stackrel{\eqref{eq:p2-4}}\le  \sum_{j=1}^{q_S} (2^{-r(n)}+\mu(n))(q_H+(j-1))\notag\\
+        &\le (2^{-r(n)}+\mu(n))(q_Hq_S+q_S^2).
+    \end{align}
+
+
+    On the other hand, in experiment $\Sign^{\mathsf{forge}}(n)$, suppose $\textrm{BAD}_2$ occurs in $\Sign^{\mathsf{forge}}(n)$, meaning that $\Adv^{H,\Sign_\sk(\cdot)}$ has never queried $(m^\ast, \com^\ast)$ to $H(\cdot, \cdot)$. If we additionally know $m^\ast\notin Q$, then all query responses that $\Adv^{H,\Sign_\sk(\cdot)}$ has received during execution are independent of $H(m^\ast, \com^\ast)$, which thus remains uniformly random, albeit possibly set to some value, to  $\Adv^{H,\Sign_\sk(\cdot)}$. Hence, assuming that conditioning on $\textrm{BAD}_2$, for every $\pk, \com, \resp$, there is only one challenge $\ch\in\Ccal$ such that $V(\pk, \com, \ch, \resp)=1$, this allows us to deduce that: 
+    \begin{align}\label{eq:p2-6}
+        \Pr\left[\Adv^H \textrm{ wins } \Sign^{\mathsf{forge}}(n)\mid \textrm{BAD}_2\right]
+        &= \Pr\left[ V(\pk, \com^\ast, H(m^\ast, \com^\ast), \resp^\ast)=1 \land m^\ast\notin Q \mid \textrm{BAD}_2\right] \notag\\
+        &= \Pr_{\ch\Usample \Ccal}\left[ V(\pk, \com^\ast, \ch, \resp^\ast)=1 \land m^\ast\notin Q\mid \textrm{BAD}_2\right] \notag\\
+        &\le \Pr_{\ch\Usample \Ccal}\left[ V(\pk, \com^\ast, \ch, \resp^\ast)=1\mid \textrm{BAD}_2\right] \notag\\
+        &= \frac{\{\ch\in\Ccal \mid V(\pk, \com^\ast, \ch, \resp^\ast)=1 \}}{\abs*{\Ccal}} \notag\\
+        &= \frac{1}{\abs*{\Ccal}}.
+    \end{align}
+    We further assume $\abs*{\Ccal} = \omega(\poly(n))$.
+
+    Back in experiment $\ID^{\mathsf{forge},\bot}(n)$, define the event $\textrm{GoodGuess}\triangleq \left( (m_{i^\ast}, \com_{i^\ast})=(m^\ast, \com^\ast) \right)$. Conditioning on $\textrm{WIN}\land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2$, from $\neg \textrm{BAD}_2$ we know $\Adv^{H,\Sign_\sk(\cdot)}$ has queried the outputted $(m^\ast, \com^\ast)$ EXACTLY ONCE, as we've assumed that all queries made by $\Adv^{H,\Sign_\sk(\cdot)}$ are distinct. Observe that during each execution of the simulated $H(\cdot, \cdot)$, given the first branch (lines 1-2) is not taken,  $\Adv^{H,\Sign_\sk(\cdot)}$ cannot distinguish the case $i = i^\ast$, in which the second branch is taken, from the case $i \neq i^\ast$, in which the third branch is taken. Therefore, we may see that the uniformly chosen $i^\ast$ is in fact independent of the view of $\Adv^{H,\Sign_\sk(\cdot)}$ and thus its output $(m^\ast, \com^\ast)$. This gives us
+    \begin{align}\label{eq:p2-7}
+        \Pr\left[\textrm{GoodGuess} \mid \textrm{WIN}\land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right]
+        &= \Pr_{i^\ast\Usample [q_H]}\left[(m_{i^\ast}, \com_{i^\ast})=(m^\ast, \com^\ast) \mid \textrm{WIN}\land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right]\notag\\
+        &= \Pr_{i^\ast\Usample [q_H]}\left[(m_{i^\ast}, \com_{i^\ast})=(m_{i^\bigstar}, \com_{i^\bigstar}) \mid \textrm{WIN}\land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right]\notag\\
+        &= \Pr_{i^\ast\Usample [q_H]}[i^\ast = i^\bigstar \mid \textrm{WIN}\land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2] = \frac{1}{q_H}
+    \end{align}
+    since we know $(m^\ast, \com^\ast)=(m_{i^\bigstar}, \com_{i^\bigstar})$ for some $i^\bigstar\in [q_H]$ and all queries $(m_1, \com_1),\ldots, (m_{q_H}, \com_{q_H})$ are distinct.
+
+
+    Putting it all together, we see that for all $n\in\Nbb$,
+    \begin{align*}
+        &\Pr\left[\Rcal \textrm{ wins } \ID^{\mathsf{forge},\bot}(n)\right]\\
+        \ge& \Pr\left[\textrm{WIN} \land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2 \land \textrm{GoodGuess} \right]\\
+        =& \Pr\left[\textrm{WIN} \land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right] \Pr\left[\textrm{GoodGuess}\mid \textrm{WIN} \land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right]\\
+        =& \Pr\left[\textrm{WIN} \land \neg \textrm{BAD}_1\land \neg \textrm{BAD}_2\right] \cdot \frac{1}{q_H}
+        \qquad (\textrm{by \eqref{eq:p2-7}})\\
+        =& \Pr[\neg \textrm{BAD}_1]\Pr\left[\Adv^H \textrm{ wins } \land \neg \textrm{BAD}_2 \textrm{ in } \Sign^{\mathsf{forge}}(n)  \right] \cdot \frac{1}{q_H}
+        \qquad (\textrm{by \eqref{eq:p2-8}})\\
+        =& \Pr[\neg \textrm{BAD}_1]\left(\Pr\left[\Adv^H \textrm{ wins }\Sign^{\mathsf{forge}}(n)  \right]-\Pr\left[\Adv^H \textrm{ wins } \land  \textrm{BAD}_2 \textrm{ in } \Sign^{\mathsf{forge}}(n)  \right]\right) \cdot \frac{1}{q_H}\\
+        \ge& \Pr[\neg \textrm{BAD}_1]\left(\Pr\left[\Adv^H \textrm{ wins }\Sign^{\mathsf{forge}}(n)  \right]- \Pr\left[\Adv^H \textrm{ wins } \Sign^{\mathsf{forge}}(n) \mid \textrm{BAD}_2  \right]\right) \cdot \frac{1}{q_H}\\
+        \ge& \left(1- (2^{-r(n)}+\mu(n))(q_Hq_S+q_S^2)\right)\left(\epsilon(n) - \frac{1}{\abs*{\Ccal}} \right)\cdot \frac{1}{q_H}
+        \qquad (\textrm{by \eqref{eq:p2-1}, \eqref{eq:p2-5} and \eqref{eq:p2-6}})\\
+        =& \left(1-(\negl(n)+\negl(n))O(\poly(n))\right)\left(\nonnegl(n)-\frac{1}{\omega(\poly(n))} \right)\cdot \frac{1}{O(\poly(n))}
+        \qquad (\textrm{by assumptions})\\
+        =& (1-\negl(n)) \left(\nonnegl(n)-\negl(n) \right)\cdot \nonnegl(n)
+        = \nonnegl(n).
+    \end{align*}
+
+    Hence, by definition, the PPT adversary $\Rcal$ indeed breaks the security of the underlying ID scheme $\ID_\bot$ with abort, meaning that $\ID_\bot$ is not secure. Hence proved.
+\end{answer}

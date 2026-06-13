@@ -358,7 +358,7 @@
         \item In the oracle $\Decaps^{\not\bot}_{\sk'}(\cdot)$ simulated by $R$, since $\ct_i\neq \ct^\ast$, the decryption oracle $\Dec_\sk(\cdot)$ simulated by the challenger always outputs the same values as the real decryption function $\Dec_\sk$ in \autoref{fig:p2-game3} (as $R$ is only not allowed to query $\ct^\ast$). Combining with the previous observation that $H(\cdot)$ has been perfectly simulated, we see that $R$ has also been perfectly simulating $\Decaps^{\not\bot}_{\sk'}(\cdot)$. That is, the simulated $\Decaps^{\not\bot}_{\sk'}(\cdot)$ has been behaving the same as the real one in \autoref{fig:p2-game3}, before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$.
     \end{itemize}
     We conclude that all inputs to $\Adv$ and outputs from the oracles $H(\cdot)$ and  $\Decaps^{\not\bot}_{\sk'}(\cdot)$ have been distributed identically to those in  $\KEM^{\mathsf{IND-CCA}}$ \textcolor{red}{before $(m^\ast, \ct^\ast)$ is ever queried by $\Adv$ to $H(\cdot)$}. Hence we have
-    \begin{equation}\label{eq:p2-2-3}
+    \begin{equation}\label{eq:p2-2-7}
         \Pr\left[\textrm{QUERY}^\PKE \right]= \Pr\left[\textrm{QUERY}^\KEM\right].
     \end{equation}
 
@@ -380,7 +380,7 @@
         && (\textrm{by \eqref{eq:p2-2-4}})\\
         &= \frac{1}{2}+\frac{1}{2}\Pr\left[\textrm{QUERY}^\KEM\right]\\
         &= \frac{1}{2}+\frac{1}{2}\Pr\left[\textrm{QUERY}^\PKE\right],
-        && (\textrm{by \eqref{eq:p2-2-3}})
+        && (\textrm{by \eqref{eq:p2-2-7}})
     \end{align*}
     which gives us
     \begin{equation}\label{eq:p2-2-5}
